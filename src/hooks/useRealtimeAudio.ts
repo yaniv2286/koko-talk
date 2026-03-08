@@ -186,6 +186,8 @@ export const useRealtimeAudio = ({
           session: {
             type: 'realtime',
             instructions: instructions,
+            input_audio_format: 'pcm16',
+            output_audio_format: 'pcm16',
           }
         };
         
