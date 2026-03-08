@@ -405,16 +405,30 @@ export const useRealtimeAudio = ({
 
   // Stop recording
   const stopRecording = useCallback(() => {
+    console.log('🔇 Stop recording called');
+    console.log('🔇 Current state before stopping:', state);
+    console.log('🔇 WebSocket readyState:', websocketRef.current?.readyState);
+    console.log('🔇 WebSocket exists:', !!websocketRef.current);
+    
     // Audio capture stops automatically when state changes from 'listening'
     setState('thinking');
+    console.log('🔇 State set to thinking');
     
     // Trigger response generation
     if (websocketRef.current?.readyState === WebSocket.OPEN) {
-      websocketRef.current.send(JSON.stringify({
+      console.log('🔇 Sending response.create to OpenAI');
+      const responseMessage = JSON.stringify({
         type: 'response.create'
-      }));
+      });
+      console.log('🔇 Message to send:', responseMessage);
+      
+      websocketRef.current.send(responseMessage);
+      console.log('🔇 response.create sent successfully');
+    } else {
+      console.log('❌ WebSocket not ready for response.create');
+      console.log('❌ WebSocket readyState:', websocketRef.current?.readyState);
     }
-  }, [setState]);
+  }, [setState, state]);
 
   // Disconnect
   const disconnect = useCallback(() => {
