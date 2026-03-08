@@ -10,6 +10,10 @@ interface AvatarProps {
 export const Avatar = ({ className = '' }: AvatarProps) => {
   const { state, userProfile } = useVoiceStore();
 
+  // Debug logging
+  console.log('🖼️ Current Avatar Path:', userProfile?.avatar);
+  console.log('🖼️ User Profile:', userProfile);
+
   // Animation for the avatar based on state
   const getAvatarAnimation = () => {
     switch (state) {
@@ -102,6 +106,8 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
           alt='Character Avatar' 
           className='w-full h-full object-contain'
           animate={getAvatarAnimation()}
+          onLoad={() => console.log('🖼️ Main avatar loaded:', userProfile?.avatar)}
+          onError={() => console.error('🖼️ Main avatar failed to load:', userProfile?.avatar)}
         />
       </motion.div>
 

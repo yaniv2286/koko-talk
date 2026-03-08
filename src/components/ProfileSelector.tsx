@@ -69,9 +69,23 @@ export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSe
     {
       id: 'avatar3',
       name: 'Character 3',
-      avatar: '/avatars/f0cefe01-6670-4fc4-9ea5-7769605e4fce.jpg',
+      avatar: '/avatars/Gemini_Generated_Image_sndvtosndvtosndv.png',
       color: 'bg-green-100 hover:bg-green-200',
       borderColor: 'border-green-300'
+    },
+    {
+      id: 'avatar4',
+      name: 'Character 4',
+      avatar: '/avatars/Gemini_Generated_Image_4xj7d14xj7d14xj7.png',
+      color: 'bg-purple-100 hover:bg-purple-200',
+      borderColor: 'border-purple-300'
+    },
+    {
+      id: 'avatar5',
+      name: 'Character 5',
+      avatar: '/avatars/Gemini_Generated_Image_gfdrt3gfdrt3gfdr.png',
+      color: 'bg-pink-100 hover:bg-pink-200',
+      borderColor: 'border-pink-300'
     }
   ];
 
@@ -81,6 +95,8 @@ export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSe
   };
 
   const handleCharacterSelect = (character: typeof characters[0]) => {
+    console.log('🖼️ Selected Avatar Path:', character.avatar);
+    
     const userProfile = {
       id: `${selectedAgeGroup}-${character.id}`,
       name: `${selectedAgeGroup === '4-7' ? 'Little Kid' : 'Big Kid'}`,
@@ -192,12 +208,12 @@ export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSe
 
       {/* Step 2: Character Selection */}
       {step === 'character' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 w-full max-w-6xl mb-12">
           {characters.map((character, index) => (
             <motion.div
               key={character.id}
               className={`
-                relative rounded-2xl p-8
+                relative rounded-2xl p-4 sm:p-6
                 bg-white/60 backdrop-blur-md border border-white/50 shadow-lg
                 cursor-pointer
                 transition-all duration-300
@@ -206,38 +222,41 @@ export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSe
               `}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.2 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleCharacterSelect(character)}
             >
               {/* Character Image */}
-              <div className="flex justify-center mb-6">
+              <div className="flex justify-center mb-4">
                 <div className={`
-                  w-24 h-24 sm:w-32 sm:h-32
+                  w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24
                   rounded-full 
                   ${character.color}
                   border-2 ${character.borderColor}
                   flex items-center justify-center
                   overflow-hidden
+                  border-red-500  // Debugging border
                 `}>
                   <img 
                     src={character.avatar} 
                     alt={character.name}
                     className="w-full h-full object-contain"
+                    onLoad={() => console.log('🖼️ Avatar loaded:', character.avatar)}
+                    onError={() => console.error('🖼️ Avatar failed to load:', character.avatar)}
                   />
                 </div>
               </div>
 
               {/* Character Name */}
-              <h2 className="text-xl sm:text-2xl font-semibold text-slate-800 text-center mb-2">
+              <h2 className="text-sm sm:text-base md:text-lg font-semibold text-slate-800 text-center mb-2">
                 {character.name}
               </h2>
 
               {/* Selection indicator */}
               <div className="flex justify-center">
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                  <span className="text-white text-sm">→</span>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                  <span className="text-white text-xs sm:text-sm">→</span>
                 </div>
               </div>
             </motion.div>
