@@ -28,6 +28,7 @@ export const useRealtimeAudio = ({
   // Initialize audio context and analyser
   const initializeAudio = useCallback(async () => {
     try {
+      console.log('🎤 Initializing audio...');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -37,12 +38,20 @@ export const useRealtimeAudio = ({
         },
       });
 
+      console.log('✅ Microphone access granted');
+      console.log('🎤 Stream active:', stream.active);
+
       audioContextRef.current = new AudioContext({ sampleRate: 24000 });
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 256;
 
+      console.log('🎵 Audio context created:', audioContextRef.current.state);
+      console.log('🎵 Analyser created:', !!analyserRef.current);
+
       const source = audioContextRef.current.createMediaStreamSource(stream);
       source.connect(analyserRef.current);
+
+      console.log('🎵 Audio source connected to analyser');
 
       // Create a simple processor for real-time audio capture
       // Note: ScriptProcessor is deprecated but still widely supported
@@ -80,9 +89,12 @@ export const useRealtimeAudio = ({
       source.connect(processor);
       processor.connect(audioContextRef.current.destination);
 
+      console.log('🎵 Audio processor connected');
+
       return stream;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to initialize audio';
+      console.error('❌ Audio initialization failed:', errorMessage);
       setConnectionError(errorMessage);
       onError?.(errorMessage);
       throw error;
@@ -91,7 +103,14 @@ export const useRealtimeAudio = ({
 
   // Monitor audio levels
   const monitorAudioLevel = useCallback(() => {
-    if (!analyserRef.current) return;
+    console.log('🎵 Monitoring audio level...');
+    console.log('Analyser exists:', !!analyserRef.current);
+    console.log('Current state:', state);
+    
+    if (!analyserRef.current) {
+      console.log('❌ No analyser reference');
+      return;
+    }
 
     const dataArray = new Uint8Array(analyserRef.current.fftSize);
     analyserRef.current.getByteTimeDomainData(dataArray);
@@ -105,11 +124,15 @@ export const useRealtimeAudio = ({
     const rms = Math.sqrt(sum / dataArray.length);
     const normalizedLevel = Math.min(100, rms * 200); // Scale to 0-100
     
+    console.log('🎵 Audio level:', normalizedLevel.toFixed(2));
+    
     setAudioLevel(normalizedLevel);
     onAudioLevelChange?.(normalizedLevel);
 
     if (state === 'listening') {
       animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
+    } else {
+      console.log('🔇 Stopping audio monitoring, state:', state);
     }
   }, [state, setAudioLevel, onAudioLevelChange]);
 
