@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       apiKey: apiKey,
-      model: 'gpt-4o-realtime-preview',
+      model: 'gpt-4o',
       instructions: 'You are Koko, a friendly English tutor for kids. The user is a native Hebrew speaker. Respond only in English, keep sentences short and encouraging.',
     });
   } catch (error) {
