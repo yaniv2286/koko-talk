@@ -20,7 +20,8 @@ export const useRealtimeAudio = ({
     setSessionId, 
     addConversationMessage,
     incrementStarCount,
-    userProfile
+    userProfile,
+    kidGender
   } = useVoiceStore();
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -43,7 +44,8 @@ export const useRealtimeAudio = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userProfile: userProfile || undefined
+          userProfile: userProfile || undefined,
+          kidGender: kidGender || undefined
         }),
       });
       

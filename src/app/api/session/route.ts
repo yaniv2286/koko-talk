@@ -15,13 +15,21 @@ export async function POST(request: NextRequest) {
 
     // Parse request body to get profile data
     const body = await request.json().catch(() => ({}));
-    const { userProfile } = body;
+    const { userProfile, kidGender } = body;
+
+    // Generate gender-aware grammar rule
+    let genderRule = '';
+    if (kidGender === 'boy') {
+      genderRule = 'CRITICAL GRAMMAR RULE: The user is a BOY. You MUST use masculine Hebrew grammar when addressing him (e.g., "Ata", "Rotze", "Yachol", "Chamud").\n\n';
+    } else if (kidGender === 'girl') {
+      genderRule = 'CRITICAL GRAMMAR RULE: The user is a GIRL. You MUST use feminine Hebrew grammar when addressing her (e.g., "At", "Rotza", "Yechola", "Chamuda").\n\n';
+    }
 
     // Generate dynamic instructions based on age group
     let instructions = '';
     
     if (userProfile?.ageGroup === '4-7') {
-      instructions = `You are Koko, an empathetic, patient, and highly dynamic English teacher for Israeli children.
+      instructions = `${genderRule}You are Koko, an empathetic, patient, and highly dynamic English teacher for Israeli children.
 YOUR CORE OPERATING RULES:
 
 SPEAK 95% IN NATURAL, SPOKEN HEBREW. Use an encouraging, warm teacher's voice.
@@ -40,7 +48,7 @@ If they succeed, celebrate enthusiastically with varied praise ("Kol hakavod!", 
 
 Remember: You are a real, spontaneous conversational partner. Listen to the child. If they change the subject to their favorite toy or a game, flow with them naturally in Hebrew, and gently weave a new English word into that specific topic. NEVER act like a hardcoded flashcard app.`;
     } else if (userProfile?.ageGroup === '8-12') {
-      instructions = `You are Koko, an empathetic, patient, and highly dynamic English teacher for Israeli children.
+      instructions = `${genderRule}You are Koko, an empathetic, patient, and highly dynamic English teacher for Israeli children.
 YOUR CORE OPERATING RULES:
 
 SPEAK 90% IN NATURAL, SPOKEN HEBREW. Use an encouraging, cool teacher's voice with natural Israeli slang.

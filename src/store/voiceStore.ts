@@ -18,6 +18,9 @@ interface VoiceStore {
   // User profile
   userProfile: UserProfile | null;
   
+  // Kid's gender
+  kidGender: 'boy' | 'girl' | null;
+  
   // Gamification
   starCount: number;
   
@@ -39,6 +42,7 @@ interface VoiceStore {
   // Actions
   setState: (state: VoiceState) => void;
   setProfile: (profile: UserProfile) => void;
+  setKidGender: (kidGender: 'boy' | 'girl' | null) => void;
   setConnected: (connected: boolean) => void;
   setConnectionError: (error: string | null) => void;
   setAudioLevel: (level: number) => void;
@@ -49,14 +53,15 @@ interface VoiceStore {
 }
 
 const initialState = {
-  state: 'idle' as VoiceState,
-  userProfile: null as UserProfile | null,
-  starCount: 0,
+  state: 'idle' as const,
   isConnected: false,
   connectionError: null,
-  audioLevel: 0,
   sessionId: null,
+  audioLevel: 0,
   conversationHistory: [],
+  userProfile: null,
+  kidGender: null,
+  starCount: 0,
 };
 
 export const useVoiceStore = create<VoiceStore>()(
@@ -67,6 +72,8 @@ export const useVoiceStore = create<VoiceStore>()(
       setState: (state) => set({ state }),
       
       setProfile: (userProfile) => set({ userProfile }),
+      
+      setKidGender: (kidGender) => set({ kidGender }),
       
       setConnected: (isConnected) => set({ isConnected }),
       
