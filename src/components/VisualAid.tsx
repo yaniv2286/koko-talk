@@ -93,14 +93,14 @@ export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
   }
 
   return (
-    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 ${className}`}>
-      <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-auto">
+    <div className={`fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 ${className}`}>
+      <div className="glass-dark rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Let's Spell Together! 🎯</h2>
+          <h2 className="text-2xl font-bold text-primary">Let's Spell Together! 🎯</h2>
           <button
             onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+            className="text-secondary hover:text-primary text-2xl font-bold transition-colors"
           >
             ×
           </button>
@@ -108,7 +108,7 @@ export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
 
         {/* Error Display */}
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700">
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300">
             {error}
           </div>
         )}
@@ -116,8 +116,8 @@ export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
         {/* Image Section */}
         <div className="mb-6">
           {isLoading ? (
-            <div className="w-full h-64 bg-gray-200 rounded-2xl flex items-center justify-center">
-              <div className="text-gray-500">Loading image...</div>
+            <div className="w-full h-64 bg-gray-800/50 rounded-2xl flex items-center justify-center glass">
+              <div className="text-secondary">Loading image...</div>
             </div>
           ) : imageUrl ? (
             <img
@@ -130,27 +130,29 @@ export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
               }}
             />
           ) : (
-            <div className="w-full h-64 bg-gray-200 rounded-2xl flex items-center justify-center">
-              <div className="text-gray-500">No image available</div>
+            <div className="w-full h-64 bg-gray-800/50 rounded-2xl flex items-center justify-center glass">
+              <div className="text-secondary">No image available</div>
             </div>
           )}
         </div>
 
         {/* Word Display */}
-        <div className="text-center mb-6">
-          <p className="text-lg text-gray-600 mb-2">Can you spell this word?</p>
-          <div className="text-3xl font-bold text-blue-600 mb-4">{word}</div>
+        <div className="text-center mb-8">
+          <h3 className="text-3xl sm:text-4xl font-bold text-primary mb-2">
+            {word}
+          </h3>
+          <p className="text-secondary">Let's spell it together!</p>
         </div>
 
-        {/* Letter Slots */}
-        <div className="flex justify-center gap-2 mb-8">
+        {/* Letter-by-Letter Spelling */}
+        <div className="flex justify-center gap-2 sm:gap-4 mb-8 flex-wrap">
           {letters.map((letter, index) => (
             <div
               key={`${letter}-${index}`}
-              className={`w-12 h-12 border-2 rounded-lg flex items-center justify-center text-xl font-bold transition-all duration-300 ${
+              className={`w-12 h-12 sm:w-16 sm:h-16 rounded-lg flex items-center justify-center text-xl sm:text-2xl font-bold transition-all duration-300 ${
                 index < currentLetterIndex
-                  ? 'bg-green-100 border-green-500 text-green-700'
-                  : 'bg-gray-100 border-gray-300 text-gray-400'
+                  ? 'bg-green-500 text-white neon-green'
+                  : 'bg-gray-800/50 text-secondary glass'
               }`}
             >
               {index < currentLetterIndex ? letter : '_'}
@@ -158,24 +160,21 @@ export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
           ))}
         </div>
 
-        {/* Controls */}
+        {/* Action Buttons */}
         <div className="flex justify-center gap-4">
           <button
             onClick={resetSpelling}
-            className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            className="px-6 py-3 btn-glass rounded-lg font-semibold transition-all"
           >
             Reset
           </button>
           <button
-            onClick={nextLetter}
-            disabled={currentLetterIndex >= letters.length}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+            onClick={handleClose}
+            className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-all neon-green"
           >
-            {currentLetterIndex >= letters.length ? 'Complete!' : 'Next Letter'}
+            Got it!
           </button>
         </div>
-
-        {/* Completion Message */}
         {currentLetterIndex >= letters.length && (
           <div className="mt-6 text-center">
             <p className="text-xl font-bold text-green-600">Great job! 🎉</p>

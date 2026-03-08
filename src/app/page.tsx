@@ -99,21 +99,15 @@ export default function Home() {
   if (!kidGender) {
     console.log('🏠 Showing Gender Selection (first page)');
     return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
-        {/* Blurred Background */}
-        <div className="absolute inset-0">
-          <div className="w-full h-full bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20 blur-3xl" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/80 to-slate-900" />
-        </div>
-
+      <main className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
         {/* Content */}
         <div className="relative z-10 w-full max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-4 tracking-tight drop-shadow-lg">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-primary mb-4 tracking-tight drop-shadow-lg">
               Koko
             </h1>
-            <p className="text-xl sm:text-2xl text-white/90 font-medium drop-shadow">
+            <p className="text-xl sm:text-2xl text-secondary font-medium drop-shadow">
               Choose your teacher
             </p>
           </div>
@@ -133,7 +127,7 @@ export default function Home() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1.2, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
-                      className="absolute inset-0 rounded-full bg-green-400/20 blur-xl"
+                      className="absolute inset-0 rounded-full neon-blue"
                     />
                   )}
                 </AnimatePresence>
@@ -145,7 +139,7 @@ export default function Home() {
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
-                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center"
+                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center neon-green"
                     >
                       <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-8-8a1 1 0 010-1.414l8-8z" clipRule="evenodd" />
@@ -155,7 +149,7 @@ export default function Home() {
                 </AnimatePresence>
                 
                 {/* Avatar Container */}
-                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 p-1 shadow-2xl shadow-blue-500/50 group-hover:shadow-blue-500/70">
+                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full glass-dark p-1 group-hover:neon-blue transition-all duration-300">
                   <div className="w-full h-full rounded-full overflow-hidden">
                     <img
                       src="/avatars/boy_avatar.png"
@@ -187,7 +181,7 @@ export default function Home() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1.2, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
-                      className="absolute inset-0 rounded-full bg-green-400/20 blur-xl"
+                      className="absolute inset-0 rounded-full neon-pink"
                     />
                   )}
                 </AnimatePresence>
@@ -199,7 +193,7 @@ export default function Home() {
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
-                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center"
+                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center neon-green"
                     >
                       <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-8-8a1 1 0 010-1.414l8-8z" clipRule="evenodd" />
@@ -209,7 +203,7 @@ export default function Home() {
                 </AnimatePresence>
                 
                 {/* Avatar Container */}
-                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 p-1 shadow-2xl shadow-pink-500/50 group-hover:shadow-pink-500/70">
+                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full glass-dark p-1 group-hover:neon-pink transition-all duration-300">
                   <div className="w-full h-full rounded-full overflow-hidden">
                     <img
                       src="/avatars/girl_avatar.png"
@@ -230,7 +224,7 @@ export default function Home() {
           </div>
 
           {/* Helper Text */}
-          <p className="text-center text-white/70 max-w-md text-sm sm:text-base mb-8">
+          <p className="text-center text-secondary max-w-md text-sm sm:text-base mb-8">
             This helps Koko know how to talk to you in Hebrew! 🌟
           </p>
         </div>
@@ -257,20 +251,20 @@ export default function Home() {
       <VisualAid />
       
       {/* Phone Call Interface */}
-      <div className="relative h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="relative h-screen">
         {/* Blurred Background with Avatar */}
         <div className="absolute inset-0">
           <div 
             className="w-full h-full bg-cover bg-center opacity-20 blur-xl"
             style={{ backgroundImage: `url(${userProfile?.avatar})` }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/50 to-slate-900" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0D021A]/80 to-[#0D021A]" />
         </div>
 
         {/* Debug Drawer Toggle */}
         <button
           onClick={() => setShowDebugDrawer(!showDebugDrawer)}
-          className="absolute top-4 right-4 z-50 p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-colors"
+          className="absolute top-4 right-4 z-50 p-2 glass-dark rounded-full text-primary hover:bg-white/20 transition-colors"
         >
           <span className="text-xs">Debug</span>
         </button>
@@ -282,9 +276,9 @@ export default function Home() {
               initial={{ x: 300 }}
               animate={{ x: 0 }}
               exit={{ x: 300 }}
-              className="absolute top-0 right-0 h-full w-80 bg-slate-800/95 backdrop-blur-md z-40 p-4 overflow-y-auto"
+              className="absolute top-0 right-0 h-full w-80 glass-dark z-40 p-4 overflow-y-auto"
             >
-              <div className="text-white space-y-4">
+              <div className="text-primary space-y-4">
                 <h3 className="text-lg font-bold">Debug Info</h3>
                 <div className="text-sm space-y-2">
                   <p>State: {state}</p>
@@ -294,7 +288,7 @@ export default function Home() {
                 </div>
                 <button
                   onClick={() => setShowDebugDrawer(false)}
-                  className="w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  className="w-full py-2 bg-red-500 text-primary rounded-lg hover:bg-red-600 transition-colors"
                 >
                   Close
                 </button>
@@ -307,7 +301,7 @@ export default function Home() {
         <div className="relative h-full flex flex-col">
           {/* Status Bar */}
           <div className="absolute top-0 left-0 right-0 z-20 p-4 text-center">
-            <div className="text-white/80 text-sm font-medium">
+            <div className="text-secondary text-sm font-medium">
               {state === 'connecting' ? 'Connecting...' : state === 'error' ? 'Connection Error' : formatTimer(callTimer)}
             </div>
           </div>
@@ -354,7 +348,7 @@ export default function Home() {
 
               {/* Avatar */}
               <motion.div
-                className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 bg-white rounded-full flex items-center justify-center shadow-2xl"
+                className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 glass-dark rounded-full flex items-center justify-center"
                 animate={{
                   scale: state === 'speaking' ? [1, 1.05, 1] : 1,
                 }}
@@ -384,7 +378,7 @@ export default function Home() {
                     ease: "easeInOut"
                   }}
                 >
-                  <div className="w-2 h-2 bg-green-400 rounded-full" />
+                  <div className="w-2 h-2 bg-green-400 rounded-full neon-green" />
                 </motion.div>
               )}
             </div>
@@ -397,9 +391,9 @@ export default function Home() {
               <div className="flex justify-center items-center">
                 <button
                   onClick={handleStartCall}
-                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-all transform hover:scale-105 shadow-lg"
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-full btn-glass flex items-center justify-center transition-all transform hover:scale-105 neon-green"
                 >
-                  <Phone className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
+                  <Phone className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
                 </button>
               </div>
             )}
@@ -410,32 +404,30 @@ export default function Home() {
                 {/* Mute Button */}
                 <button
                   onClick={() => setIsMuted(!isMuted)}
-                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-all ${
-                    isMuted 
-                      ? 'bg-red-500 hover:bg-red-600' 
-                      : 'bg-gray-600 hover:bg-gray-700'
+                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full btn-glass flex items-center justify-center transition-all ${
+                    isMuted ? 'neon-red' : ''
                   }`}
                 >
                   {isMuted ? (
-                    <MicOff className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                    <MicOff className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                   ) : (
-                    <Mic className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                    <Mic className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                   )}
                 </button>
 
                 {/* End Call Button */}
                 <button
                   onClick={handleEndCall}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all transform hover:scale-105"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full btn-glass flex items-center justify-center transition-all transform hover:scale-105 neon-red"
                 >
-                  <PhoneOff className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                  <PhoneOff className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                 </button>
 
                 {/* Speaker Button */}
                 <button
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-600 hover:bg-gray-700 flex items-center justify-center transition-all"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full btn-glass flex items-center justify-center transition-all"
                 >
-                  <Volume2 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                  <Volume2 className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                 </button>
               </div>
             )}
@@ -447,7 +439,7 @@ export default function Home() {
                 state === 'error' ? 'text-red-400' :
                 state === 'listening' ? 'text-green-400' :
                 state === 'speaking' ? 'text-blue-400' :
-                'text-gray-400'
+                'text-secondary'
               }`}>
                 {state === 'connecting' ? 'Connecting...' :
                  state === 'error' ? 'Connection Error' :
