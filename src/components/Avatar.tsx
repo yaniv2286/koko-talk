@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Bot } from 'lucide-react';
 import { useVoiceStore } from '@/store/voiceStore';
 
 interface AvatarProps {
@@ -16,9 +15,15 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
     switch (state) {
       case 'idle':
         return {
-          y: [0, -12, 0],
+          scale: [1, 1.05, 0.95, 1],
+          borderRadius: ['50%', '45%', '55%', '50%'],
+          boxShadow: [
+            '0 0 40px rgba(99, 102, 241, 0.3)',
+            '0 0 60px rgba(99, 102, 241, 0.4)',
+            '0 0 40px rgba(99, 102, 241, 0.3)',
+          ],
           transition: {
-            duration: 3,
+            duration: 4,
             repeat: Infinity,
             ease: "easeInOut" as const
           }
@@ -26,20 +31,18 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
       
       case 'listening':
         return {
-          scale: [1, 1.2, 1],
-          backgroundColor: ['#10b981', '#34d399', '#10b981'],
-          transition: {
-            duration: 1.5,
-            repeat: Infinity,
-            ease: "easeInOut" as const
-          }
-        };
-      
-      case 'thinking':
-        return {
-          rotate: [0, 8, -8, 0],
-          scale: [1, 1.15, 1],
-          backgroundColor: ['#3b82f6', '#60a5fa', '#3b82f6'],
+          scale: [1, 1.15, 1.1, 1.15, 1],
+          borderRadius: ['50%', '40%', '50%', '40%', '50%'],
+          boxShadow: [
+            '0 0 60px rgba(34, 197, 94, 0.4)',
+            '0 0 80px rgba(34, 197, 94, 0.6)',
+            '0 0 100px rgba(34, 197, 94, 0.4)',
+          ],
+          background: [
+            'linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.6))',
+            'linear-gradient(135deg, rgba(34, 197, 94, 0.9), rgba(16, 185, 129, 0.7))',
+            'linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(16, 185, 129, 0.6))',
+          ],
           transition: {
             duration: 2,
             repeat: Infinity,
@@ -47,13 +50,39 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
           }
         };
       
+      case 'thinking':
+        return {
+          scale: [1, 1.08, 1.02, 1.08, 1],
+          borderRadius: ['50%', '48%', '52%', '48%', '50%'],
+          rotate: [0, 2, -2, 0],
+          boxShadow: [
+            '0 0 50px rgba(59, 130, 246, 0.4)',
+            '0 0 70px rgba(59, 130, 246, 0.5)',
+            '0 0 50px rgba(59, 130, 246, 0.4)',
+          ],
+          transition: {
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut" as const
+          }
+        };
+      
       case 'speaking':
         return {
-          y: [0, -20, 0],
-          scale: [1, 1.3, 1],
-          backgroundColor: ['#f59e0b', '#fbbf24', '#f59e0b'],
+          scale: [1, 1.2, 0.9, 1.3, 1],
+          borderRadius: ['50%', '35%', '65%', '30%', '50%'],
+          boxShadow: [
+            '0 0 80px rgba(251, 146, 60, 0.5)',
+            '0 0 120px rgba(251, 146, 60, 0.7)',
+            '0 0 100px rgba(251, 146, 60, 0.4)',
+          ],
+          background: [
+            'linear-gradient(135deg, rgba(251, 146, 60, 0.8), rgba(245, 158, 11, 0.6))',
+            'linear-gradient(135deg, rgba(251, 146, 60, 0.9), rgba(245, 158, 11, 0.7))',
+            'linear-gradient(135deg, rgba(251, 146, 60, 0.8), rgba(245, 158, 11, 0.6))',
+          ],
           transition: {
-            duration: 0.3,
+            duration: 0.8,
             repeat: Infinity,
             ease: "easeInOut" as const
           }
@@ -61,11 +90,16 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
       
       case 'connecting':
         return {
-          scale: [1, 1.15, 1],
-          opacity: [0.5, 1, 0.5],
-          backgroundColor: ['#6b7280', '#9ca3af', '#6b7280'],
+          scale: [1, 1.1, 0.95, 1.1, 1],
+          opacity: [0.6, 1, 0.6, 1, 0.6],
+          borderRadius: ['50%', '45%', '55%', '45%', '50%'],
+          boxShadow: [
+            '0 0 40px rgba(156, 163, 175, 0.3)',
+            '0 0 60px rgba(156, 163, 175, 0.4)',
+            '0 0 40px rgba(156, 163, 175, 0.3)',
+          ],
           transition: {
-            duration: 1,
+            duration: 2,
             repeat: Infinity,
             ease: "easeInOut" as const
           }
@@ -73,10 +107,16 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
       
       case 'error':
         return {
-          x: [-8, 8, -8, 0],
-          backgroundColor: ['#ef4444', '#f87171', '#ef4444'],
+          scale: [1, 1.05, 0.95, 1.05, 1],
+          borderRadius: ['50%', '40%', '60%', '40%', '50%'],
+          x: [-3, 3, -3, 3, 0],
+          boxShadow: [
+            '0 0 50px rgba(239, 68, 68, 0.4)',
+            '0 0 70px rgba(239, 68, 68, 0.6)',
+            '0 0 50px rgba(239, 68, 68, 0.4)',
+          ],
           transition: {
-            duration: 0.5,
+            duration: 1,
             repeat: 3,
             ease: "easeInOut" as const
           }
@@ -85,7 +125,8 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
       default:
         return {
           scale: 1,
-          backgroundColor: '#10b981'
+          borderRadius: '50%',
+          boxShadow: '0 0 40px rgba(99, 102, 241, 0.3)'
         };
     }
   };
@@ -94,17 +135,17 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
   const getStatusText = () => {
     switch (state) {
       case 'idle':
-        return 'Ready to learn!';
+        return 'Ready to learn';
       case 'listening':
-        return 'Listening...';
+        return 'Listening';
       case 'thinking':
-        return 'Thinking...';
+        return 'Thinking';
       case 'speaking':
-        return 'Speaking...';
+        return 'Speaking';
       case 'connecting':
-        return 'Connecting...';
+        return 'Connecting';
       case 'error':
-        return 'Oops! Try again';
+        return 'Try again';
       default:
         return 'Koko';
     }
@@ -114,92 +155,55 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
 
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
-      {/* Avatar Container */}
+      {/* Fluid AI Orb */}
       <motion.div
-        className="relative w-56 h-56 sm:w-72 sm:h-72 md:w-96 md:h-96 rounded-full flex items-center justify-center shadow-2xl bg-gradient-to-br from-purple-400 via-pink-400 to-orange-400"
+        className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64"
         animate={animationConfig}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        {/* Inner glow effect */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/40 to-transparent" />
+        {/* Main Orb */}
+        <div 
+          className="absolute inset-0 bg-gradient-to-br from-indigo-400/80 via-purple-400/60 to-blue-400/40 backdrop-blur-sm"
+          style={{
+            borderRadius: '50%',
+            boxShadow: '0 0 60px rgba(99, 102, 241, 0.3), inset 0 0 30px rgba(255, 255, 255, 0.2)'
+          }}
+        />
         
-        {/* Massive Friendly Bot Face */}
-        <div className="relative z-10">
-          <Bot className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 text-white drop-shadow-2xl" />
-          
-          {/* Friendly animated eyes */}
-          <div className="absolute inset-0 flex items-center justify-center pt-8">
-            <div className="flex gap-6 sm:gap-8">
-              <motion.div
-                className="w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full shadow-lg"
-                animate={{
-                  scale: state === 'listening' ? [1, 0.3, 1] : 1,
-                  y: state === 'speaking' ? [0, -2, 0] : 0,
-                }}
-                transition={{
-                  duration: 0.3,
-                  repeat: state === 'listening' || state === 'speaking' ? Infinity : 0,
-                  ease: "easeInOut" as const,
-                }}
-              />
-              <motion.div
-                className="w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full shadow-lg"
-                animate={{
-                  scale: state === 'listening' ? [1, 0.3, 1] : 1,
-                  y: state === 'speaking' ? [0, -2, 0] : 0,
-                }}
-                transition={{
-                  duration: 0.3,
-                  repeat: state === 'listening' || state === 'speaking' ? Infinity : 0,
-                  ease: "easeInOut" as const,
-                }}
-              />
-            </div>
-          </div>
-          
-          {/* Big friendly smile */}
-          <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2">
-            <motion.div
-              className="w-16 h-8 sm:w-20 sm:h-10 border-b-6 border-white rounded-b-full shadow-lg"
-              animate={{
-                width: state === 'speaking' ? ['4rem', '6rem', '4rem'] : '4rem',
-                height: state === 'speaking' ? ['2rem', '2.5rem', '2rem'] : '2rem',
-              }}
-              transition={{
-                duration: 0.4,
-                repeat: state === 'speaking' ? Infinity : 0,
-                ease: "easeInOut" as const,
-              }}
-            />
-          </div>
-        </div>
+        {/* Inner glow */}
+        <div 
+          className="absolute inset-4 bg-gradient-to-tr from-white/30 to-transparent backdrop-blur-md"
+          style={{ borderRadius: '50%' }}
+        />
         
-        {/* Enhanced pulsing ring effect for active states */}
-        {(state === 'listening' || state === 'speaking') && (
+        {/* Core light */}
+        <div 
+          className="absolute inset-0 flex items-center justify-center"
+        >
           <motion.div
-            className="absolute inset-0 rounded-full border-6 border-white opacity-40"
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-white/40 rounded-full backdrop-blur-sm"
             animate={{
-              scale: [1, 1.4, 1],
-              opacity: [0.4, 0, 0.4],
+              scale: state === 'listening' ? [1, 1.3, 1] : [1, 1.1, 1],
+              opacity: state === 'listening' ? [0.6, 1, 0.6] : [0.8, 1, 0.8],
             }}
             transition={{
-              duration: 1.5,
+              duration: state === 'listening' ? 1 : 3,
               repeat: Infinity,
               ease: "easeInOut" as const,
             }}
           />
-        )}
+        </div>
       </motion.div>
 
       {/* Status text */}
       <motion.div
-        className="mt-8 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-200 text-center"
+        className="mt-12 text-lg sm:text-xl md:text-2xl font-medium text-slate-700 text-center tracking-wide"
         animate={{
-          opacity: [0.6, 1, 0.6],
+          opacity: [0.7, 1, 0.7],
         }}
         transition={{
-          duration: 2,
+          duration: 3,
           repeat: Infinity,
           ease: "easeInOut" as const,
         }}

@@ -21,17 +21,17 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-pink-900 flex flex-col items-center justify-center p-4 sm:p-8">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
       {/* Star Counter */}
       <StarCounter />
       
       {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-800 dark:text-white mb-4">
-          Koko Talk
+      <div className="text-center mb-16">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold text-slate-800 mb-4 tracking-tight">
+          Koko
         </h1>
-        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-md mx-auto">
-          Your friendly English tutor! 🎓
+        <p className="text-xl sm:text-2xl text-slate-600 font-light">
+          Your AI English Tutor
         </p>
       </div>
 
