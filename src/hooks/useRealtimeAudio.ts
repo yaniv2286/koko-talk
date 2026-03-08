@@ -81,6 +81,7 @@ export const useRealtimeAudio = ({
             websocketRef.current.send(JSON.stringify({
               type: 'input_audio_buffer.append',
               audio: base64Audio,
+              format: 'pcm16'
             }));
           } catch (error) {
             console.error('Error sending audio data:', error);
@@ -186,8 +187,6 @@ export const useRealtimeAudio = ({
           session: {
             type: 'realtime',
             instructions: instructions,
-            input_audio_format: 'pcm16',
-            output_audio_format: 'pcm16',
           }
         };
         
