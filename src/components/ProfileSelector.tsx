@@ -54,38 +54,38 @@ export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSe
   const characters = [
     {
       id: 'avatar1',
-      name: 'Character 1',
-      avatar: '/avatars/10762531.jpg',
-      color: 'bg-amber-100 hover:bg-amber-200',
-      borderColor: 'border-amber-300'
-    },
-    {
-      id: 'avatar2',
-      name: 'Character 2',
-      avatar: '/avatars/cute-dog-studio.jpg',
+      name: 'Boy',
+      avatar: '/avatars/boy_avatar.png',
       color: 'bg-blue-100 hover:bg-blue-200',
       borderColor: 'border-blue-300'
     },
     {
+      id: 'avatar2',
+      name: 'Girl',
+      avatar: '/avatars/girl_avatar.png',
+      color: 'bg-pink-100 hover:bg-pink-200',
+      borderColor: 'border-pink-300'
+    },
+    {
       id: 'avatar3',
       name: 'Character 3',
-      avatar: '/avatars/Gemini_Generated_Image_sndvtosndvtosndv.png',
+      avatar: '/avatars/cute-dog-studio.jpg',
       color: 'bg-green-100 hover:bg-green-200',
       borderColor: 'border-green-300'
     },
     {
       id: 'avatar4',
       name: 'Character 4',
-      avatar: '/avatars/Gemini_Generated_Image_4xj7d14xj7d14xj7.png',
+      avatar: '/avatars/Gemini_Generated_Image_sndvtosndvtosndv.png',
       color: 'bg-purple-100 hover:bg-purple-200',
       borderColor: 'border-purple-300'
     },
     {
       id: 'avatar5',
       name: 'Character 5',
-      avatar: '/avatars/Gemini_Generated_Image_gfdrt3gfdrt3gfdr.png',
-      color: 'bg-pink-100 hover:bg-pink-200',
-      borderColor: 'border-pink-300'
+      avatar: '/avatars/Gemini_Generated_Image_4xj7d14xj7d14xj7.png',
+      color: 'bg-amber-100 hover:bg-amber-200',
+      borderColor: 'border-amber-300'
     }
   ];
 
