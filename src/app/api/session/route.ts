@@ -8,6 +8,18 @@ const openai = new OpenAI({
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔑 API route called - START');
+    
+    // Return a simple test first to see if the route works at all
+    console.log('🔑 Returning simple test response...');
+    return NextResponse.json({
+      test: 'API route is working',
+      timestamp: new Date().toISOString(),
+      step: 'simple_test'
+    });
+    
+    // Original code below (commented out for testing)
+    /*
     console.log('🔑 API route called');
     
     // For OpenAI Realtime API, we need to return the API key for WebSocket authentication
@@ -33,6 +45,7 @@ export async function POST(request: NextRequest) {
       instructions: 'You are Koko, a friendly English tutor for kids. The user is a native Hebrew speaker. Respond only in English, keep sentences short and encouraging.',
       test: 'API key retrieved (validation bypassed)',
     });
+    */
   } catch (error) {
     console.error('❌ Failed to create OpenAI session:', error);
     
