@@ -181,16 +181,6 @@ export const useRealtimeAudio = ({
       const data = await response.json();
       console.log('🔌 API response data:', data);
 
-      // Handle test response vs real API key response
-      if (data.test && data.message) {
-        console.log('🔌 Received test response - API route is working but no API key');
-        // For now, create a mock API key to test the rest of the pipeline
-        const mockApiKey = 'sk-proj-mock-key-for-testing';
-        console.log('🔑 Using mock API key for testing');
-        
-        return; // Stop here for now - we know the API route works
-      }
-
       const { apiKey, model, instructions } = data;
 
       if (!apiKey) {
