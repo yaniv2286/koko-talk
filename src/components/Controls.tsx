@@ -103,9 +103,8 @@ export const Controls = ({ className = '' }: ControlsProps) => {
       {/* Main Action Button */}
       <motion.button
         className={`
-          relative w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 
-          rounded-3xl
-          ${buttonConfig.color} 
+          relative w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 
+          rounded-2xl
           text-white 
           font-bold 
           text-lg sm:text-xl md:text-2xl
@@ -120,28 +119,36 @@ export const Controls = ({ className = '' }: ControlsProps) => {
           gap-2
           select-none
           active:scale-95
-          border-4 border-white/20
-          bg-gradient-to-br
+          border-6 border-white/30
+          transform hover:rotate-2
         `}
         style={{
           background: buttonConfig.disabled 
-            ? 'linear-gradient(135deg, #6b7280, #4b5563)' 
+            ? 'linear-gradient(145deg, #6b7280, #4b5563)' 
             : buttonConfig.color.includes('green') 
-              ? 'linear-gradient(135deg, #10b981, #059669)'
+              ? 'linear-gradient(145deg, #10b981, #059669, #047857)'
               : buttonConfig.color.includes('blue')
-                ? 'linear-gradient(135deg, #3b82f6, #2563eb)'
+                ? 'linear-gradient(145deg, #3b82f6, #2563eb, #1d4ed8)'
                 : buttonConfig.color.includes('red')
-                  ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                  ? 'linear-gradient(145deg, #ef4444, #dc2626, #b91c1c)'
                   : buttonConfig.color.includes('orange')
-                    ? 'linear-gradient(135deg, #f59e0b, #d97706)'
-                    : 'linear-gradient(135deg, #6b7280, #4b5563)'
+                    ? 'linear-gradient(145deg, #f59e0b, #d97706, #b45309)'
+                    : 'linear-gradient(145deg, #6b7280, #4b5563, #374151)'
         }}
         onClick={handleButtonPress}
         onMouseUp={handleButtonRelease}
         onTouchEnd={handleButtonRelease}
         disabled={buttonConfig.disabled}
-        whileHover={{ scale: buttonConfig.disabled ? 1 : 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ 
+          scale: buttonConfig.disabled ? 1 : 1.08,
+          rotate: buttonConfig.disabled ? 0 : 2,
+          boxShadow: buttonConfig.disabled ? 'none' : '0 20px 40px rgba(0,0,0,0.3)'
+        }}
+        whileTap={{ 
+          scale: 0.92,
+          rotate: -2,
+          boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
+        }}
       >
         {/* Pulsing ring effect for active states */}
         {(state === 'listening' || state === 'speaking') && (
