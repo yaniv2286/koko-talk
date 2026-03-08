@@ -21,7 +21,6 @@ export const useRealtimeAudio = ({
   } = useVoiceStore();
 
   const websocketRef = useRef<WebSocket | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -45,10 +44,41 @@ export const useRealtimeAudio = ({
       const source = audioContextRef.current.createMediaStreamSource(stream);
       source.connect(analyserRef.current);
 
-      // Set up media recorder for audio capture
-      mediaRecorderRef.current = new MediaRecorder(stream, {
-        mimeType: 'audio/webm',
-      });
+      // Create a simple processor for real-time audio capture
+      // Note: ScriptProcessor is deprecated but still widely supported
+      // For production, you'd want to use AudioWorklet
+      const processor = audioContextRef.current.createScriptProcessor(4096, 1, 1);
+      let isRecording = false;
+      
+      processor.onaudioprocess = (event) => {
+        if (websocketRef.current?.readyState === WebSocket.OPEN && state === 'listening' && !isRecording) {
+          isRecording = true;
+          const inputBuffer = event.inputBuffer.getChannelData(0);
+          const pcmData = new Int16Array(inputBuffer.length);
+          
+          // Convert float32 to int16 PCM
+          for (let i = 0; i < inputBuffer.length; i++) {
+            pcmData[i] = Math.max(-32768, Math.min(32767, inputBuffer[i] * 32768));
+          }
+          
+          // Send as base64 encoded audio data
+          try {
+            const base64Audio = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
+            
+            websocketRef.current.send(JSON.stringify({
+              type: 'input_audio_buffer.append',
+              audio: base64Audio,
+            }));
+          } catch (error) {
+            console.error('Error sending audio data:', error);
+          }
+          
+          isRecording = false;
+        }
+      };
+      
+      source.connect(processor);
+      processor.connect(audioContextRef.current.destination);
 
       return stream;
     } catch (error) {
@@ -57,7 +87,7 @@ export const useRealtimeAudio = ({
       onError?.(errorMessage);
       throw error;
     }
-  }, [setConnectionError, onError]);
+  }, [setConnectionError, onError, state]);
 
   // Monitor audio levels
   const monitorAudioLevel = useCallback(() => {
@@ -84,21 +114,21 @@ export const useRealtimeAudio = ({
       setState('connecting');
       setConnectionError(null);
 
-      // Get ephemeral token from our API
+      // Get API key and configuration from our API
       const response = await fetch('/api/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get session token');
+        throw new Error('Failed to get API configuration');
       }
 
-      const { client_secret } = await response.json();
+      const { apiKey, model, instructions } = await response.json();
 
       // Create WebSocket connection to OpenAI Realtime API
       const ws = new WebSocket(
-        `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01&authorization=${encodeURIComponent(`Bearer ${client_secret.value}`)}`
+        `wss://api.openai.com/v1/realtime?model=${model}&api_key=${encodeURIComponent(apiKey)}`
       );
 
       websocketRef.current = ws;
@@ -106,7 +136,23 @@ export const useRealtimeAudio = ({
       ws.onopen = () => {
         setState('idle');
         setConnected(true);
-        setSessionId(client_secret.value);
+        setSessionId(apiKey);
+        
+        // Send session configuration
+        ws.send(JSON.stringify({
+          type: 'session.create',
+          session: {
+            instructions: instructions,
+            turn_detection: {
+              type: 'server_vad',
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 500,
+            },
+            input_audio_format: 'pcm16',
+            output_audio_format: 'pcm16',
+          }
+        }));
       };
 
       ws.onmessage = (event) => {
@@ -114,9 +160,24 @@ export const useRealtimeAudio = ({
         
         // Handle different message types from OpenAI
         switch (data.type) {
-          case 'response.audio_transcript.done':
+          case 'session.created':
+            // Session successfully created
+            console.log('Session created:', data.session);
+            break;
+            
+          case 'response.text.done':
             // AI finished speaking
-            addConversationMessage('assistant', data.transcript);
+            addConversationMessage('assistant', data.text);
+            setState('idle');
+            break;
+            
+          case 'response.started':
+            // AI started speaking
+            setState('speaking');
+            break;
+            
+          case 'response.done':
+            // AI finished speaking (alternative event)
             setState('idle');
             break;
             
@@ -143,6 +204,9 @@ export const useRealtimeAudio = ({
             setConnectionError(data.error.message);
             setState('error');
             break;
+            
+          default:
+            console.log('Unhandled message type:', data.type, data);
         }
       };
 
@@ -177,28 +241,20 @@ export const useRealtimeAudio = ({
 
   // Start recording and sending audio
   const startRecording = useCallback(() => {
-    if (!mediaRecorderRef.current || !websocketRef.current) return;
-
-    mediaRecorderRef.current.ondataavailable = (event) => {
-      if (event.data.size > 0 && websocketRef.current?.readyState === WebSocket.OPEN) {
-        // Convert audio data and send to OpenAI
-        // TODO: Implement proper audio format conversion
-        websocketRef.current.send(JSON.stringify({
-          type: 'input_audio_buffer.append',
-          audio: event.data, // This needs proper base64 encoding
-        }));
-      }
-    };
-
-    mediaRecorderRef.current.start(100); // Send chunks every 100ms
+    // Audio capture is now handled automatically by the Web Audio API processor
     setState('listening');
   }, [setState]);
 
   // Stop recording
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      setState('thinking');
+    // Audio capture stops automatically when state changes from 'listening'
+    setState('thinking');
+    
+    // Trigger response generation
+    if (websocketRef.current?.readyState === WebSocket.OPEN) {
+      websocketRef.current.send(JSON.stringify({
+        type: 'response.create'
+      }));
     }
   }, [setState]);
 
@@ -207,10 +263,6 @@ export const useRealtimeAudio = ({
     if (websocketRef.current) {
       websocketRef.current.close();
       websocketRef.current = null;
-    }
-    
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
     }
     
     if (animationFrameRef.current) {
