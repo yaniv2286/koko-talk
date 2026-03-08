@@ -210,10 +210,7 @@ export const useRealtimeAudio = ({
             type: 'realtime',
             instructions: instructions,
             turn_detection: {
-              type: 'server_vad',
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 500
+              type: 'server_vad'
             },
             input_audio_format: 'pcm16',
             output_audio_format: 'pcm16'
@@ -293,8 +290,9 @@ export const useRealtimeAudio = ({
               break;
             case 'error':
               console.error('FRONTEND: OpenAI error:', data);
+              console.error('FRONTEND: Error details:', data.error);
               setConnectionError(data.error?.message || 'Unknown OpenAI error');
-              setState('error');
+              setState('idle'); // Failsafe: don't let app hang in thinking state
               break;
             default:
               console.log('FRONTEND: Unhandled message type:', data.type, data);
