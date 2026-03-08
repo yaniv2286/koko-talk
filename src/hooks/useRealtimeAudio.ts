@@ -145,6 +145,7 @@ export const useRealtimeAudio = ({
         const sessionConfig = {
           type: 'session.update',
           session: {
+            type: 'realtime',
             instructions: instructions,
             voice: voice,
             turn_detection: {
