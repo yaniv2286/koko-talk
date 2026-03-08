@@ -93,12 +93,17 @@ export const useRealtimeAudio = ({
   const monitorAudioLevel = useCallback(() => {
     if (!analyserRef.current) return;
 
-    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-    analyserRef.current.getByteFrequencyData(dataArray);
+    const dataArray = new Uint8Array(analyserRef.current.fftSize);
+    analyserRef.current.getByteTimeDomainData(dataArray);
 
-    // Calculate average audio level
-    const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
-    const normalizedLevel = Math.min(100, (average / 128) * 100);
+    // Calculate RMS (Root Mean Square) for better audio level representation
+    let sum = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+      const normalized = (dataArray[i] - 128) / 128; // Convert to -1 to 1 range
+      sum += normalized * normalized;
+    }
+    const rms = Math.sqrt(sum / dataArray.length);
+    const normalizedLevel = Math.min(100, rms * 200); // Scale to 0-100
     
     setAudioLevel(normalizedLevel);
     onAudioLevelChange?.(normalizedLevel);
@@ -274,7 +279,9 @@ export const useRealtimeAudio = ({
   const startRecording = useCallback(() => {
     // Audio capture is now handled automatically by the Web Audio API processor
     setState('listening');
-  }, [setState]);
+    // Start audio level monitoring immediately
+    monitorAudioLevel();
+  }, [setState, monitorAudioLevel]);
 
   // Stop recording
   const stopRecording = useCallback(() => {
