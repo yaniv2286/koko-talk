@@ -158,6 +158,7 @@ export const useRealtimeAudio = ({
   // Start WebSocket connection
   const connect = useCallback(async () => {
     try {
+      console.log('FRONTEND: Starting connection...');
       setState('connecting');
       setConnectionError(null);
 
@@ -165,12 +166,21 @@ export const useRealtimeAudio = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
+      
+      console.log('FRONTEND: API response received, status:', response.status);
 
       if (!response.ok) {
+        console.log('FRONTEND: Response not ok');
         throw new Error('Failed to get API configuration');
       }
 
       const { apiKey, model, instructions } = await response.json();
+      console.log('FRONTEND: API key received:', apiKey ? 'YES' : 'NO');
+
+      if (!apiKey) {
+        console.log('FRONTEND: No API key in response');
+        throw new Error('No API key received from server');
+      }
 
       // Initialize audio
       await initializeAudio();
@@ -184,6 +194,7 @@ export const useRealtimeAudio = ({
       websocketRef.current = ws;
 
       ws.onopen = () => {
+        console.log('FRONTEND: WebSocket connected');
         setState('idle');
         setConnected(true);
         setSessionId(apiKey);
@@ -210,10 +221,10 @@ export const useRealtimeAudio = ({
           
           switch (data.type) {
             case 'session.updated':
-              console.log('Session updated successfully');
+              console.log('FRONTEND: Session updated successfully');
               break;
             case 'response.text.done':
-              console.log('Got AI response:', data.text);
+              console.log('FRONTEND: Got AI response:', data.text);
               addConversationMessage({
                 role: 'assistant',
                 content: data.text,
@@ -222,22 +233,24 @@ export const useRealtimeAudio = ({
               setState('idle');
               break;
             case 'error':
-              console.error('OpenAI error:', data);
+              console.error('FRONTEND: OpenAI error:', data);
               setConnectionError(data.error?.message || 'Unknown OpenAI error');
               setState('error');
               break;
           }
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+          console.error('FRONTEND: Error parsing WebSocket message:', error);
         }
       };
 
       ws.onclose = (event) => {
+        console.log('FRONTEND: WebSocket closed');
         setConnected(false);
         setState('idle');
       };
 
     } catch (error) {
+      console.log('FRONTEND: Connection error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Connection failed';
       setConnectionError(errorMessage);
       setState('error');

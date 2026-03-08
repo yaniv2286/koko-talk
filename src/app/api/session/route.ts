@@ -7,8 +7,11 @@ const openai = new OpenAI({
 });
 
 export async function POST(request: NextRequest) {
+  console.log('API ROUTE CALLED');
+  
   try {
     const apiKey = process.env.OPENAI_API_KEY;
+    console.log('API KEY CHECK:', apiKey ? 'EXISTS' : 'NULL');
     
     if (!apiKey) {
       return NextResponse.json(
