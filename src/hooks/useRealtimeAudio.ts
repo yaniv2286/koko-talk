@@ -65,8 +65,8 @@ export const useRealtimeAudio = ({
       let isRecording = false;
       
       processor.onaudioprocess = (event) => {
-        if (websocketRef.current?.readyState === WebSocket.OPEN && state === 'listening' && !isRecording) {
-          isRecording = true;
+        // CONTINUOUS STREAMING: Always send audio when connected and mic is open
+        if (websocketRef.current?.readyState === WebSocket.OPEN && state === 'listening') {
           const inputBuffer = event.inputBuffer.getChannelData(0);
           const pcmData = new Int16Array(inputBuffer.length);
           
@@ -75,7 +75,7 @@ export const useRealtimeAudio = ({
             pcmData[i] = Math.max(-32768, Math.min(32767, inputBuffer[i] * 32768));
           }
           
-          // Send as base64 encoded audio data to OpenAI
+          // CONTINUOUS FIREHOSE: Send audio chunks immediately
           try {
             const base64Audio = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
             
@@ -84,12 +84,13 @@ export const useRealtimeAudio = ({
               audio: base64Audio
             }));
             
-            console.log('🎤 Audio chunk sent to OpenAI:', pcmData.length, 'samples');
+            // Log less frequently to avoid console spam
+            if (Math.random() < 0.01) { // 1% of chunks
+              console.log('🎤 Continuous streaming audio chunk:', pcmData.length, 'samples');
+            }
           } catch (error) {
-            console.error('🎤 Error sending audio to OpenAI:', error);
+            console.error('🎤 Error sending continuous audio to OpenAI:', error);
           }
-          
-          isRecording = false;
         }
       };
       
@@ -226,13 +227,13 @@ export const useRealtimeAudio = ({
             case 'session.updated':
               console.log('FRONTEND: Session updated successfully');
               console.log('FRONTEND: Session details:', data.session);
-              // Trigger AI's first response immediately after connecting
-              if (websocketRef.current) {
-                websocketRef.current.send(JSON.stringify({ type: 'response.create' }));
-                console.log('FRONTEND: Triggered auto-greeting - sent response.create');
-              } else {
-                console.error('FRONTEND: Cannot trigger auto-greeting - websocketRef.current is null');
-              }
+              // NO MANUAL TRIGGER: Let OpenAI's server_vad handle responses automatically
+              console.log('FRONTEND: Server VAD active - OpenAI will auto-trigger responses');
+              break;
+            case 'input_audio_buffer.speech_started':
+              console.log('FRONTEND: User started speaking - interrupting AI if needed');
+              // INTERRUPTION: Stop any currently playing AI audio
+              setState('listening'); // Immediately switch to listening state
               break;
             case 'response.output_audio.delta':
               console.log('FRONTEND: Output audio delta received');

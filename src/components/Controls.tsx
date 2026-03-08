@@ -163,12 +163,12 @@ export const Controls = ({ className = '' }: ControlsProps) => {
       {/* Helper text for idle state */}
       {state === 'idle' && isConnected && (
         <motion.p
-          className="mt-6 text-sm sm:text-base text-gray-600 dark:text-gray-400 text-center max-w-xs"
+          className="mt-6 text-sm sm:text-base text-slate-600 text-center max-w-xs"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          Tap and hold to talk to Koko, or just tap to toggle recording
+          Click to start continuous conversation with Koko
         </motion.p>
       )}
 
