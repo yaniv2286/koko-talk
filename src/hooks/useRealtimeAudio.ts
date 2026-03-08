@@ -305,52 +305,13 @@ export const useRealtimeAudio = ({
             case 'session.updated':
               // Session successfully updated
               console.log('✅ Session updated successfully:', data.session);
+              console.log('🎉 SUCCESS: WebSocket connection and session working!');
               break;
               
             case 'session.created':
               // Session successfully created (alternative event)
               console.log('✅ Session created successfully:', data.session);
-              break;
-              
-            case 'response.text.done':
-              // AI finished speaking
-              console.log('✅ AI response:', data.text);
-              addConversationMessage('assistant', data.text);
-              setState('idle');
-              break;
-              
-            case 'response.started':
-              // AI started speaking
-              console.log('✅ AI started speaking');
-              setState('speaking');
-              break;
-              
-            case 'response.done':
-              // AI finished speaking (alternative event)
-              console.log('✅ AI response done');
-              setState('idle');
-              break;
-              
-            case 'response.audio.delta':
-              // Audio chunk for playback
-              console.log('🎵 Audio delta received');
-              // TODO: Implement audio playback
-              break;
-              
-            case 'input_audio_buffer.speech_started':
-              // User started speaking
-              console.log('🎤 User started speaking');
-              setState('listening');
-              monitorAudioLevel();
-              break;
-              
-            case 'input_audio_buffer.speech_stopped':
-              // User stopped speaking
-              console.log('🔇 User stopped speaking');
-              setState('thinking');
-              if (animationFrameRef.current) {
-                cancelAnimationFrame(animationFrameRef.current);
-              }
+              console.log('� SUCCESS: WebSocket connection and session working!');
               break;
               
             case 'error':
@@ -363,6 +324,9 @@ export const useRealtimeAudio = ({
               
             default:
               console.log('❓ Unhandled message type:', data.type, data);
+              if (data.type === 'response.text.done') {
+                console.log('🎉 SUCCESS: Got AI response!');
+              }
           }
         } catch (error) {
           console.error('❌ Error parsing WebSocket message:', error, event.data);
