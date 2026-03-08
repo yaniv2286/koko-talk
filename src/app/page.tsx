@@ -13,7 +13,7 @@ import { Mic, MicOff, Phone, PhoneOff, Volume2 } from 'lucide-react';
 
 export default function Home() {
   console.log('🏠 Home component rendering');
-  const { userProfile, kidGender, setKidGender, state, audioLevel, disconnect } = useVoiceStore();
+  const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect } = useVoiceStore();
   console.log('🏠 Store state (real-time):', { 
     userProfile: userProfile?.name, 
     kidGender, 
@@ -28,12 +28,6 @@ export default function Home() {
   const [showDebugDrawer, setShowDebugDrawer] = useState(false);
   const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
 
-  const handleProfileSelected = () => {
-    console.log('🏠 handleProfileSelected called - moving to gender selection');
-    // Profile selected, will show gender selection next
-  };
-
-  // Hardcoded avatar array for testing
   const hardcodedAvatars = [
     '/avatars/boy_avatar.png',
     '/avatars/girl_avatar.png',
@@ -43,7 +37,19 @@ export default function Home() {
   ];
 
   const handleGenderSelected = () => {
-    console.log('🏠 handleGenderSelected called, setting showMainApp to true');
+    console.log('🏠 handleGenderSelected called, showing avatar selection');
+    // Create a default profile and show avatar selection
+    const defaultProfile = {
+      id: `default-${selectedGender}`,
+      name: selectedGender === 'boy' ? 'Boy' : 'Girl',
+      ageGroup: '8-12' as const,
+      avatar: selectedGender === 'boy' ? '/avatars/boy_avatar.png' : '/avatars/girl_avatar.png',
+    };
+    setProfile(defaultProfile);
+  };
+
+  const handleProfileSelected = () => {
+    console.log('🏠 handleProfileSelected called - setting showMainApp to true');
     setShowMainApp(true);
   };
 
@@ -89,15 +95,9 @@ export default function Home() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Show ProfileSelector if no profile is selected
-  if (!userProfile) {
-    console.log('🏠 Showing ProfileSelector');
-    return <ProfileSelector onProfileSelected={handleProfileSelected} />;
-  }
-
-  // Show Gender Selection if profile is selected but gender is not
+  // Show Gender Selection as the first page (mandatory onboarding)
   if (!kidGender) {
-    console.log('🏠 Showing Gender Selection');
+    console.log('🏠 Showing Gender Selection (first page)');
     return (
       <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
         {/* Blurred Background */}
@@ -114,7 +114,7 @@ export default function Home() {
               Koko
             </h1>
             <p className="text-xl sm:text-2xl text-white/90 font-medium drop-shadow">
-              One more thing before we start...
+              Choose your teacher
             </p>
           </div>
 
@@ -233,19 +233,15 @@ export default function Home() {
           <p className="text-center text-white/70 max-w-md text-sm sm:text-base mb-8">
             This helps Koko know how to talk to you in Hebrew! 🌟
           </p>
-
-          {/* Call Button */}
-          <div className="flex justify-center">
-            <button
-              onClick={handleStartCall}
-              className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
-            >
-              📞 Start Call with Koko
-            </button>
-          </div>
         </div>
       </main>
     );
+  }
+
+  // Show ProfileSelector if gender is selected but no profile
+  if (!userProfile) {
+    console.log('🏠 Showing ProfileSelector (avatar selection)');
+    return <ProfileSelector onProfileSelected={handleProfileSelected} />;
   }
 
   // Show main app if both profile and gender are selected
@@ -266,7 +262,7 @@ export default function Home() {
         <div className="absolute inset-0">
           <div 
             className="w-full h-full bg-cover bg-center opacity-20 blur-xl"
-            style={{ backgroundImage: `url(${userProfile.avatar})` }}
+            style={{ backgroundImage: `url(${userProfile?.avatar})` }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/50 to-slate-900" />
         </div>
@@ -369,7 +365,7 @@ export default function Home() {
                 }}
               >
                 <img
-                  src={userProfile.avatar}
+                  src={userProfile?.avatar || '/koko.png'}
                   alt="Koko"
                   className="w-full h-full rounded-full object-contain"
                 />
