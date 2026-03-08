@@ -104,11 +104,11 @@ export default function Home() {
         <div className="relative z-10 w-full max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-primary mb-4 tracking-tight drop-shadow-lg">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-4 tracking-tight drop-shadow-lg">
               Koko
             </h1>
-            <p className="text-xl sm:text-2xl text-secondary font-medium drop-shadow">
-              Choose your teacher
+            <p className="text-xl sm:text-2xl text-gray-300 font-medium drop-shadow">
+              One more thing before we start...
             </p>
           </div>
 
@@ -127,7 +127,7 @@ export default function Home() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1.2, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
-                      className="absolute inset-0 rounded-full neon-blue"
+                      className="absolute inset-0 rounded-full bg-green-400/20 blur-xl"
                     />
                   )}
                 </AnimatePresence>
@@ -139,7 +139,7 @@ export default function Home() {
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
-                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center neon-green"
+                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center"
                     >
                       <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-8-8a1 1 0 010-1.414l8-8z" clipRule="evenodd" />
@@ -148,20 +148,18 @@ export default function Home() {
                   )}
                 </AnimatePresence>
                 
-                {/* Avatar Container */}
-                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full glass-dark p-1 group-hover:neon-blue transition-all duration-300">
-                  <div className="w-full h-full rounded-full overflow-hidden">
-                    <img
-                      src="/avatars/boy_avatar.png"
-                      alt="Boy Avatar"
-                      className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
+                {/* Avatar Container with Blue Glowing Border */}
+                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full border-[3px] border-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.5)] overflow-hidden">
+                  <img
+                    src="/avatars/boy_avatar.png"
+                    alt="Boy Avatar"
+                    className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
+                  />
                 </div>
                 
                 {/* Label */}
                 <div className="mt-6 text-center">
-                  <h3 className="text-2xl sm:text-3xl font-bold text-blue-400 drop-shadow-lg">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-blue-400">
                     I am a Boy
                   </h3>
                 </div>
@@ -181,7 +179,7 @@ export default function Home() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1.2, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
-                      className="absolute inset-0 rounded-full neon-pink"
+                      className="absolute inset-0 rounded-full bg-green-400/20 blur-xl"
                     />
                   )}
                 </AnimatePresence>
@@ -193,7 +191,7 @@ export default function Home() {
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
-                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center neon-green"
+                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center"
                     >
                       <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-8-8a1 1 0 010-1.414l8-8z" clipRule="evenodd" />
@@ -202,20 +200,18 @@ export default function Home() {
                   )}
                 </AnimatePresence>
                 
-                {/* Avatar Container */}
-                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full glass-dark p-1 group-hover:neon-pink transition-all duration-300">
-                  <div className="w-full h-full rounded-full overflow-hidden">
-                    <img
-                      src="/avatars/girl_avatar.png"
-                      alt="Girl Avatar"
-                      className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
+                {/* Avatar Container with Pink Glowing Border */}
+                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full border-[3px] border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] overflow-hidden">
+                  <img
+                    src="/avatars/girl_avatar.png"
+                    alt="Girl Avatar"
+                    className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
+                  />
                 </div>
                 
                 {/* Label */}
                 <div className="mt-6 text-center">
-                  <h3 className="text-2xl sm:text-3xl font-bold text-pink-400 drop-shadow-lg">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-pink-400">
                     I am a Girl
                   </h3>
                 </div>
@@ -223,10 +219,12 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Helper Text */}
-          <p className="text-center text-secondary max-w-md text-sm sm:text-base mb-8">
-            This helps Koko know how to talk to you in Hebrew! 🌟
-          </p>
+          {/* Footer Text */}
+          <div className="text-center mt-8">
+            <p className="text-gray-400 text-sm">
+              This helps Koko know how to talk to you in Hebrew! 🌟
+            </p>
+          </div>
         </div>
       </main>
     );
