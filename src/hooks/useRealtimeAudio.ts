@@ -163,49 +163,58 @@ export const useRealtimeAudio = ({
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('Received message:', data.type, data);
+          console.log('=== OpenAI Message Received ===');
+          console.log('Type:', data.type);
+          console.log('Full Data:', JSON.stringify(data, null, 2));
+          console.log('==============================');
           
           // Handle different message types from OpenAI
           switch (data.type) {
             case 'session.updated':
               // Session successfully updated
-              console.log('Session updated:', data.session);
+              console.log('✅ Session updated successfully:', data.session);
+              break;
+              
+            case 'session.created':
+              // Session successfully created (alternative event)
+              console.log('✅ Session created successfully:', data.session);
               break;
               
             case 'response.text.done':
               // AI finished speaking
-              console.log('AI response:', data.text);
+              console.log('✅ AI response:', data.text);
               addConversationMessage('assistant', data.text);
               setState('idle');
               break;
               
             case 'response.started':
               // AI started speaking
-              console.log('AI started speaking');
+              console.log('✅ AI started speaking');
               setState('speaking');
               break;
               
             case 'response.done':
               // AI finished speaking (alternative event)
-              console.log('AI response done');
+              console.log('✅ AI response done');
               setState('idle');
               break;
               
             case 'response.audio.delta':
               // Audio chunk for playback
+              console.log('🎵 Audio delta received');
               // TODO: Implement audio playback
               break;
               
             case 'input_audio_buffer.speech_started':
               // User started speaking
-              console.log('User started speaking');
+              console.log('🎤 User started speaking');
               setState('listening');
               monitorAudioLevel();
               break;
               
             case 'input_audio_buffer.speech_stopped':
               // User stopped speaking
-              console.log('User stopped speaking');
+              console.log('🔇 User stopped speaking');
               setState('thinking');
               if (animationFrameRef.current) {
                 cancelAnimationFrame(animationFrameRef.current);
@@ -213,18 +222,18 @@ export const useRealtimeAudio = ({
               break;
               
             case 'error':
-              console.error('OpenAI error:', data);
+              console.error('❌ OpenAI error:', data);
               const errorMessage = data.error?.message || data.error || 'Unknown OpenAI error';
-              console.error('Parsed error message:', errorMessage);
+              console.error('❌ Parsed error message:', errorMessage);
               setConnectionError(errorMessage);
               setState('error');
               break;
               
             default:
-              console.log('Unhandled message type:', data.type, data);
+              console.log('❓ Unhandled message type:', data.type, data);
           }
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error, event.data);
+          console.error('❌ Error parsing WebSocket message:', error, event.data);
         }
       };
 
