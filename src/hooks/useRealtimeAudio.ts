@@ -55,6 +55,10 @@ export const useRealtimeAudio = ({
       source.connect(analyserRef.current);
       console.log('🎵 Audio source connected to analyser');
 
+      // IMPORTANT: Connect analyser to destination to ensure audio flow
+      analyserRef.current.connect(audioContextRef.current.destination);
+      console.log('🎵 Analyser connected to destination');
+
       // Create a simple processor for real-time audio capture
       const processor = audioContextRef.current.createScriptProcessor(4096, 1, 1);
       let isRecording = false;
