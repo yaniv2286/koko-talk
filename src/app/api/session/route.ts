@@ -16,7 +16,6 @@ export async function POST(request: NextRequest) {
     
     console.log('🔑 Raw API key from env:', apiKey ? 'EXISTS' : 'NULL');
     console.log('🔑 API key length:', apiKey?.length || 0);
-    console.log('🔑 ENV vars:', Object.keys(process.env).filter(k => k.includes('OPENAI')));
     
     if (!apiKey) {
       console.log('❌ API key not found in environment');
@@ -26,8 +25,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Temporarily bypass OpenAI validation to test API key retrieval
-    console.log('🔑 API key found, bypassing validation for testing...');
+    console.log('🔑 API key found, returning response...');
     
     return NextResponse.json({
       apiKey: apiKey,
@@ -35,28 +33,6 @@ export async function POST(request: NextRequest) {
       instructions: 'You are Koko, a friendly English tutor for kids. The user is a native Hebrew speaker. Respond only in English, keep sentences short and encouraging.',
       test: 'API key retrieved (validation bypassed)',
     });
-    
-    // Original validation code (commented out for testing)
-    /*
-    console.log('🔑 API key found, testing validity...');
-    
-    // Test the API key by making a simple request to OpenAI
-    const openai = new OpenAI({
-      apiKey: apiKey,
-    });
-
-    // Make a simple test request to verify the API key works
-    const models = await openai.models.list();
-    
-    console.log('✅ API key validation passed');
-    
-    return NextResponse.json({
-      apiKey: apiKey,
-      model: 'gpt-4o-realtime-preview-2024-10-01',
-      instructions: 'You are Koko, a friendly English tutor for kids. The user is a native Hebrew speaker. Respond only in English, keep sentences short and encouraging.',
-      test: 'API key is valid',
-    });
-    */
   } catch (error) {
     console.error('❌ Failed to create OpenAI session:', error);
     
