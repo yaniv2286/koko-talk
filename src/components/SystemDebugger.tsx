@@ -41,6 +41,11 @@ export default function SystemDebugger() {
         logType = 'state';
       }
 
+      // Always capture API key related logs
+      if (message.includes('API key') || message.includes('sk-proj') || message.includes('EXISTS') || message.includes('NULL')) {
+        logType = 'api';
+      }
+
       // Only capture important events
       if (logType !== 'error' || message.includes('❌')) {
         setDebugLogs(prev => [...prev.slice(-100), {
@@ -115,10 +120,12 @@ export default function SystemDebugger() {
     
     // Check for API key issues
     const apiLogs = debugLogs.filter(log => log.type === 'api');
-    const hasApiKey = apiLogs.some(log => log.message.includes('API key received'));
+    const hasApiKey = apiLogs.some(log => log.message.includes('API key received:') && log.message.includes('sk-proj'));
+    const hasApiKeyExists = apiLogs.some(log => log.message.includes('EXISTS'));
+    const hasApiKeyTest = apiLogs.some(log => log.message.includes('API key validation passed'));
     
-    if (!hasApiKey) {
-      issues.push('❌ No API key detected');
+    if (!hasApiKey && !hasApiKeyExists && !hasApiKeyTest) {
+      issues.push('❌ No API key detected from server');
     }
 
     return issues;
