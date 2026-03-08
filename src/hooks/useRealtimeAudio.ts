@@ -220,8 +220,10 @@ export const useRealtimeAudio = ({
               break;
               
             case 'error':
-              console.error('OpenAI error:', data.error);
-              setConnectionError(data.error.message || 'Unknown OpenAI error');
+              console.error('OpenAI error:', data);
+              const errorMessage = data.error?.message || data.error || 'Unknown OpenAI error';
+              console.error('Parsed error message:', errorMessage);
+              setConnectionError(errorMessage);
               setState('error');
               break;
               
@@ -233,15 +235,19 @@ export const useRealtimeAudio = ({
         }
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
+        console.log('WebSocket closed:', event.code, event.reason);
         setConnected(false);
         setState('idle');
         if (state !== 'idle') {
-          setConnectionError('Connection closed unexpectedly');
+          const closeReason = event.reason || 'Connection closed unexpectedly';
+          console.log('WebSocket closed unexpectedly:', closeReason);
+          setConnectionError(closeReason);
         }
       };
 
       ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
         setConnectionError('WebSocket connection error');
         setState('error');
       };
@@ -290,10 +296,16 @@ export const useRealtimeAudio = ({
     
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
     
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
+    // Only close AudioContext if it exists and is not already closed
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      try {
+        audioContextRef.current.close();
+      } catch (error) {
+        console.warn('AudioContext already closed or closing:', error);
+      }
     }
     
     setConnected(false);
