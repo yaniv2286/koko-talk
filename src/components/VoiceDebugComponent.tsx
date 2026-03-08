@@ -34,8 +34,14 @@ export const VoiceDebugComponent = () => {
   const handleStopRecording = () => {
     console.log('CLEAN VERSION: handleStopRecording called, state:', state);
     if (state === 'listening') {
-      console.log('CLEAN VERSION: Calling stopRecording');
-      stopRecording();
+      console.log('CLEAN VERSION: About to call stopRecording');
+      console.log('CLEAN VERSION: stopRecording function:', stopRecording);
+      try {
+        stopRecording();
+        console.log('CLEAN VERSION: stopRecording called successfully');
+      } catch (error) {
+        console.log('CLEAN VERSION: Error calling stopRecording:', error);
+      }
     } else {
       console.log('CLEAN VERSION: Not in listening state, current state:', state);
     }
