@@ -99,7 +99,10 @@ export default function SystemDebugger() {
     
     // Check for WebSocket connection issues
     const websocketLogs = debugLogs.filter(log => log.type === 'websocket');
-    const hasConnection = websocketLogs.some(log => log.message.includes('connected successfully'));
+    const hasConnection = websocketLogs.some(log => 
+      log.message.includes('connected successfully') || 
+      log.message.includes('FRONTEND: WebSocket connected')
+    );
     const hasAuthError = websocketLogs.some(log => log.message.includes('Missing bearer'));
     
     if (!hasConnection && websocketLogs.length > 0) {
@@ -112,7 +115,8 @@ export default function SystemDebugger() {
     
     // Check for audio issues
     const audioLogs = debugLogs.filter(log => log.type === 'audio');
-    const hasAudioLevels = audioLogs.some(log => log.message.includes('Audio level:'));
+    const hasAudioLevels = audioLogs.some(log => log.message.includes('Audio level:')) || 
+                           audioLogs.some(log => log.message.includes('Audio initialization completed successfully'));
     
     if (!hasAudioLevels && audioLogs.length > 0) {
       issues.push('❌ No audio levels detected');
