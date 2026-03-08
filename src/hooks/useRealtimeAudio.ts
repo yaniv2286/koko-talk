@@ -216,12 +216,25 @@ export const useRealtimeAudio = ({
       };
 
       ws.onmessage = (event) => {
+        console.log('FRONTEND: WebSocket message received:', event.data);
         try {
           const data = JSON.parse(event.data);
+          console.log('FRONTEND: Parsed message type:', data.type);
           
           switch (data.type) {
             case 'session.updated':
               console.log('FRONTEND: Session updated successfully');
+              break;
+            case 'response.audio.delta':
+              console.log('FRONTEND: Audio delta received');
+              setState('speaking');
+              break;
+            case 'response.audio.done':
+              console.log('FRONTEND: Audio response done');
+              setState('idle');
+              break;
+            case 'response.text.delta':
+              console.log('FRONTEND: Text delta received:', data.delta);
               break;
             case 'response.text.done':
               console.log('FRONTEND: Got AI response:', data.text);
@@ -232,11 +245,17 @@ export const useRealtimeAudio = ({
               });
               setState('idle');
               break;
+            case 'response.done':
+              console.log('FRONTEND: Response completed');
+              setState('idle');
+              break;
             case 'error':
               console.error('FRONTEND: OpenAI error:', data);
               setConnectionError(data.error?.message || 'Unknown OpenAI error');
               setState('error');
               break;
+            default:
+              console.log('FRONTEND: Unhandled message type:', data.type, data);
           }
         } catch (error) {
           console.error('FRONTEND: Error parsing WebSocket message:', error);
@@ -274,13 +293,19 @@ export const useRealtimeAudio = ({
 
   // Stop recording
   const stopRecording = useCallback(() => {
+    console.log('FRONTEND: stopRecording called');
     setState('thinking');
     
     // Trigger response generation
     if (websocketRef.current?.readyState === WebSocket.OPEN) {
-      websocketRef.current.send(JSON.stringify({
+      const message = JSON.stringify({
         type: 'response.create'
-      }));
+      });
+      console.log('FRONTEND: Sending message to OpenAI:', message);
+      websocketRef.current.send(message);
+      console.log('FRONTEND: Message sent successfully');
+    } else {
+      console.log('FRONTEND: WebSocket not ready, state:', websocketRef.current?.readyState);
     }
   }, [setState]);
 
