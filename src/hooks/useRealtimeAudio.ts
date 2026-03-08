@@ -223,6 +223,11 @@ export const useRealtimeAudio = ({
           switch (data.type) {
             case 'session.updated':
               console.log('FRONTEND: Session updated successfully');
+              // Trigger AI's first response immediately after connecting
+              if (websocketRef.current) {
+                websocketRef.current.send(JSON.stringify({ type: 'response.create' }));
+                console.log('FRONTEND: Triggered auto-greeting');
+              }
               break;
             case 'response.audio.delta':
               console.log('FRONTEND: Audio delta received');
