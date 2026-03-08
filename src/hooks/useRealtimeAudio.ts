@@ -410,8 +410,29 @@ export const useRealtimeAudio = ({
     
     // Start audio level monitoring immediately
     console.log('🎤 Starting audio level monitoring...');
+    
+    // Force an immediate audio level test
+    if (analyserRef.current) {
+      console.log('🎵 Testing audio level immediately...');
+      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+      analyserRef.current.getByteTimeDomainData(dataArray);
+      
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        const normalizedValue = (dataArray[i] - 128) / 128;
+        sum += normalizedValue * normalizedValue;
+      }
+      const rms = Math.sqrt(sum / dataArray.length);
+      const audioLevel = Math.min(100, rms * 200);
+      
+      console.log('🎵 Immediate test - Audio level:', audioLevel.toFixed(2) + '%');
+      console.log('🎵 Immediate test - RMS value:', rms.toFixed(4));
+      setAudioLevel(audioLevel);
+      onAudioLevelChange?.(audioLevel);
+    }
+    
     monitorAudioLevel();
-  }, [setState, monitorAudioLevel, state]);
+  }, [setState, monitorAudioLevel, state, onAudioLevelChange]);
 
   // Stop recording
   const stopRecording = useCallback(() => {
