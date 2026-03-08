@@ -166,10 +166,15 @@ export const useRealtimeAudio = ({
 
       const { apiKey, model, instructions } = await response.json();
 
+      console.log('🔑 API key received:', apiKey.substring(0, 10) + '...');
+      console.log('🔑 API key length:', apiKey.length);
+      console.log('🔑 Model:', model);
+
       // Create WebSocket connection to OpenAI Realtime API
-      // Try using Bearer token in query string instead of subprotocol
+      // Use the official OpenAI Realtime API subprotocol format
       const ws = new WebSocket(
-        `wss://api.openai.com/v1/realtime?model=${model}&authorization=${encodeURIComponent(`Bearer ${apiKey}`)}`
+        `wss://api.openai.com/v1/realtime?model=${model}`,
+        ['realtime', `openai-insecure-api-key.${apiKey}`]
       );
 
       websocketRef.current = ws;
