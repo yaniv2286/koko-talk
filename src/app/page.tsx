@@ -5,6 +5,7 @@ import { Avatar } from '@/components/Avatar';
 import { Controls } from '@/components/Controls';
 import { ProfileSelector } from '@/components/ProfileSelector';
 import { StarCounter } from '@/components/StarCounter';
+import { VisualAid } from '@/components/VisualAid';
 import { useVoiceStore } from '@/store/voiceStore';
 
 export default function Home() {
@@ -80,6 +81,9 @@ export default function Home() {
   // Show main app if both profile and gender are selected
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
+      {/* Visual Aid Modal */}
+      <VisualAid />
+      
       {/* Star Counter */}
       <StarCounter />
       

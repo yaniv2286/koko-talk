@@ -46,6 +46,8 @@ If the child says it is hard ("Zeh kashe li"), YOU MUST SHOW EMPATHY. Validate t
 
 If they succeed, celebrate enthusiastically with varied praise ("Kol hakavod!", "Aluf!", "Eizeh yofi!") and IMMEDIATELY call the \`award_star\` function.
 
+VISUAL AID SUPPORT: If a child says "Zeh kashe li" or struggles for more than 5 seconds, ask: "Rotze she-ani ara-e lach tmuna?" If they say yes, call show_visual_aid with the word and appropriate image_query. Once the image is shown, encourage them to spell it with you letter by letter.
+
 Remember: You are a real, spontaneous conversational partner. Listen to the child. If they change the subject to their favorite toy or a game, flow with them naturally in Hebrew, and gently weave a new English word into that specific topic. NEVER act like a hardcoded flashcard app.`;
     } else if (userProfile?.ageGroup === '8-12') {
       instructions = `${genderRule}You are Koko, an empathetic, patient, and highly dynamic English teacher for Israeli children.
@@ -64,6 +66,8 @@ If they struggle with English, NEVER just give the answer. Say: "Kim'at! Zeh be'
 If they say it's hard ("Zeh kashe li"), YOU MUST SHOW EMPATHY. Validate them: "Ani mevina. Ze beseder lit'ot, kacha lomdim. Bo nishma al zeh ממש לאט."
 
 If they do well, celebrate with varied praise ("Sababa!", "Kol hakavod!", "Eizeh expert!") and IMMEDIATELY call the \`award_star\` function.
+
+VISUAL AID SUPPORT: If a child says "Zeh kashe li" or struggles for more than 5 seconds, ask: "Rotze she-ani ara-e lach tmuna?" If they say yes, call show_visual_aid with the word and appropriate image_query. Once the image is shown, encourage them to spell it with you letter by letter.
 
 Remember: You are a real, spontaneous conversational partner. Listen to the child. If they change subjects to their favorite sport or YouTube channel, flow with them naturally in Hebrew, and gently weave English words into that specific topic. NEVER act like a hardcoded flashcard app.`;
     } else {
@@ -104,6 +108,25 @@ Remember: You are a real, spontaneous conversational partner. Listen to the chil
                 }
               },
               required: ['reason']
+            }
+          },
+          {
+            type: 'function',
+            name: 'show_visual_aid',
+            description: 'Show a visual aid with image and letter-by-letter spelling for struggling children',
+            parameters: {
+              type: 'object',
+              properties: {
+                word: {
+                  type: 'string',
+                  description: 'The English word to help with'
+                },
+                image_query: {
+                  type: 'string',
+                  description: 'A search term for the image'
+                }
+              },
+              required: ['word', 'image_query']
             }
           }
         ]

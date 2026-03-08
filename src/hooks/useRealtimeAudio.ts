@@ -21,7 +21,8 @@ export const useRealtimeAudio = ({
     addConversationMessage,
     incrementStarCount,
     userProfile,
-    kidGender
+    kidGender,
+    setVisualAid
   } = useVoiceStore();
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -125,6 +126,31 @@ export const useRealtimeAudio = ({
                     }
                   }));
                   // Trigger the AI to continue the conversation after awarding the star
+                  dcRef.current.send(JSON.stringify({ type: 'response.create' }));
+                }
+              } else if (data.name === 'show_visual_aid') {
+                console.log('🎯 Visual aid requested:', data.arguments);
+                const { word, image_query } = data.arguments;
+                
+                // Show visual aid in UI
+                setVisualAid({
+                  word,
+                  imageQuery: image_query,
+                  imageUrl: '',
+                  isVisible: true
+                });
+                
+                // Acknowledge the function call back to OpenAI
+                if (dcRef.current && dcRef.current.readyState === 'open') {
+                  dcRef.current.send(JSON.stringify({
+                    type: 'conversation.item.create',
+                    item: {
+                      type: 'function_call_output',
+                      call_id: data.call_id,
+                      output: JSON.stringify({ success: true, message: "Visual aid displayed!" })
+                    }
+                  }));
+                  // Trigger the AI to continue the conversation
                   dcRef.current.send(JSON.stringify({ type: 'response.create' }));
                 }
               }

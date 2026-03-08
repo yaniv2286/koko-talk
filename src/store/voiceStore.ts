@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type VoiceState = 'idle' | 'connecting' | 'listening' | 'thinking' | 'speaking' | 'error';
+export type VoiceStateEnum = 'idle' | 'connecting' | 'listening' | 'thinking' | 'speaking' | 'error';
 export type AgeGroup = '4-7' | '8-12';
 
 interface UserProfile {
@@ -11,9 +11,16 @@ interface UserProfile {
   avatar: string;
 }
 
+interface VisualAid {
+  word: string;
+  imageQuery: string;
+  imageUrl: string;
+  isVisible: boolean;
+}
+
 interface VoiceStore {
   // Current voice state
-  state: VoiceState;
+  state: VoiceStateEnum;
   
   // User profile
   userProfile: UserProfile | null;
@@ -39,8 +46,11 @@ interface VoiceStore {
     timestamp: Date;
   }>;
   
+  // Visual aid
+  visualAid: VisualAid | null;
+  
   // Actions
-  setState: (state: VoiceState) => void;
+  setState: (state: VoiceStateEnum) => void;
   setProfile: (profile: UserProfile) => void;
   setKidGender: (kidGender: 'boy' | 'girl' | null) => void;
   setConnected: (connected: boolean) => void;
@@ -49,6 +59,7 @@ interface VoiceStore {
   setSessionId: (id: string | null) => void;
   addConversationMessage: (role: 'user' | 'assistant', content: string) => void;
   incrementStarCount: () => void;
+  setVisualAid: (visualAid: VisualAid | null) => void;
   reset: () => void;
 }
 
@@ -62,6 +73,7 @@ const initialState = {
   userProfile: null,
   kidGender: null,
   starCount: 0,
+  visualAid: null,
 };
 
 export const useVoiceStore = create<VoiceStore>()(
@@ -82,6 +94,8 @@ export const useVoiceStore = create<VoiceStore>()(
       setAudioLevel: (audioLevel) => set({ audioLevel }),
       
       setSessionId: (sessionId) => set({ sessionId }),
+      
+      setVisualAid: (visualAid) => set({ visualAid }),
       
       addConversationMessage: (role, content) => {
         const message = {
