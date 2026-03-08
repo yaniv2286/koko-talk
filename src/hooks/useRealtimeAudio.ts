@@ -176,7 +176,9 @@ export const useRealtimeAudio = ({
       websocketRef.current = ws;
 
       ws.onopen = () => {
-        console.log('WebSocket connected successfully');
+        console.log('🔌 WebSocket connected successfully');
+        console.log('🔌 WebSocket readyState:', ws.readyState);
+        console.log('🔌 WebSocket URL:', ws.url);
         setState('idle');
         setConnected(true);
         setSessionId(apiKey);
@@ -190,8 +192,15 @@ export const useRealtimeAudio = ({
           }
         };
         
-        console.log('Sending session configuration:', sessionConfig);
-        ws.send(JSON.stringify(sessionConfig));
+        console.log('🔌 Sending session configuration:', sessionConfig);
+        console.log('🔌 Session config stringified:', JSON.stringify(sessionConfig));
+        
+        try {
+          ws.send(JSON.stringify(sessionConfig));
+          console.log('🔌 Session configuration sent successfully');
+        } catch (error) {
+          console.error('🔌 Failed to send session configuration:', error);
+        }
       };
 
       ws.onerror = (error) => {
@@ -278,12 +287,15 @@ export const useRealtimeAudio = ({
       };
 
       ws.onclose = (event) => {
-        console.log('WebSocket closed:', event.code, event.reason);
+        console.log('🔌 WebSocket closed:');
+        console.log('🔌 Close code:', event.code);
+        console.log('🔌 Close reason:', event.reason);
+        console.log('🔌 Was clean:', event.wasClean);
         setConnected(false);
         setState('idle');
         if (state !== 'idle') {
           const closeReason = event.reason || 'Connection closed unexpectedly';
-          console.log('WebSocket closed unexpectedly:', closeReason);
+          console.log('🔌 WebSocket closed unexpectedly:', closeReason);
           setConnectionError(closeReason);
         }
       };
