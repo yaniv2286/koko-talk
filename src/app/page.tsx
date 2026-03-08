@@ -52,51 +52,152 @@ export default function Home() {
 
   // Show Gender Selection if profile is selected but gender is not
   if (!kidGender) {
+    const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
+    
+    const handleGenderSelect = (gender: 'boy' | 'girl') => {
+      setSelectedGender(gender);
+      setKidGender(gender);
+      setTimeout(() => {
+        handleGenderSelected();
+      }, 300); // Brief delay to show selection animation
+    };
+    
     return (
-      <main className="min-h-screen bg-gradient-to-br from-pink-100 via-blue-100 to-purple-100 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-800 mb-4 tracking-tight">
-            Koko
-          </h1>
-          <p className="text-lg sm:text-xl text-slate-600 font-medium">
-            One more thing before we start...
+      <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
+        {/* Blurred Background */}
+        <div className="absolute inset-0">
+          <div className="w-full h-full bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/80 to-slate-900" />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 w-full max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-4 tracking-tight drop-shadow-lg">
+              Koko
+            </h1>
+            <p className="text-xl sm:text-2xl text-white/90 font-medium drop-shadow">
+              One more thing before we start...
+            </p>
+          </div>
+
+          {/* 3D Avatar Selection */}
+          <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 mb-8 justify-center items-center">
+            {/* Boy Avatar */}
+            <div className="relative group">
+              <button
+                onClick={() => handleGenderSelect('boy')}
+                className="relative transform transition-all duration-300 hover:scale-105 focus:outline-none"
+              >
+                {/* Selection Halo */}
+                <AnimatePresence>
+                  {selectedGender === 'boy' && (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1.2, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      className="absolute inset-0 rounded-full bg-green-400/20 blur-xl"
+                    />
+                  )}
+                </AnimatePresence>
+                
+                {/* Checkmark */}
+                <AnimatePresence>
+                  {selectedGender === 'boy' && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center"
+                    >
+                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-8-8a1 1 0 010-1.414l8-8z" clipRule="evenodd" />
+                      </svg>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
+                {/* Avatar Container */}
+                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 p-1 shadow-2xl shadow-blue-500/50 group-hover:shadow-blue-500/70">
+                  <div className="w-full h-full rounded-full overflow-hidden">
+                    <img
+                      src="/avatars/boy_avatar.png"
+                      alt="Boy Avatar"
+                      className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                </div>
+                
+                {/* Label */}
+                <div className="mt-6 text-center">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-blue-400 drop-shadow-lg">
+                    I am a Boy
+                  </h3>
+                </div>
+              </button>
+            </div>
+
+            {/* Girl Avatar */}
+            <div className="relative group">
+              <button
+                onClick={() => handleGenderSelect('girl')}
+                className="relative transform transition-all duration-300 hover:scale-105 focus:outline-none"
+              >
+                {/* Selection Halo */}
+                <AnimatePresence>
+                  {selectedGender === 'girl' && (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1.2, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      className="absolute inset-0 rounded-full bg-green-400/20 blur-xl"
+                    />
+                  )}
+                </AnimatePresence>
+                
+                {/* Checkmark */}
+                <AnimatePresence>
+                  {selectedGender === 'girl' && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center"
+                    >
+                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-8-8a1 1 0 010-1.414l8-8z" clipRule="evenodd" />
+                      </svg>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
+                {/* Avatar Container */}
+                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 p-1 shadow-2xl shadow-pink-500/50 group-hover:shadow-pink-500/70">
+                  <div className="w-full h-full rounded-full overflow-hidden">
+                    <img
+                      src="/avatars/girl_avatar.png"
+                      alt="Girl Avatar"
+                      className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                </div>
+                
+                {/* Label */}
+                <div className="mt-6 text-center">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-pink-400 drop-shadow-lg">
+                    I am a Girl
+                  </h3>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Helper Text */}
+          <p className="text-center text-white/70 max-w-md text-sm sm:text-base">
+            This helps Koko know how to talk to you in Hebrew! 🌟
           </p>
         </div>
-
-        {/* Gender Selection Buttons */}
-        <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 mb-8">
-          {/* Boy Button */}
-          <button
-            onClick={() => {
-              setKidGender('boy');
-              handleGenderSelected();
-            }}
-            className="group relative bg-blue-500 hover:bg-blue-600 text-white rounded-3xl p-8 sm:p-12 transform transition-all duration-200 hover:scale-105 hover:shadow-2xl min-w-[200px] sm:min-w-[250px]"
-          >
-            <div className="text-6xl sm:text-7xl mb-4">👦</div>
-            <div className="text-xl sm:text-2xl font-bold">I am a Boy</div>
-            <div className="absolute inset-0 rounded-3xl bg-blue-400 opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>
-          </button>
-
-          {/* Girl Button */}
-          <button
-            onClick={() => {
-              setKidGender('girl');
-              handleGenderSelected();
-            }}
-            className="group relative bg-pink-500 hover:bg-pink-600 text-white rounded-3xl p-8 sm:p-12 transform transition-all duration-200 hover:scale-105 hover:shadow-2xl min-w-[200px] sm:min-w-[250px]"
-          >
-            <div className="text-6xl sm:text-7xl mb-4">👧</div>
-            <div className="text-xl sm:text-2xl font-bold">I am a Girl</div>
-            <div className="absolute inset-0 rounded-3xl bg-pink-400 opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>
-          </button>
-        </div>
-
-        {/* Helper Text */}
-        <p className="text-center text-slate-600 max-w-md">
-          This helps Koko know how to talk to you in Hebrew! 🌟
-        </p>
       </main>
     );
   }
