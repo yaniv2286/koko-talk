@@ -49,8 +49,9 @@ export const useRealtimeAudio = ({
       console.log('🎵 Analyser created:', !!analyserRef.current);
 
       const source = audioContextRef.current.createMediaStreamSource(stream);
+      
+      // Connect source to analyser for level monitoring
       source.connect(analyserRef.current);
-
       console.log('🎵 Audio source connected to analyser');
 
       // Create a simple processor for real-time audio capture
@@ -86,10 +87,11 @@ export const useRealtimeAudio = ({
         }
       };
       
+      // Connect source to processor for audio capture
       source.connect(processor);
       processor.connect(audioContextRef.current.destination);
 
-      console.log('🎵 Audio processor connected');
+      console.log('🎵 Audio processor connected for audio capture');
 
       return stream;
     } catch (error) {
