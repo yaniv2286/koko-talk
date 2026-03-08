@@ -240,6 +240,10 @@ export const useRealtimeAudio = ({
               addConversationMessage('assistant', data.text);
               setState('idle');
               break;
+            case 'input_text.done':
+              console.log('FRONTEND: User input transcript:', data.text);
+              addConversationMessage('user', data.text);
+              break;
             case 'response.done':
               console.log('FRONTEND: Response completed');
               setState('idle');
