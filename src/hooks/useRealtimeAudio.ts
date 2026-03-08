@@ -44,19 +44,18 @@ export const useRealtimeAudio = ({
       audioContextRef.current = new AudioContext({ sampleRate: 24000 });
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 256;
+      analyserRef.current.smoothingTimeConstant = 0.8;
 
       console.log('🎵 Audio context created:', audioContextRef.current.state);
       console.log('🎵 Analyser created:', !!analyserRef.current);
 
       const source = audioContextRef.current.createMediaStreamSource(stream);
       
-      // Connect source to analyser for level monitoring
+      // Connect source directly to analyser for level monitoring
       source.connect(analyserRef.current);
       console.log('🎵 Audio source connected to analyser');
 
       // Create a simple processor for real-time audio capture
-      // Note: ScriptProcessor is deprecated but still widely supported
-      // For production, you'd want to use AudioWorklet
       const processor = audioContextRef.current.createScriptProcessor(4096, 1, 1);
       let isRecording = false;
       
@@ -87,7 +86,7 @@ export const useRealtimeAudio = ({
         }
       };
       
-      // Connect source to processor for audio capture
+      // Connect processor to destination for audio processing
       source.connect(processor);
       processor.connect(audioContextRef.current.destination);
 
@@ -114,27 +113,36 @@ export const useRealtimeAudio = ({
       return;
     }
 
-    const dataArray = new Uint8Array(analyserRef.current.fftSize);
-    analyserRef.current.getByteTimeDomainData(dataArray);
+    try {
+      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+      analyserRef.current.getByteFrequencyData(dataArray);
 
-    // Calculate RMS (Root Mean Square) for better audio level representation
-    let sum = 0;
-    for (let i = 0; i < dataArray.length; i++) {
-      const normalized = (dataArray[i] - 128) / 128; // Convert to -1 to 1 range
-      sum += normalized * normalized;
-    }
-    const rms = Math.sqrt(sum / dataArray.length);
-    const normalizedLevel = Math.min(100, rms * 200); // Scale to 0-100
-    
-    console.log('🎵 Audio level:', normalizedLevel.toFixed(2));
-    
-    setAudioLevel(normalizedLevel);
-    onAudioLevelChange?.(normalizedLevel);
+      // Simple average calculation for audio level
+      let sum = 0;
+      let count = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        if (dataArray[i] > 0) { // Only count non-zero values
+          sum += dataArray[i];
+          count++;
+        }
+      }
+      
+      const average = count > 0 ? sum / count : 0;
+      const normalizedLevel = Math.min(100, (average / 255) * 100); // Scale to 0-100
+      
+      console.log('🎵 Audio level:', normalizedLevel.toFixed(2));
+      console.log('🎵 Raw data points:', count, 'Average:', average.toFixed(2));
+      
+      setAudioLevel(normalizedLevel);
+      onAudioLevelChange?.(normalizedLevel);
 
-    if (state === 'listening') {
-      animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
-    } else {
-      console.log('🔇 Stopping audio monitoring, state:', state);
+      if (state === 'listening') {
+        animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
+      } else {
+        console.log('🔇 Stopping audio monitoring, state:', state);
+      }
+    } catch (error) {
+      console.error('❌ Error in audio level monitoring:', error);
     }
   }, [state, setAudioLevel, onAudioLevelChange]);
 
