@@ -156,16 +156,26 @@ export const useRealtimeAudio = ({
       setConnectionError(null);
 
       // Get API key and configuration from our API
+      console.log('🔌 Starting API key fetch...');
       const response = await fetch('/api/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
+      
+      console.log('🔌 API response received');
+      console.log('🔌 Response status:', response.status);
+      console.log('🔌 Response ok:', response.ok);
+      console.log('🔌 Response headers:', response.headers);
 
       if (!response.ok) {
+        console.log('❌ API response not ok:', response.status, response.statusText);
         throw new Error('Failed to get API configuration');
       }
 
-      const { apiKey, model, instructions } = await response.json();
+      const data = await response.json();
+      console.log('🔌 API response data:', data);
+
+      const { apiKey, model, instructions } = data;
 
       console.log('🔑 API key received:', apiKey.substring(0, 10) + '...');
       console.log('🔑 API key length:', apiKey.length);
