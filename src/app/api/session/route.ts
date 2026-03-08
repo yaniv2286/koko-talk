@@ -10,6 +10,13 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🔑 API route called');
     
+    // For debugging - return a simple response first
+    return NextResponse.json({
+      test: 'API route is working',
+      timestamp: new Date().toISOString(),
+      envVars: Object.keys(process.env).filter(k => k.includes('OPENAI'))
+    });
+    
     // For OpenAI Realtime API, we need to return the API key for WebSocket authentication
     // The API has changed and no longer uses ephemeral tokens for WebSocket connections
     const apiKey = process.env.OPENAI_API_KEY;
