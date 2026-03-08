@@ -123,8 +123,9 @@ export default function SystemDebugger() {
     const hasApiKey = apiLogs.some(log => log.message.includes('API key received:') && log.message.includes('sk-proj'));
     const hasApiKeyExists = apiLogs.some(log => log.message.includes('EXISTS'));
     const hasApiKeyTest = apiLogs.some(log => log.message.includes('API key validation passed'));
+    const hasFrontendApiKey = apiLogs.some(log => log.message.includes('API key received: YES'));
     
-    if (!hasApiKey && !hasApiKeyExists && !hasApiKeyTest) {
+    if (!hasApiKey && !hasApiKeyExists && !hasApiKeyTest && !hasFrontendApiKey) {
       issues.push('❌ No API key detected from server');
     }
 
