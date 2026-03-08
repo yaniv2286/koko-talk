@@ -127,9 +127,10 @@ export const useRealtimeAudio = ({
       const { apiKey, model, instructions, voice } = await response.json();
 
       // Create WebSocket connection to OpenAI Realtime API
-      // Using the latest authentication format with query parameter
+      // OpenAI Realtime API requires specific subprotocol format for authentication
       const ws = new WebSocket(
-        `wss://api.openai.com/v1/realtime?model=${model}&api_key=${encodeURIComponent(apiKey)}`
+        `wss://api.openai.com/v1/realtime?model=${model}`,
+        ['realtime', `openai-insecure-api-key.${apiKey}`]
       );
 
       websocketRef.current = ws;
