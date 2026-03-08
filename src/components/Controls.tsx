@@ -103,8 +103,8 @@ export const Controls = ({ className = '' }: ControlsProps) => {
       {/* Main Action Button */}
       <motion.button
         className={`
-          relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 
-          rounded-full 
+          relative w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 
+          rounded-3xl
           ${buttonConfig.color} 
           text-white 
           font-bold 
@@ -112,8 +112,7 @@ export const Controls = ({ className = '' }: ControlsProps) => {
           shadow-2xl
           disabled:opacity-50
           disabled:cursor-not-allowed
-          transition-colors
-          duration-200
+          transition-all duration-200
           flex
           flex-col
           items-center
@@ -121,7 +120,22 @@ export const Controls = ({ className = '' }: ControlsProps) => {
           gap-2
           select-none
           active:scale-95
+          border-4 border-white/20
+          bg-gradient-to-br
         `}
+        style={{
+          background: buttonConfig.disabled 
+            ? 'linear-gradient(135deg, #6b7280, #4b5563)' 
+            : buttonConfig.color.includes('green') 
+              ? 'linear-gradient(135deg, #10b981, #059669)'
+              : buttonConfig.color.includes('blue')
+                ? 'linear-gradient(135deg, #3b82f6, #2563eb)'
+                : buttonConfig.color.includes('red')
+                  ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                  : buttonConfig.color.includes('orange')
+                    ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+                    : 'linear-gradient(135deg, #6b7280, #4b5563)'
+        }}
         onClick={handleButtonPress}
         onMouseUp={handleButtonRelease}
         onTouchEnd={handleButtonRelease}

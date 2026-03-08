@@ -33,12 +33,6 @@ export default function Home() {
         <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-md mx-auto">
           Your friendly English tutor! 🎓
         </p>
-        {/* Show selected profile */}
-        <div className="mt-4 inline-flex items-center px-4 py-2 bg-white/80 dark:bg-gray-800/80 rounded-full">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            {userProfile.name} • {userProfile.ageGroup === '4-7' ? 'Little Kids' : 'Big Kids'}
-          </span>
-        </div>
       </div>
 
       {/* Main Content - Avatar and Controls */}

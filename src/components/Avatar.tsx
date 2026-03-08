@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { Bot } from 'lucide-react';
 import { useVoiceStore } from '@/store/voiceStore';
 
 interface AvatarProps {
@@ -15,8 +16,7 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
     switch (state) {
       case 'idle':
         return {
-          scale: [1, 1.05, 1],
-          opacity: [0.8, 1, 0.8],
+          y: [0, -8, 0],
           transition: {
             duration: 3,
             repeat: Infinity,
@@ -26,7 +26,7 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
       
       case 'listening':
         return {
-          scale: [1, 1.2, 1],
+          scale: [1, 1.15, 1],
           backgroundColor: ['#10b981', '#34d399', '#10b981'],
           transition: {
             duration: 1.5,
@@ -37,22 +37,23 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
       
       case 'thinking':
         return {
-          rotate: [0, 360],
+          rotate: [0, 5, -5, 0],
           scale: [1, 1.1, 1],
           backgroundColor: ['#3b82f6', '#60a5fa', '#3b82f6'],
           transition: {
             duration: 2,
             repeat: Infinity,
-            ease: "linear" as const
+            ease: "easeInOut" as const
           }
         };
       
       case 'speaking':
         return {
-          scale: [1, 1.3, 1.15, 1.25, 1],
+          y: [0, -12, 0],
+          scale: [1, 1.2, 1],
           backgroundColor: ['#f59e0b', '#fbbf24', '#f59e0b'],
           transition: {
-            duration: 0.3,
+            duration: 0.4,
             repeat: Infinity,
             ease: "easeInOut" as const
           }
@@ -72,11 +73,11 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
       
       case 'error':
         return {
-          scale: [1, 1.05, 1],
+          x: [-5, 5, -5, 0],
           backgroundColor: ['#ef4444', '#f87171', '#ef4444'],
           transition: {
             duration: 0.5,
-            repeat: Infinity,
+            repeat: 3,
             ease: "easeInOut" as const
           }
         };
@@ -84,28 +85,8 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
       default:
         return {
           scale: 1,
-          backgroundColor: '#6b7280'
+          backgroundColor: '#10b981'
         };
-    }
-  };
-
-  // Get avatar content based on state
-  const getAvatarContent = () => {
-    switch (state) {
-      case 'idle':
-        return '😊';
-      case 'listening':
-        return '👂';
-      case 'thinking':
-        return '🤔';
-      case 'speaking':
-        return '🗣️';
-      case 'connecting':
-        return '🔄';
-      case 'error':
-        return '😕';
-      default:
-        return '🤖';
     }
   };
 
@@ -113,7 +94,7 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
   const getStatusText = () => {
     switch (state) {
       case 'idle':
-        return 'Ready to talk!';
+        return 'Ready to learn!';
       case 'listening':
         return 'Listening...';
       case 'thinking':
@@ -135,34 +116,74 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
     <div className={`flex flex-col items-center justify-center ${className}`}>
       {/* Avatar Container */}
       <motion.div
-        className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 rounded-full flex items-center justify-center shadow-2xl"
-        style={{
-          backgroundColor: state === 'idle' ? '#10b981' : undefined,
-        }}
+        className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 rounded-full flex items-center justify-center shadow-2xl bg-gradient-to-br from-green-400 to-blue-500"
         animate={animationConfig}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
         {/* Inner glow effect */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent" />
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 to-transparent" />
         
-        {/* Avatar face/content */}
-        <div className="relative z-10 text-6xl sm:text-7xl md:text-8xl">
-          {getAvatarContent()}
+        {/* Friendly Bot Face */}
+        <div className="relative z-10">
+          <Bot className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 text-white drop-shadow-lg" />
+          
+          {/* Friendly eyes overlay */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="flex gap-4 sm:gap-6">
+              <motion.div
+                className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full"
+                animate={{
+                  scale: state === 'listening' ? [1, 0.5, 1] : 1,
+                }}
+                transition={{
+                  duration: 0.3,
+                  repeat: state === 'listening' ? Infinity : 0,
+                  ease: "easeInOut" as const,
+                }}
+              />
+              <motion.div
+                className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full"
+                animate={{
+                  scale: state === 'listening' ? [1, 0.5, 1] : 1,
+                }}
+                transition={{
+                  duration: 0.3,
+                  repeat: state === 'listening' ? Infinity : 0,
+                  ease: "easeInOut" as const,
+                }}
+              />
+            </div>
+          </div>
+          
+          {/* Friendly smile */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+            <motion.div
+              className="w-12 h-6 sm:w-16 sm:h-8 border-b-4 border-white rounded-b-full"
+              animate={{
+                width: state === 'speaking' ? ['3rem', '4rem', '3rem'] : '3rem',
+              }}
+              transition={{
+                duration: 0.5,
+                repeat: state === 'speaking' ? Infinity : 0,
+                ease: "easeInOut" as const,
+              }}
+            />
+          </div>
         </div>
         
         {/* Pulsing ring effect for active states */}
         {(state === 'listening' || state === 'speaking') && (
           <motion.div
-            className="absolute inset-0 rounded-full border-4 border-current opacity-30"
+            className="absolute inset-0 rounded-full border-4 border-white opacity-30"
             animate={{
-              scale: [1, 1.5, 1],
+              scale: [1, 1.3, 1],
               opacity: [0.3, 0, 0.3],
             }}
             transition={{
-              duration: 2,
+              duration: 1.5,
               repeat: Infinity,
-              ease: 'easeInOut',
+              ease: "easeInOut" as const,
             }}
           />
         )}
