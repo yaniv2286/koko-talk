@@ -88,21 +88,24 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
       {/* Clean Avatar Container */}
-      <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 bg-white shadow-xl rounded-full flex items-center justify-center">
-        {/* Simple Glowing Blue Orb */}
-        <motion.div
-          className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-blue-500 rounded-full"
-          animate={getOrbAnimation()}
-          style={{
-            boxShadow: '0 0 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3)'
-          }}
+      <motion.div 
+        className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 bg-white shadow-xl rounded-full flex items-center justify-center"
+        animate={{
+          scale: [1, 1.05, 0.95, 1],
+          transition: {
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut" as const
+          }
+        }}
+      >
+        {/* Koko Character Image */}
+        <img 
+          src='/koko.png' 
+          alt='Koko Mascot' 
+          className='w-full h-full object-contain' 
         />
-        
-        {/* Inner glow for depth */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-blue-400/50 rounded-full" />
-        </div>
-      </div>
+      </motion.div>
 
       {/* Status text */}
       <motion.div
