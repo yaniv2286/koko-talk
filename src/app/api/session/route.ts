@@ -19,10 +19,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Test the API key by making a simple request to OpenAI
+    const openai = new OpenAI({
+      apiKey: apiKey,
+    });
+
+    // Make a simple test request to verify the API key works
+    const models = await openai.models.list();
+    
     return NextResponse.json({
       apiKey: apiKey,
       model: 'gpt-4o-realtime-preview-2024-10-01',
       instructions: 'You are Koko, a friendly English tutor for kids. The user is a native Hebrew speaker. Respond only in English, keep sentences short and encouraging.',
+      voice: 'alloy',
+      test: 'API key is valid',
     });
   } catch (error) {
     console.error('Failed to create OpenAI session:', error);

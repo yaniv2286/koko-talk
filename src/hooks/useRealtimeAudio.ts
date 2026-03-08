@@ -124,11 +124,12 @@ export const useRealtimeAudio = ({
         throw new Error('Failed to get API configuration');
       }
 
-      const { apiKey, model, instructions } = await response.json();
+      const { apiKey, model, instructions, voice } = await response.json();
 
       // Create WebSocket connection to OpenAI Realtime API
       const ws = new WebSocket(
-        `wss://api.openai.com/v1/realtime?model=${model}&api_key=${encodeURIComponent(apiKey)}`
+        `wss://api.openai.com/v1/realtime?model=${model}`,
+        ['realtime', `openai-api-key.${apiKey}`]
       );
 
       websocketRef.current = ws;
@@ -143,6 +144,7 @@ export const useRealtimeAudio = ({
           type: 'session.create',
           session: {
             instructions: instructions,
+            voice: voice,
             turn_detection: {
               type: 'server_vad',
               threshold: 0.5,
