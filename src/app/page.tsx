@@ -1,6 +1,6 @@
 import { VoiceDebugComponent } from '@/components/VoiceDebugComponent';
 import DebugDashboard from '@/components/DebugDashboard';
-import SystemDebugger from '@/components/SystemDebugger';
+import { SystemDebugger } from '@/components/SystemDebugger';
 
 export default function Home() {
   return (
