@@ -7,60 +7,23 @@ const openai = new OpenAI({
 });
 
 export async function POST(request: NextRequest) {
+  console.log('🔑🔑🔑 API ROUTE CALLED AT ALL!!!');
+  
   try {
-    console.log('🔑 API route called - START');
-    
-    // Return a simple test first to see if the route works at all
-    console.log('🔑 Returning simple test response...');
-    return NextResponse.json({
-      test: 'API route is working',
-      timestamp: new Date().toISOString(),
-      step: 'simple_test'
-    });
-    
-    // Original code below (commented out for testing)
-    /*
-    console.log('🔑 API route called');
-    
-    // For OpenAI Realtime API, we need to return the API key for WebSocket authentication
-    // The API has changed and no longer uses ephemeral tokens for WebSocket connections
-    const apiKey = process.env.OPENAI_API_KEY;
-    
-    console.log('🔑 Raw API key from env:', apiKey ? 'EXISTS' : 'NULL');
-    console.log('🔑 API key length:', apiKey?.length || 0);
-    
-    if (!apiKey) {
-      console.log('❌ API key not found in environment');
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
-      );
-    }
-
-    console.log('🔑 API key found, returning response...');
+    // Ultra simple test - no variables, no logic, just return a response
+    console.log('🔑🔑🔑 Returning ultra-simple response...');
     
     return NextResponse.json({
-      apiKey: apiKey,
-      model: 'gpt-4o-realtime-preview-2024-10-01',
-      instructions: 'You are Koko, a friendly English tutor for kids. The user is a native Hebrew speaker. Respond only in English, keep sentences short and encouraging.',
-      test: 'API key retrieved (validation bypassed)',
+      message: 'API route is working',
+      test: true,
+      timestamp: Date.now()
     });
-    */
+    
   } catch (error) {
-    console.error('❌ Failed to create OpenAI session:', error);
-    
-    if (error instanceof Error) {
-      console.log('❌ Error details:', error.message);
-      return NextResponse.json(
-        { error: 'Failed to create session', details: error.message },
-        { status: 500 }
-      );
-    }
-    
-    console.log('❌ Unknown error occurred');
-    return NextResponse.json(
-      { error: 'Unknown error occurred' },
-      { status: 500 }
-    );
+    console.log('🔑🔑🔑 ERROR IN API ROUTE:', error);
+    return NextResponse.json({
+      error: 'API route error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 }
