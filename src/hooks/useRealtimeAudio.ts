@@ -187,6 +187,16 @@ export const useRealtimeAudio = ({
       console.log('🔑 API key length:', apiKey.length);
       console.log('🔑 Model:', model);
 
+      // Initialize audio right after API key is retrieved
+      console.log('🎤 Initializing audio pipeline...');
+      try {
+        await initializeAudio();
+        console.log('✅ Audio pipeline initialized successfully');
+      } catch (audioError) {
+        console.log('❌ Audio pipeline initialization failed:', audioError);
+        // Don't throw error here - let user try recording manually
+      }
+
       // Create WebSocket connection to OpenAI Realtime API with auto-fixing
       const createWebSocketWithFallback = (apiKey: string, model: string) => {
         const methods = [
