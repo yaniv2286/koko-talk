@@ -18,6 +18,8 @@ export const useRealtimeAudio = ({
     setAudioLevel,
     setSessionId,
     addConversationMessage,
+    userProfile,
+    incrementStarCount,
   } = useVoiceStore();
 
   const websocketRef = useRef<WebSocket | null>(null);
@@ -165,6 +167,9 @@ export const useRealtimeAudio = ({
       const response = await fetch('/api/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userProfile: userProfile || undefined
+        }),
       });
       
       console.log('FRONTEND: API response received, status:', response.status);
@@ -209,12 +214,6 @@ export const useRealtimeAudio = ({
         }));
       };
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setConnectionError('WebSocket connection error');
-        setState('error');
-      };
-
       ws.onmessage = (event) => {
         console.log('FRONTEND: WebSocket message received:', event.data);
         try {
@@ -238,16 +237,14 @@ export const useRealtimeAudio = ({
               break;
             case 'response.text.done':
               console.log('FRONTEND: Got AI response:', data.text);
-              addConversationMessage({
-                role: 'assistant',
-                content: data.text,
-                timestamp: new Date(),
-              });
+              addConversationMessage('assistant', data.text);
               setState('idle');
               break;
             case 'response.done':
               console.log('FRONTEND: Response completed');
               setState('idle');
+              // Increment star count for successful response
+              incrementStarCount();
               break;
             case 'error':
               console.error('FRONTEND: OpenAI error:', data);
@@ -265,7 +262,16 @@ export const useRealtimeAudio = ({
       ws.onclose = (event) => {
         console.log('FRONTEND: WebSocket closed');
         setConnected(false);
+        // Graceful degradation - return to idle state instead of error
         setState('idle');
+        setConnectionError('Oops! Connection lost. Tap to wake Koko up!');
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setConnectionError('Oops! Connection lost. Tap to wake Koko up!');
+        setState('idle');
+        setConnected(false);
       };
 
     } catch (error) {
@@ -283,6 +289,8 @@ export const useRealtimeAudio = ({
     addConversationMessage,
     onError,
     initializeAudio,
+    userProfile,
+    incrementStarCount,
   ]);
 
   // Start recording and sending audio
