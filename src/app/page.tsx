@@ -8,10 +8,12 @@ import { ProfileSelector } from '@/components/ProfileSelector';
 import { StarCounter } from '@/components/StarCounter';
 import { VisualAid } from '@/components/VisualAid';
 import { useVoiceStore } from '@/store/voiceStore';
+import { useRealtimeAudio } from '@/hooks/useRealtimeAudio';
 import { Mic, MicOff, Phone, PhoneOff, Volume2 } from 'lucide-react';
 
 export default function Home() {
   const { userProfile, kidGender, setKidGender, state, audioLevel, disconnect } = useVoiceStore();
+  const { connect, disconnect: rtcDisconnect } = useRealtimeAudio();
   const [showMainApp, setShowMainApp] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [callTimer, setCallTimer] = useState(0);
@@ -27,11 +29,22 @@ export default function Home() {
   };
 
   const handleGenderSelect = (gender: 'boy' | 'girl') => {
+    console.log('🚀 Selection made:', gender);
     setSelectedGender(gender);
     setKidGender(gender);
     setTimeout(() => {
       handleGenderSelected();
     }, 300); // Brief delay to show selection animation
+  };
+
+  const handleStartCall = () => {
+    console.log('📞 Attempting to connect...');
+    connect();
+  };
+
+  const handleEndCall = () => {
+    console.log('📞 Ending call...');
+    rtcDisconnect();
   };
 
   // Call timer effect
@@ -347,38 +360,53 @@ export default function Home() {
 
           {/* Bottom Call Controls */}
           <div className="absolute bottom-0 left-0 right-0 z-20 p-6 pb-8">
-            <div className="flex justify-center items-center gap-8">
-              {/* Mute Button */}
-              <button
-                onClick={() => setIsMuted(!isMuted)}
-                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-all ${
-                  isMuted 
-                    ? 'bg-red-500 hover:bg-red-600' 
-                    : 'bg-gray-600 hover:bg-gray-700'
-                }`}
-              >
-                {isMuted ? (
-                  <MicOff className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                ) : (
-                  <Mic className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                )}
-              </button>
+            {/* Start Call Button - Show when not connected */}
+            {state === 'idle' && (
+              <div className="flex justify-center items-center">
+                <button
+                  onClick={handleStartCall}
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-all transform hover:scale-105 shadow-lg"
+                >
+                  <Phone className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
+                </button>
+              </div>
+            )}
 
-              {/* End Call Button */}
-              <button
-                onClick={disconnect}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all transform hover:scale-105"
-              >
-                <PhoneOff className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-              </button>
+            {/* Call Controls - Show when connected */}
+            {state !== 'idle' && (
+              <div className="flex justify-center items-center gap-8">
+                {/* Mute Button */}
+                <button
+                  onClick={() => setIsMuted(!isMuted)}
+                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-all ${
+                    isMuted 
+                      ? 'bg-red-500 hover:bg-red-600' 
+                      : 'bg-gray-600 hover:bg-gray-700'
+                  }`}
+                >
+                  {isMuted ? (
+                    <MicOff className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                  ) : (
+                    <Mic className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                  )}
+                </button>
 
-              {/* Speaker Button */}
-              <button
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-600 hover:bg-gray-700 flex items-center justify-center transition-all"
-              >
-                <Volume2 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-              </button>
-            </div>
+                {/* End Call Button */}
+                <button
+                  onClick={handleEndCall}
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all transform hover:scale-105"
+                >
+                  <PhoneOff className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                </button>
+
+                {/* Speaker Button */}
+                <button
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-600 hover:bg-gray-700 flex items-center justify-center transition-all"
+                >
+                  <Volume2 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                </button>
+              </div>
+            )}
 
             {/* Connection Status */}
             <div className="text-center mt-4">
