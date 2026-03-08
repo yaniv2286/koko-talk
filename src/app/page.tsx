@@ -11,24 +11,22 @@ import { useVoiceStore } from '@/store/voiceStore';
 export default function Home() {
   const { userProfile, kidGender, setKidGender } = useVoiceStore();
   const [showMainApp, setShowMainApp] = useState(false);
-  const [showGenderSelection, setShowGenderSelection] = useState(false);
 
   const handleProfileSelected = () => {
-    setShowGenderSelection(true);
+    // Profile selected, will show gender selection next
   };
 
   const handleGenderSelected = () => {
-    setShowGenderSelection(false);
     setShowMainApp(true);
   };
 
   // Show ProfileSelector if no profile is selected
-  if (!userProfile || !showGenderSelection) {
+  if (!userProfile) {
     return <ProfileSelector onProfileSelected={handleProfileSelected} />;
   }
 
   // Show Gender Selection if profile is selected but gender is not
-  if (showGenderSelection && !kidGender) {
+  if (!kidGender) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-pink-100 via-blue-100 to-purple-100 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
         {/* Header */}
@@ -79,6 +77,10 @@ export default function Home() {
   }
 
   // Show main app if both profile and gender are selected
+  if (!showMainApp) {
+    return null; // Will show gender selection above
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
       {/* Visual Aid Modal */}
