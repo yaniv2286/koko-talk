@@ -1,21 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// Initialize OpenAI client with server-side API key
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function POST(request: NextRequest) {
-  console.log('API ROUTE CALLED');
-  
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
-    console.log('API KEY CHECK:', apiKey ? 'EXISTS' : 'NULL');
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     
-    if (!apiKey) {
+    if (!OPENAI_API_KEY) {
+      console.error('API key not found in environment variables');
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
+        { error: 'API key not configured' },
         { status: 500 }
       );
     }
@@ -94,16 +87,69 @@ NEVER break the learning loop. Always drive the conversation forward with Hebrew
       instructions = 'You are Koko, a Hebrew-to-English tutor. Always ask translation questions in Hebrew and expect English answers.';
     }
 
-    console.log('Generated instructions for age group:', userProfile?.ageGroup || 'default');
+    console.log('Creating WebRTC session with OpenAI');
+
+    // Create ephemeral session with OpenAI's WebRTC API
+    const sessionResponse = await fetch('https://api.openai.com/v1/realtime/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-realtime-preview-2024-12-17',
+        voice: 'alloy',
+        instructions: instructions,
+        turn_detection: {
+          type: 'server_vad',
+          threshold: 0.5,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 500
+        },
+        input_audio_format: 'pcm16',
+        output_audio_format: 'pcm16',
+        tools: [
+          {
+            type: 'function',
+            name: 'award_star',
+            description: 'Award a star to the child for correct answers',
+            parameters: {
+              type: 'object',
+              properties: {
+                reason: {
+                  type: 'string',
+                  description: 'Why the star was awarded'
+                }
+              },
+              required: ['reason']
+            }
+          }
+        ]
+      })
+    });
+
+    if (!sessionResponse.ok) {
+      const errorText = await sessionResponse.text();
+      console.error('Failed to create OpenAI session:', errorText);
+      return NextResponse.json(
+        { error: 'Failed to create session', details: errorText },
+        { status: 500 }
+      );
+    }
+
+    const session = await sessionResponse.json();
+    console.log('OpenAI session created successfully');
 
     return NextResponse.json({
-      apiKey: apiKey,
-      model: 'gpt-realtime-mini',
-      instructions: instructions,
+      ephemeralToken: session.client_secret.value,
+      model: session.model,
+      voice: session.voice
     });
+
   } catch (error) {
+    console.error('Session creation error:', error);
     return NextResponse.json(
-      { error: 'Failed to create session' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -17,14 +17,12 @@ export const VoiceDebugComponent = () => {
     disconnect,
     startRecording,
     stopRecording,
-    initializeAudio,
   } = useRealtimeAudio({
     onError: (error) => console.error('Audio error:', error),
   });
 
   const handleStartSession = async () => {
     try {
-      await initializeAudio();
       await connect();
     } catch (error) {
       console.error('Failed to start session:', error);
