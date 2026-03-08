@@ -8,6 +8,7 @@ interface UserProfile {
   id: string;
   name: string;
   ageGroup: AgeGroup;
+  avatar: string;
 }
 
 interface VoiceStore {

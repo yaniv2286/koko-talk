@@ -8,15 +8,14 @@ interface AvatarProps {
 }
 
 export const Avatar = ({ className = '' }: AvatarProps) => {
-  const { state } = useVoiceStore();
+  const { state, userProfile } = useVoiceStore();
 
-  // Simple animation for the glowing orb
-  const getOrbAnimation = () => {
+  // Animation for the avatar based on state
+  const getAvatarAnimation = () => {
     switch (state) {
       case 'idle':
         return {
-          scale: [1, 1.1, 1],
-          opacity: [0.6, 1, 0.6],
+          y: [0, -8, 0],
           transition: {
             duration: 3,
             repeat: Infinity,
@@ -26,8 +25,7 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
       
       case 'listening':
         return {
-          scale: [1, 1.2, 1],
-          opacity: [0.8, 1, 0.8],
+          scale: [1, 1.1, 1],
           transition: {
             duration: 1.5,
             repeat: Infinity,
@@ -37,8 +35,7 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
       
       case 'thinking':
         return {
-          scale: [1, 1.15, 1],
-          opacity: [0.7, 1, 0.7],
+          rotate: [0, 5, -5, 0],
           transition: {
             duration: 2,
             repeat: Infinity,
@@ -48,8 +45,8 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
       
       case 'speaking':
         return {
-          scale: [1, 1.3, 1],
-          opacity: [0.9, 1, 0.9],
+          y: [0, -12, 0],
+          scale: [1, 1.2, 1],
           transition: {
             duration: 0.8,
             repeat: Infinity,
@@ -60,7 +57,7 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
       default:
         return {
           scale: 1,
-          opacity: 0.8
+          y: 0
         };
     }
   };
@@ -99,11 +96,12 @@ export const Avatar = ({ className = '' }: AvatarProps) => {
           }
         }}
       >
-        {/* Koko Character Image */}
-        <img 
-          src='/koko.png' 
-          alt='Koko Mascot' 
-          className='w-full h-full object-contain' 
+        {/* User's Selected Character Avatar */}
+        <motion.img
+          src={userProfile?.avatar || '/koko.png'} 
+          alt='Character Avatar' 
+          className='w-full h-full object-contain'
+          animate={getAvatarAnimation()}
         />
       </motion.div>
 

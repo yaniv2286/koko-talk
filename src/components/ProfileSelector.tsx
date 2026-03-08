@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Baby, User, Users, Sparkles } from 'lucide-react';
 import { useVoiceStore } from '@/store/voiceStore';
@@ -12,6 +13,8 @@ interface ProfileSelectorProps {
 
 export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSelectorProps) => {
   const { setProfile } = useVoiceStore();
+  const [step, setStep] = useState<'age' | 'character'>('age');
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);
 
   const profiles = [
     {
@@ -48,11 +51,41 @@ export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSe
     }
   ];
 
-  const handleProfileSelect = (profile: typeof profiles[0]) => {
+  const characters = [
+    {
+      id: 'puppy',
+      name: 'Puppy',
+      avatar: '/avatars/puppy.png',
+      color: 'bg-amber-100 hover:bg-amber-200',
+      borderColor: 'border-amber-300'
+    },
+    {
+      id: 'robot',
+      name: 'Robot',
+      avatar: '/avatars/robot.png',
+      color: 'bg-blue-100 hover:bg-blue-200',
+      borderColor: 'border-blue-300'
+    },
+    {
+      id: 'monster',
+      name: 'Monster',
+      avatar: '/avatars/monster.png',
+      color: 'bg-green-100 hover:bg-green-200',
+      borderColor: 'border-green-300'
+    }
+  ];
+
+  const handleAgeSelect = (profile: typeof profiles[0]) => {
+    setSelectedAgeGroup(profile.ageGroup);
+    setStep('character');
+  };
+
+  const handleCharacterSelect = (character: typeof characters[0]) => {
     const userProfile = {
-      id: profile.id,
-      name: profile.name,
-      ageGroup: profile.ageGroup,
+      id: `${selectedAgeGroup}-${character.id}`,
+      name: `${selectedAgeGroup === '4-7' ? 'Little Kid' : 'Big Kid'}`,
+      ageGroup: selectedAgeGroup as AgeGroup,
+      avatar: character.avatar,
     };
 
     setProfile(userProfile);
@@ -60,7 +93,7 @@ export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSe
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-screen p-4 sm:p-8 ${className}`}>
+    <div className={`flex flex-col items-center justify-center min-h-screen p-4 sm:p-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 ${className}`}>
       {/* Header */}
       <motion.div
         className="text-center mb-12 max-w-2xl"
@@ -83,103 +116,147 @@ export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSe
           </motion.div>
         </div>
         
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-800 dark:text-white mb-4">
-          Welcome to Koko Talk!
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold text-slate-800 mb-4">
+          {step === 'age' ? 'Welcome to Koko Talk!' : 'Choose your Koko!'}
         </h1>
         
-        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-2">
-          Choose your learning adventure 🎓
+        <p className="text-lg sm:text-xl text-slate-800 mb-2">
+          {step === 'age' ? 'Choose your learning adventure 🎓' : 'Pick your character friend! 🎭'}
         </p>
         
-        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
-          Pick the right level for you
+        <p className="text-sm sm:text-base text-slate-600">
+          {step === 'age' ? 'Pick the right level for you' : 'Which character do you want to learn with?'}
         </p>
       </motion.div>
 
-      {/* Profile Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-4xl mb-12">
-        {profiles.map((profile, index) => (
-          <motion.div
-            key={profile.id}
-            className={`
-              relative rounded-2xl p-8 sm:p-10 md:p-12
-              ${profile.bgColor} 
-              border-2 ${profile.borderColor}
-              cursor-pointer
-              transition-all duration-300
-              hover:shadow-2xl
-              hover:scale-105
-            `}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: index * 0.2 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => handleProfileSelect(profile)}
-          >
-            {/* Profile Icon */}
-            <div className="flex justify-center mb-6">
-              <div className={`
-                w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32
-                rounded-full 
-                ${profile.color}
-                flex items-center justify-center
-                text-white
-                shadow-lg
-              `}>
-                {profile.icon}
+      {/* Step 1: Age Selection */}
+      {step === 'age' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-4xl mb-12">
+          {profiles.map((profile, index) => (
+            <motion.div
+              key={profile.id}
+              className={`
+                relative rounded-2xl p-8 sm:p-10 md:p-12
+                bg-white/60 backdrop-blur-md border border-white/50 shadow-lg
+                cursor-pointer
+                transition-all duration-300
+                hover:shadow-xl
+                hover:scale-105
+              `}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.2 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleAgeSelect(profile)}
+            >
+              {/* Profile Icon */}
+              <div className="flex justify-center mb-6">
+                <div className={`
+                  w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32
+                  rounded-full 
+                  ${profile.color}
+                  flex items-center justify-center
+                  text-white
+                  shadow-lg
+                `}>
+                  {profile.icon}
+                </div>
               </div>
-            </div>
 
-            {/* Profile Name */}
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 dark:text-white text-center mb-2">
-              {profile.name}
-            </h2>
+              {/* Profile Name */}
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-slate-800 text-center mb-2">
+                {profile.name}
+              </h2>
 
-            {/* Description */}
-            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 text-center mb-6">
-              {profile.description}
-            </p>
+              {/* Description */}
+              <p className="text-lg sm:text-xl text-slate-600 text-center mb-6">
+                {profile.description}
+              </p>
 
-            {/* Features */}
-            <div className="space-y-2">
-              {profile.features.map((feature, featureIndex) => (
-                <motion.div
-                  key={featureIndex}
-                  className="flex items-center justify-center text-sm sm:text-base text-gray-700 dark:text-gray-300"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.2 + featureIndex * 0.1 }}
-                >
-                  <span className="mr-2">{feature}</span>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Hover Effect */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Footer */}
-      <motion.div
-        className="text-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
-      >
-        <div className="flex items-center justify-center mb-4">
-          <Users className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mr-2" />
-          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
-            Join thousands of kids learning English with Koko!
-          </p>
+              {/* Features */}
+              <div className="space-y-2">
+                {profile.features.map((feature, featureIndex) => (
+                  <div
+                    key={featureIndex}
+                    className="text-sm sm:text-base text-slate-700 text-center"
+                  >
+                    {feature}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          ))}
         </div>
-        
-        <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500">
-          Made with ❤️ for young learners everywhere
-        </p>
-      </motion.div>
+      )}
+
+      {/* Step 2: Character Selection */}
+      {step === 'character' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl mb-12">
+          {characters.map((character, index) => (
+            <motion.div
+              key={character.id}
+              className={`
+                relative rounded-2xl p-8
+                bg-white/60 backdrop-blur-md border border-white/50 shadow-lg
+                cursor-pointer
+                transition-all duration-300
+                hover:shadow-xl
+                hover:scale-105
+              `}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.2 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleCharacterSelect(character)}
+            >
+              {/* Character Image */}
+              <div className="flex justify-center mb-6">
+                <div className={`
+                  w-24 h-24 sm:w-32 sm:h-32
+                  rounded-full 
+                  ${character.color}
+                  border-2 ${character.borderColor}
+                  flex items-center justify-center
+                  overflow-hidden
+                `}>
+                  <img 
+                    src={character.avatar} 
+                    alt={character.name}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+
+              {/* Character Name */}
+              <h2 className="text-xl sm:text-2xl font-semibold text-slate-800 text-center mb-2">
+                {character.name}
+              </h2>
+
+              {/* Selection indicator */}
+              <div className="flex justify-center">
+                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                  <span className="text-white text-sm">→</span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Back button for character selection */}
+      {step === 'character' && (
+        <motion.button
+          className="px-6 py-3 bg-white/60 backdrop-blur-md border border-white/50 rounded-full text-slate-700 font-medium hover:bg-white/80 transition-all duration-200"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          onClick={() => setStep('age')}
+        >
+          ← Back to Age Selection
+        </motion.button>
+      )}
     </div>
   );
 };
