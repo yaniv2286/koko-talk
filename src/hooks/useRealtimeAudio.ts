@@ -118,24 +118,21 @@ export const useRealtimeAudio = ({
     }
 
     try {
-      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-      analyserRef.current.getByteFrequencyData(dataArray);
+      // Use time-domain data for voice level detection (better for voice)
+      const dataArray = new Uint8Array(analyserRef.current.fftSize);
+      analyserRef.current.getByteTimeDomainData(dataArray);
 
-      // Simple average calculation for audio level
+      // Calculate RMS (Root Mean Square) for voice levels
       let sum = 0;
-      let count = 0;
       for (let i = 0; i < dataArray.length; i++) {
-        if (dataArray[i] > 0) { // Only count non-zero values
-          sum += dataArray[i];
-          count++;
-        }
+        const normalized = (dataArray[i] - 128) / 128; // Convert to -1 to 1 range
+        sum += normalized * normalized;
       }
-      
-      const average = count > 0 ? sum / count : 0;
-      const normalizedLevel = Math.min(100, (average / 255) * 100); // Scale to 0-100
+      const rms = Math.sqrt(sum / dataArray.length);
+      const normalizedLevel = Math.min(100, rms * 200); // Scale to 0-100
       
       console.log('🎵 Audio level:', normalizedLevel.toFixed(2));
-      console.log('🎵 Raw data points:', count, 'Average:', average.toFixed(2));
+      console.log('🎵 RMS value:', rms.toFixed(4));
       
       setAudioLevel(normalizedLevel);
       onAudioLevelChange?.(normalizedLevel);

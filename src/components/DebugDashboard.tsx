@@ -5,8 +5,7 @@ import React, { useState, useEffect } from 'react';
 interface AudioDebugData {
   timestamp: string;
   audioLevel: number;
-  rawPoints: number;
-  average: number;
+  rmsValue: number;
   state: string;
   analyserExists: boolean;
   audioContextState: string;
@@ -37,16 +36,14 @@ export default function DebugDashboard() {
       const message = args.join(' ');
       if (message.includes('🎵 Audio level:')) {
         const match = message.match(/🎵 Audio level: ([\d.]+)/);
-        const rawMatch = message.match(/🎵 Raw data points: (\d+)/);
-        const avgMatch = message.match(/Average: ([\d.]+)/);
+        const rmsMatch = message.match(/🎵 RMS value: ([\d.]+)/);
         const stateMatch = message.match(/Current state: (\w+)/);
         
         if (match) {
           setAudioLogs(prev => [...prev.slice(-50), {
             timestamp: new Date().toLocaleTimeString(),
             audioLevel: parseFloat(match[1]),
-            rawPoints: rawMatch ? parseInt(rawMatch[1]) : 0,
-            average: avgMatch ? parseFloat(avgMatch[1]) : 0,
+            rmsValue: rmsMatch ? parseFloat(rmsMatch[1]) : 0,
             state: stateMatch ? stateMatch[1] : 'unknown',
             analyserExists: message.includes('Analyser exists: true'),
             audioContextState: 'unknown',
@@ -125,7 +122,7 @@ export default function DebugDashboard() {
                 </span>
               </div>
               <div className="text-gray-400">
-                Points: {log.rawPoints} | State: {log.state}
+                RMS: {log.rmsValue.toFixed(4)} | State: {log.state}
               </div>
             </div>
           ))}
