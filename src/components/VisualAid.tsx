@@ -12,15 +12,29 @@ export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
   const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
   const [imageUrl, setImageUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Early validation
+  if (!visualAid || !visualAid.isVisible) {
+    return null;
+  }
+
+  if (!visualAid.word) {
+    console.error('🖼️ VisualAid: No word provided');
+    return null;
+  }
 
   // Reset letter index when visual aid changes
   useEffect(() => {
     if (visualAid) {
+      console.log('🖼️ Visual Aid triggered for:', visualAid.word);
       setCurrentLetterIndex(0);
+      setError('');
       fetchImage();
     } else {
       setImageUrl('');
       setCurrentLetterIndex(0);
+      setError('');
     }
   }, [visualAid]);
 
@@ -28,6 +42,8 @@ export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
     if (!visualAid) return;
     
     setIsLoading(true);
+    setError('');
+    
     try {
       // Use Unsplash API or placeholder service for images
       const response = await fetch(
@@ -39,12 +55,14 @@ export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
         setImageUrl(data.urls.regular);
       } else {
         // Fallback to placeholder service
-        setImageUrl(`https://picsum.photos/seed/${visualAid.imageQuery}/400/300.jpg`);
+        const fallbackUrl = `https://picsum.photos/seed/${encodeURIComponent(visualAid.imageQuery)}/400/300.jpg`;
+        setImageUrl(fallbackUrl);
       }
     } catch (error) {
-      console.error('Failed to fetch image:', error);
+      console.error('🖼️ Failed to fetch image:', error);
       // Fallback to placeholder service
-      setImageUrl(`https://picsum.photos/seed/${visualAid.imageQuery}/400/300.jpg`);
+      const fallbackUrl = `https://picsum.photos/seed/${encodeURIComponent(visualAid.imageQuery)}/400/300.jpg`;
+      setImageUrl(fallbackUrl);
     } finally {
       setIsLoading(false);
     }
@@ -64,12 +82,15 @@ export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
     setCurrentLetterIndex(0);
   };
 
-  if (!visualAid || !visualAid.isVisible) {
+  // Safely get word and letters
+  const word = visualAid.word ? visualAid.word.toUpperCase() : '';
+  const letters = word ? word.split('') : [];
+
+  // If no letters after validation, don't render
+  if (!letters || letters.length === 0) {
+    console.error('🖼️ VisualAid: No valid letters to display');
     return null;
   }
-
-  const word = visualAid.word.toUpperCase();
-  const letters = word.split('');
 
   return (
     <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 ${className}`}>
@@ -85,6 +106,13 @@ export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
           </button>
         </div>
 
+        {/* Error Display */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700">
+            {error}
+          </div>
+        )}
+
         {/* Image Section */}
         <div className="mb-6">
           {isLoading ? (
@@ -93,9 +121,13 @@ export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
             </div>
           ) : imageUrl ? (
             <img
-              src={imageUrl}
-              alt={visualAid.imageQuery}
+              src={imageUrl || '/placeholder-image.png'}
+              alt={visualAid.imageQuery || 'Visual aid image'}
               className="w-full h-64 object-cover rounded-2xl"
+              onError={() => {
+                console.error('🖼️ Failed to load image:', imageUrl);
+                setError('Image failed to load');
+              }}
             />
           ) : (
             <div className="w-full h-64 bg-gray-200 rounded-2xl flex items-center justify-center">
@@ -114,7 +146,7 @@ export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
         <div className="flex justify-center gap-2 mb-8">
           {letters.map((letter, index) => (
             <div
-              key={index}
+              key={`${letter}-${index}`}
               className={`w-12 h-12 border-2 rounded-lg flex items-center justify-center text-xl font-bold transition-all duration-300 ${
                 index < currentLetterIndex
                   ? 'bg-green-100 border-green-500 text-green-700'

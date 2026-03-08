@@ -136,7 +136,27 @@ export const useRealtimeAudio = ({
                 }
               } else if (data.name === 'show_visual_aid') {
                 console.log('🎯 Visual aid requested:', data.arguments);
-                const { word, image_query } = data.arguments;
+                
+                // Parse arguments safely - OpenAI often sends as string
+                let args;
+                try {
+                  args = typeof data.arguments === 'string' 
+                    ? JSON.parse(data.arguments) 
+                    : data.arguments;
+                } catch (error) {
+                  console.error('🎯 Failed to parse visual aid arguments:', error);
+                  return;
+                }
+                
+                const { word, image_query } = args || {};
+                
+                // Validate required fields
+                if (!word || !image_query) {
+                  console.error('🎯 Missing required visual aid fields:', { word, image_query });
+                  return;
+                }
+                
+                console.log('🖼️ Visual Aid triggered for:', word);
                 
                 // Show visual aid in UI
                 setVisualAid({
