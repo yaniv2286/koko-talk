@@ -53,23 +53,23 @@ export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSe
 
   const characters = [
     {
-      id: 'puppy',
-      name: 'Puppy',
-      avatar: '/avatars/puppy.png',
+      id: 'avatar1',
+      name: 'Character 1',
+      avatar: '/avatars/10762531.jpg',
       color: 'bg-amber-100 hover:bg-amber-200',
       borderColor: 'border-amber-300'
     },
     {
-      id: 'robot',
-      name: 'Robot',
-      avatar: '/avatars/robot.png',
+      id: 'avatar2',
+      name: 'Character 2',
+      avatar: '/avatars/cute-dog-studio.jpg',
       color: 'bg-blue-100 hover:bg-blue-200',
       borderColor: 'border-blue-300'
     },
     {
-      id: 'monster',
-      name: 'Monster',
-      avatar: '/avatars/monster.png',
+      id: 'avatar3',
+      name: 'Character 3',
+      avatar: '/avatars/f0cefe01-6670-4fc4-9ea5-7769605e4fce.jpg',
       color: 'bg-green-100 hover:bg-green-200',
       borderColor: 'border-green-300'
     }
