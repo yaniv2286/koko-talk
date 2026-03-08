@@ -203,15 +203,12 @@ export const useRealtimeAudio = ({
         setConnected(true);
         setSessionId(apiKey);
         
-        // Send session configuration with VAD enabled
+        // Send session configuration (OpenAI defaults to server_vad)
         ws.send(JSON.stringify({
           type: 'session.update',
           session: {
             type: 'realtime',
             instructions: instructions,
-            turn_detection: {
-              type: 'server_vad'
-            },
             input_audio_format: 'pcm16',
             output_audio_format: 'pcm16'
           }
@@ -237,44 +234,50 @@ export const useRealtimeAudio = ({
                 console.error('FRONTEND: Cannot trigger auto-greeting - websocketRef.current is null');
               }
               break;
-            case 'response.audio.delta':
-              console.log('FRONTEND: Audio delta received');
-              console.log('FRONTEND: Audio delta data:', data.delta);
+            case 'response.output_audio.delta':
+              console.log('FRONTEND: Output audio delta received');
+              console.log('FRONTEND: Audio delta data length:', data.delta?.length || 0);
               setState('speaking');
               
-              // Play the incoming audio
+              // Play the incoming PCM audio
               if (audioContextRef.current && data.delta) {
                 try {
-                  // Convert base64 audio data to binary
+                  // Decode base64 to binary buffer
                   const binaryString = atob(data.delta);
                   const bytes = new Uint8Array(binaryString.length);
                   for (let i = 0; i < binaryString.length; i++) {
                     bytes[i] = binaryString.charCodeAt(i);
                   }
                   
-                  // Create audio buffer from PCM data
-                  const audioBuffer = audioContextRef.current.createBuffer(1, bytes.length, 24000);
-                  const channelData = audioBuffer.getChannelData(0);
-                  
-                  // Convert bytes to float32 audio samples (-1 to 1)
-                  for (let i = 0; i < bytes.length; i++) {
-                    channelData[i] = (bytes[i] - 128) / 128.0;
+                  // Convert Int16Array to Float32Array for Web Audio API
+                  const int16Array = new Int16Array(bytes.buffer);
+                  const float32Array = new Float32Array(int16Array.length);
+                  for (let i = 0; i < int16Array.length; i++) {
+                    float32Array[i] = int16Array[i] / 32768.0; // Scale to -1.0 to 1.0
                   }
                   
-                  // Play the audio buffer
+                  // Create and play audio buffer
+                  const audioBuffer = audioContextRef.current.createBuffer(1, float32Array.length, 24000);
+                  const channelData = audioBuffer.getChannelData(0);
+                  channelData.set(float32Array);
+                  
                   const source = audioContextRef.current.createBufferSource();
                   source.buffer = audioBuffer;
                   source.connect(audioContextRef.current.destination);
                   source.start();
                   
-                  console.log('FRONTEND: Audio playback started');
+                  console.log('FRONTEND: PCM audio playback started', float32Array.length, 'samples');
                 } catch (error) {
-                  console.error('FRONTEND: Error playing audio:', error);
+                  console.error('FRONTEND: Error playing PCM audio:', error);
                 }
               }
               break;
             case 'response.audio.done':
               console.log('FRONTEND: Audio response done');
+              setState('idle');
+              break;
+            case 'response.done':
+              console.log('FRONTEND: Response done - resetting state from speaking to idle');
               setState('idle');
               break;
             case 'response.text.delta':
