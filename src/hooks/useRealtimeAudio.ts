@@ -389,7 +389,6 @@ export const useRealtimeAudio = ({
         setConnectionError('WebSocket connection error');
         setState('error');
       };
-      }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Connection failed';
