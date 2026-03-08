@@ -82,11 +82,17 @@ export const useRealtimeAudio = ({
       // Trigger initial response when data channel opens
       dc.addEventListener('open', () => {
         console.log('🌐 Data channel opened, triggering initial response...');
+        
+        // Create gender-aware Hebrew greeting
+        const genderAwareGreeting = kidGender === 'girl' 
+          ? 'Shalom! Ani Koko! Rotza nenase?' 
+          : 'Shalom! Ani Koko! Rotze nenase?';
+        
         dc.send(JSON.stringify({
           type: 'response.create',
           response: {
             modalities: ['audio', 'text'],
-            instructions: 'Please begin the lesson now.'
+            instructions: `Greet the child warmly in Hebrew and ask them if they want to start the lesson, just like the system instructions specify. Start immediately with: "${genderAwareGreeting}"`
           }
         }));
       });
