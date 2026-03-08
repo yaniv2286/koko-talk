@@ -16,6 +16,7 @@ export default function Home() {
   const [isMuted, setIsMuted] = useState(false);
   const [callTimer, setCallTimer] = useState(0);
   const [showDebugDrawer, setShowDebugDrawer] = useState(false);
+  const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
 
   const handleProfileSelected = () => {
     // Profile selected, will show gender selection next
@@ -23,6 +24,14 @@ export default function Home() {
 
   const handleGenderSelected = () => {
     setShowMainApp(true);
+  };
+
+  const handleGenderSelect = (gender: 'boy' | 'girl') => {
+    setSelectedGender(gender);
+    setKidGender(gender);
+    setTimeout(() => {
+      handleGenderSelected();
+    }, 300); // Brief delay to show selection animation
   };
 
   // Call timer effect
@@ -52,16 +61,6 @@ export default function Home() {
 
   // Show Gender Selection if profile is selected but gender is not
   if (!kidGender) {
-    const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
-    
-    const handleGenderSelect = (gender: 'boy' | 'girl') => {
-      setSelectedGender(gender);
-      setKidGender(gender);
-      setTimeout(() => {
-        handleGenderSelected();
-      }, 300); // Brief delay to show selection animation
-    };
-    
     return (
       <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
         {/* Blurred Background */}
