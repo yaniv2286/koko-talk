@@ -36,10 +36,14 @@ export const VoiceDebugComponent = () => {
     console.log('🔇🔇🔇 STOP RECORDING BUTTON CLICKED!!!');
     console.log('🔇🔇🔇 This should appear when you click the Stop Recording button');
     console.log('🔇 Current state before click:', state);
-    console.log('🔇 Button disabled state:', state !== 'listening');
     
-    // Always try to stop recording regardless of state
-    console.log('🔇 Force calling stopRecording function...');
+    // Check state inside the function instead of disabled attribute
+    if (state !== 'listening') {
+      console.log('❌ Not in listening state, current state:', state);
+      return;
+    }
+    
+    console.log('✅ In listening state, calling stopRecording function...');
     stopRecording();
     
     // Add a small delay to state change to allow the function to execute
@@ -100,8 +104,7 @@ export const VoiceDebugComponent = () => {
           </button>
           <button
             onClick={handleStopRecording}
-            disabled={state !== 'listening'}
-            className="px-6 py-2 bg-orange-600 text-white rounded-lg disabled:bg-gray-400 hover:bg-orange-700 transition-colors"
+            className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
           >
             Stop Recording
           </button>
