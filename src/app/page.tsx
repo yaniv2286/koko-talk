@@ -1,5 +1,6 @@
 import { VoiceDebugComponent } from '@/components/VoiceDebugComponent';
 import DebugDashboard from '@/components/DebugDashboard';
+import SystemDebugger from '@/components/SystemDebugger';
 
 export default function Home() {
   return (
@@ -9,6 +10,7 @@ export default function Home() {
         <VoiceDebugComponent />
       </div>
       <DebugDashboard />
+      <SystemDebugger />
     </main>
   );
 }

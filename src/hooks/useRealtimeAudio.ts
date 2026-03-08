@@ -170,48 +170,127 @@ export const useRealtimeAudio = ({
       console.log('🔑 API key length:', apiKey.length);
       console.log('🔑 Model:', model);
 
-      // Create WebSocket connection to OpenAI Realtime API
-      // Use the official OpenAI Realtime API subprotocol format
-      const ws = new WebSocket(
-        `wss://api.openai.com/v1/realtime?model=${model}`,
-        ['realtime', `openai-insecure-api-key.${apiKey}`]
-      );
+      // Create WebSocket connection to OpenAI Realtime API with auto-fixing
+      const createWebSocketWithFallback = (apiKey: string, model: string) => {
+        const methods = [
+          {
+            name: 'subprotocol-openai-insecure',
+            create: () => new WebSocket(
+              `wss://api.openai.com/v1/realtime?model=${model}`,
+              ['realtime', `openai-insecure-api-key.${apiKey}`]
+            )
+          },
+          {
+            name: 'subprotocol-bearer',
+            create: () => new WebSocket(
+              `wss://api.openai.com/v1/realtime?model=${model}`,
+              ['realtime', `Bearer ${apiKey}`.replace(/ /g, '_')]
+            )
+          },
+          {
+            name: 'query-bearer',
+            create: () => new WebSocket(
+              `wss://api.openai.com/v1/realtime?model=${model}&authorization=${encodeURIComponent(`Bearer ${apiKey}`)}`
+            )
+          },
+          {
+            name: 'query-api-key',
+            create: () => new WebSocket(
+              `wss://api.openai.com/v1/realtime?model=${model}&api_key=${encodeURIComponent(apiKey)}`
+            )
+          }
+        ];
 
-      websocketRef.current = ws;
+        let currentMethodIndex = 0;
 
-      ws.onopen = () => {
-        console.log('🔌 WebSocket connected successfully');
-        console.log('🔌 WebSocket readyState:', ws.readyState);
-        console.log('🔌 WebSocket URL:', ws.url);
-        setState('idle');
-        setConnected(true);
-        setSessionId(apiKey);
-        
-        // Send session configuration
-        const sessionConfig = {
-          type: 'session.update',
-          session: {
-            type: 'realtime',
-            instructions: instructions,
+        const tryNextMethod = () => {
+          if (currentMethodIndex >= methods.length) {
+            console.error('🔌 All authentication methods failed');
+            setConnectionError('All authentication methods failed');
+            setState('error');
+            return null;
+          }
+
+          const method = methods[currentMethodIndex];
+          console.log(`🔌 Trying authentication method: ${method.name}`);
+          
+          const ws = method.create();
+          
+          const originalOnerror = ws.onerror;
+          const originalOnclose = ws.onclose;
+          
+          ws.onerror = (error) => {
+            console.error(`🔌 Method ${method.name} failed:`, error);
+            currentMethodIndex++;
+            
+            if (currentMethodIndex < methods.length) {
+              console.log(`🔌 Trying next method...`);
+              setTimeout(() => tryNextMethod(), 1000);
+            } else {
+              originalOnerror?.call(ws, error);
+            }
+          };
+          
+          ws.onclose = (event) => {
+            if (event.code !== 1000) { // Not a normal close
+              console.log(`🔌 Method ${method.name} closed with code ${event.code}: ${event.reason}`);
+              currentMethodIndex++;
+              
+              if (currentMethodIndex < methods.length && event.code === 1006) {
+                console.log(`🔌 Trying next method...`);
+                setTimeout(() => tryNextMethod(), 1000);
+              } else {
+                originalOnclose?.call(ws, event);
+              }
+            } else {
+              originalOnclose?.call(ws, event);
+            }
+          };
+          
+          return ws;
+        };
+
+        return tryNextMethod();
+      };
+
+      const ws = createWebSocketWithFallback(apiKey, model);
+
+      if (ws) {
+        websocketRef.current = ws;
+
+        ws.onopen = () => {
+          console.log('🔌 WebSocket connected successfully');
+          console.log('🔌 WebSocket readyState:', ws.readyState);
+          console.log('🔌 WebSocket URL:', ws.url);
+          setState('idle');
+          setConnected(true);
+          setSessionId(apiKey);
+          
+          // Send session configuration
+          const sessionConfig = {
+            type: 'session.update',
+            session: {
+              type: 'realtime',
+              instructions: instructions,
+            }
+          };
+          
+          console.log('🔌 Sending session configuration:', sessionConfig);
+          console.log('🔌 Session config stringified:', JSON.stringify(sessionConfig));
+          
+          try {
+            ws.send(JSON.stringify(sessionConfig));
+            console.log('🔌 Session configuration sent successfully');
+          } catch (error) {
+            console.error('🔌 Failed to send session configuration:', error);
           }
         };
-        
-        console.log('🔌 Sending session configuration:', sessionConfig);
-        console.log('🔌 Session config stringified:', JSON.stringify(sessionConfig));
-        
-        try {
-          ws.send(JSON.stringify(sessionConfig));
-          console.log('🔌 Session configuration sent successfully');
-        } catch (error) {
-          console.error('🔌 Failed to send session configuration:', error);
-        }
-      };
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setConnectionError('WebSocket connection error');
-        setState('error');
-      };
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          setConnectionError('WebSocket connection error');
+          setState('error');
+        };
 
       ws.onmessage = (event) => {
         try {
@@ -303,12 +382,14 @@ export const useRealtimeAudio = ({
           setConnectionError(closeReason);
         }
       };
+      }
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
         setConnectionError('WebSocket connection error');
         setState('error');
       };
+      }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Connection failed';
