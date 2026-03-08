@@ -14,27 +14,47 @@ import { Mic, MicOff, Phone, PhoneOff, Volume2 } from 'lucide-react';
 export default function Home() {
   console.log('🏠 Home component rendering');
   const { userProfile, kidGender, setKidGender, state, audioLevel, disconnect } = useVoiceStore();
-  console.log('🏠 Store state:', { userProfile: !!userProfile, kidGender, state });
+  console.log('🏠 Store state (real-time):', { 
+    userProfile: userProfile?.name, 
+    kidGender, 
+    state,
+    showMainApp: false // Will check this next
+  });
   const { connect, disconnect: rtcDisconnect } = useRealtimeAudio({});
   const [showMainApp, setShowMainApp] = useState(false);
+  console.log('🏠 Local state:', { showMainApp });
   const [isMuted, setIsMuted] = useState(false);
   const [callTimer, setCallTimer] = useState(0);
   const [showDebugDrawer, setShowDebugDrawer] = useState(false);
   const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
 
   const handleProfileSelected = () => {
+    console.log('🏠 handleProfileSelected called - moving to gender selection');
     // Profile selected, will show gender selection next
   };
 
+  // Hardcoded avatar array for testing
+  const hardcodedAvatars = [
+    '/avatars/boy_avatar.png',
+    '/avatars/girl_avatar.png',
+    '/avatars/cute-dog-studio.jpg',
+    '/avatars/Gemini_Generated_Image_sndvtosndvtosndv.png',
+    '/avatars/Gemini_Generated_Image_4xj7d14xj7d14xj7.png'
+  ];
+
   const handleGenderSelected = () => {
+    console.log('🏠 handleGenderSelected called, setting showMainApp to true');
     setShowMainApp(true);
   };
 
   const handleGenderSelect = (gender: 'boy' | 'girl') => {
     console.log('🚀 Selection made:', gender);
+    console.log('🏠 Before setKidGender - kidGender:', kidGender);
     setSelectedGender(gender);
     setKidGender(gender);
+    console.log('🏠 After setKidGender - calling handleGenderSelected');
     setTimeout(() => {
+      console.log('🏠 Timeout - calling handleGenderSelected');
       handleGenderSelected();
     }, 300); // Brief delay to show selection animation
   };
@@ -210,9 +230,19 @@ export default function Home() {
           </div>
 
           {/* Helper Text */}
-          <p className="text-center text-white/70 max-w-md text-sm sm:text-base">
+          <p className="text-center text-white/70 max-w-md text-sm sm:text-base mb-8">
             This helps Koko know how to talk to you in Hebrew! 🌟
           </p>
+
+          {/* Call Button */}
+          <div className="flex justify-center">
+            <button
+              onClick={handleStartCall}
+              className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
+            >
+              📞 Start Call with Koko
+            </button>
+          </div>
         </div>
       </main>
     );
