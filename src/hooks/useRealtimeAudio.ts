@@ -415,6 +415,8 @@ export const useRealtimeAudio = ({
 
   // Stop recording
   const stopRecording = useCallback(() => {
+    console.log('🔇🔇🔇 STOP RECORDING FUNCTION CALLED!!!');
+    console.log('🔇🔇🔇 This should appear when you click Stop Recording');
     console.log('🔇 Stop recording called');
     console.log('🔇 Current state before stopping:', state);
     console.log('🔇 WebSocket readyState:', websocketRef.current?.readyState);
