@@ -143,7 +143,7 @@ export const useRealtimeAudio = ({
         
         // Send session configuration
         const sessionConfig = {
-          type: 'session.create',
+          type: 'session.update',
           session: {
             instructions: instructions,
             voice: voice,
@@ -175,9 +175,9 @@ export const useRealtimeAudio = ({
           
           // Handle different message types from OpenAI
           switch (data.type) {
-            case 'session.created':
-              // Session successfully created
-              console.log('Session created:', data.session);
+            case 'session.updated':
+              // Session successfully updated
+              console.log('Session updated:', data.session);
               break;
               
             case 'response.text.done':
