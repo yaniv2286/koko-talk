@@ -28,7 +28,7 @@ export const useRealtimeAudio = ({
   // Initialize audio context and analyser
   const initializeAudio = useCallback(async () => {
     try {
-      console.log('🎤 Initializing audio...');
+      console.log('🎤 Starting audio initialization...');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -40,13 +40,13 @@ export const useRealtimeAudio = ({
 
       console.log('✅ Microphone access granted');
       console.log('🎤 Stream active:', stream.active);
+      console.log('🎤 Stream tracks:', stream.getAudioTracks().length);
+      console.log('🎤 Stream track enabled:', stream.getAudioTracks()[0]?.enabled);
 
       audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+      console.log('🎵 Audio context created:', audioContextRef.current.state);
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 256;
-      analyserRef.current.smoothingTimeConstant = 0.8;
-
-      console.log('🎵 Audio context created:', audioContextRef.current.state);
       console.log('🎵 Analyser created:', !!analyserRef.current);
 
       const source = audioContextRef.current.createMediaStreamSource(stream);
@@ -96,6 +96,7 @@ export const useRealtimeAudio = ({
       processor.connect(audioContextRef.current.destination);
 
       console.log('🎵 Audio processor connected for audio capture');
+      console.log('🎤 Audio initialization completed successfully');
 
       return stream;
     } catch (error) {
@@ -372,11 +373,19 @@ export const useRealtimeAudio = ({
 
   // Start recording and sending audio
   const startRecording = useCallback(() => {
+    console.log('🎤 Start recording called');
+    console.log('🎤 Current state before recording:', state);
+    console.log('🎤 Analyser exists:', !!analyserRef.current);
+    console.log('🎤 Audio context state:', audioContextRef.current?.state);
+    
     // Audio capture is now handled automatically by the Web Audio API processor
     setState('listening');
+    console.log('🎤 State set to listening');
+    
     // Start audio level monitoring immediately
+    console.log('🎤 Starting audio level monitoring...');
     monitorAudioLevel();
-  }, [setState, monitorAudioLevel]);
+  }, [setState, monitorAudioLevel, state]);
 
   // Stop recording
   const stopRecording = useCallback(() => {
