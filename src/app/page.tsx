@@ -12,8 +12,10 @@ import { useRealtimeAudio } from '@/hooks/useRealtimeAudio';
 import { Mic, MicOff, Phone, PhoneOff, Volume2 } from 'lucide-react';
 
 export default function Home() {
+  console.log('🏠 Home component rendering');
   const { userProfile, kidGender, setKidGender, state, audioLevel, disconnect } = useVoiceStore();
-  const { connect, disconnect: rtcDisconnect } = useRealtimeAudio();
+  console.log('🏠 Store state:', { userProfile: !!userProfile, kidGender, state });
+  const { connect, disconnect: rtcDisconnect } = useRealtimeAudio({});
   const [showMainApp, setShowMainApp] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [callTimer, setCallTimer] = useState(0);
@@ -69,11 +71,13 @@ export default function Home() {
 
   // Show ProfileSelector if no profile is selected
   if (!userProfile) {
+    console.log('🏠 Showing ProfileSelector');
     return <ProfileSelector onProfileSelected={handleProfileSelected} />;
   }
 
   // Show Gender Selection if profile is selected but gender is not
   if (!kidGender) {
+    console.log('🏠 Showing Gender Selection');
     return (
       <main className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
         {/* Blurred Background */}
@@ -216,9 +220,11 @@ export default function Home() {
 
   // Show main app if both profile and gender are selected
   if (!showMainApp) {
+    console.log('🏠 showMainApp is false, returning null');
     return null; // Will show gender selection above
   }
 
+  console.log('🏠 Showing Main App');
   return (
     <main className="relative min-h-screen overflow-hidden">
       {/* Visual Aid Modal */}
