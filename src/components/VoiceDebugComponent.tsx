@@ -36,6 +36,8 @@ export const VoiceDebugComponent = () => {
     console.log('🔇🔇🔇 STOP RECORDING BUTTON CLICKED!!!');
     console.log('🔇🔇🔇 This should appear when you click the Stop Recording button');
     console.log('🔇 Current state before click:', state);
+    console.log('🔇 stopRecording function exists:', typeof stopRecording);
+    console.log('🔇 stopRecording function:', stopRecording);
     
     // Check state inside the function instead of disabled attribute
     if (state !== 'listening') {
@@ -44,7 +46,13 @@ export const VoiceDebugComponent = () => {
     }
     
     console.log('✅ In listening state, calling stopRecording function...');
-    stopRecording();
+    
+    try {
+      stopRecording();
+      console.log('✅ stopRecording function called successfully');
+    } catch (error) {
+      console.log('❌ Error calling stopRecording:', error);
+    }
     
     // Add a small delay to state change to allow the function to execute
     setTimeout(() => {
