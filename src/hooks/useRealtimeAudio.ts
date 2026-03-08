@@ -53,13 +53,12 @@ export const useRealtimeAudio = ({
 
       const source = audioContextRef.current.createMediaStreamSource(stream);
       
-      // Connect source directly to analyser for level monitoring
+      // Connect source directly to analyser for level monitoring ONLY
       source.connect(analyserRef.current);
-      console.log('🎵 Audio source connected to analyser');
+      console.log('🎵 Audio source connected to analyser ONLY (no loopback)');
 
-      // IMPORTANT: Connect analyser to destination to ensure audio flow
-      analyserRef.current.connect(audioContextRef.current.destination);
-      console.log('🎵 Analyser connected to destination');
+      // NEVER connect to destination - this prevents loopback
+      // analyserRef.current.connect(audioContextRef.current.destination); // REMOVED
 
       // Create a simple processor for real-time audio capture
       const processor = audioContextRef.current.createScriptProcessor(4096, 1, 1);
@@ -76,28 +75,28 @@ export const useRealtimeAudio = ({
             pcmData[i] = Math.max(-32768, Math.min(32767, inputBuffer[i] * 32768));
           }
           
-          // Send as base64 encoded audio data
+          // Send as base64 encoded audio data to OpenAI
           try {
             const base64Audio = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
             
             websocketRef.current.send(JSON.stringify({
               type: 'input_audio_buffer.append',
-              audio: base64Audio,
-              format: 'pcm16'
+              audio: base64Audio
             }));
+            
+            console.log('🎤 Audio chunk sent to OpenAI:', pcmData.length, 'samples');
           } catch (error) {
-            console.error('Error sending audio data:', error);
+            console.error('🎤 Error sending audio to OpenAI:', error);
           }
           
           isRecording = false;
         }
       };
       
-      // Connect processor to destination for audio processing
+      // Connect processor to source for audio capture (NEVER to destination)
       source.connect(processor);
-      processor.connect(audioContextRef.current.destination);
+      console.log('🎤 Audio processor connected for capture ONLY');
 
-      console.log('🎵 Audio processor connected for audio capture');
       console.log('🎤 Audio initialization completed successfully');
 
       return stream;
@@ -204,12 +203,20 @@ export const useRealtimeAudio = ({
         setConnected(true);
         setSessionId(apiKey);
         
-        // Send session configuration
+        // Send session configuration with VAD enabled
         ws.send(JSON.stringify({
           type: 'session.update',
           session: {
             type: 'realtime',
             instructions: instructions,
+            turn_detection: {
+              type: 'server_vad',
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 500
+            },
+            input_audio_format: 'pcm16',
+            output_audio_format: 'pcm16'
           }
         }));
       };
