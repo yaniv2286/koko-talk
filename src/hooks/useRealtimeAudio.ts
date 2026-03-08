@@ -124,7 +124,7 @@ export const useRealtimeAudio = ({
         throw new Error('Failed to get API configuration');
       }
 
-      const { apiKey, model, instructions, voice } = await response.json();
+      const { apiKey, model, instructions } = await response.json();
 
       // Create WebSocket connection to OpenAI Realtime API
       // OpenAI Realtime API requires specific subprotocol format for authentication
@@ -147,7 +147,6 @@ export const useRealtimeAudio = ({
           session: {
             type: 'realtime',
             instructions: instructions,
-            voice: voice,
             turn_detection: {
               type: 'server_vad',
               threshold: 0.5,

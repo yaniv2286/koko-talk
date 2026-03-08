@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
       apiKey: apiKey,
       model: 'gpt-4o-realtime-preview-2024-10-01',
       instructions: 'You are Koko, a friendly English tutor for kids. The user is a native Hebrew speaker. Respond only in English, keep sentences short and encouraging.',
-      voice: 'alloy',
       test: 'API key is valid',
     });
   } catch (error) {
