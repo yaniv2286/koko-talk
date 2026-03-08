@@ -219,19 +219,55 @@ export const useRealtimeAudio = ({
         try {
           const data = JSON.parse(event.data);
           console.log('FRONTEND: Parsed message type:', data.type);
+          console.log('FRONTEND: Full message data:', data);
           
           switch (data.type) {
             case 'session.updated':
               console.log('FRONTEND: Session updated successfully');
+              console.log('FRONTEND: Session details:', data.session);
               // Trigger AI's first response immediately after connecting
               if (websocketRef.current) {
                 websocketRef.current.send(JSON.stringify({ type: 'response.create' }));
-                console.log('FRONTEND: Triggered auto-greeting');
+                console.log('FRONTEND: Triggered auto-greeting - sent response.create');
+              } else {
+                console.error('FRONTEND: Cannot trigger auto-greeting - websocketRef.current is null');
               }
               break;
             case 'response.audio.delta':
               console.log('FRONTEND: Audio delta received');
+              console.log('FRONTEND: Audio delta data:', data.delta);
               setState('speaking');
+              
+              // Play the incoming audio
+              if (audioContextRef.current && data.delta) {
+                try {
+                  // Convert base64 audio data to binary
+                  const binaryString = atob(data.delta);
+                  const bytes = new Uint8Array(binaryString.length);
+                  for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                  }
+                  
+                  // Create audio buffer from PCM data
+                  const audioBuffer = audioContextRef.current.createBuffer(1, bytes.length, 24000);
+                  const channelData = audioBuffer.getChannelData(0);
+                  
+                  // Convert bytes to float32 audio samples (-1 to 1)
+                  for (let i = 0; i < bytes.length; i++) {
+                    channelData[i] = (bytes[i] - 128) / 128.0;
+                  }
+                  
+                  // Play the audio buffer
+                  const source = audioContextRef.current.createBufferSource();
+                  source.buffer = audioBuffer;
+                  source.connect(audioContextRef.current.destination);
+                  source.start();
+                  
+                  console.log('FRONTEND: Audio playback started');
+                } catch (error) {
+                  console.error('FRONTEND: Error playing audio:', error);
+                }
+              }
               break;
             case 'response.audio.done':
               console.log('FRONTEND: Audio response done');
@@ -247,13 +283,6 @@ export const useRealtimeAudio = ({
               break;
             case 'input_text.done':
               console.log('FRONTEND: User input transcript:', data.text);
-              addConversationMessage('user', data.text);
-              break;
-            case 'response.done':
-              console.log('FRONTEND: Response completed');
-              setState('idle');
-              // Increment star count for successful response
-              incrementStarCount();
               break;
             case 'error':
               console.error('FRONTEND: OpenAI error:', data);
@@ -271,7 +300,6 @@ export const useRealtimeAudio = ({
       ws.onclose = (event) => {
         console.log('FRONTEND: WebSocket closed');
         setConnected(false);
-        // Graceful degradation - return to idle state instead of error
         setState('idle');
         setConnectionError('Oops! Connection lost. Tap to wake Koko up!');
       };
