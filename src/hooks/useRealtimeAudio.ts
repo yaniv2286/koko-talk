@@ -107,10 +107,24 @@ export const useRealtimeAudio = ({
               console.log('🔊 Audio response done');
               setState('idle');
               break;
-            case 'function_call':
-              console.log('⭐ Function call:', data.name);
+            case 'response.function_call_arguments.done':
+              console.log('⭐ Function call complete:', data.name);
               if (data.name === 'award_star') {
                 incrementStarCount();
+                
+                // Acknowledge the function call back to OpenAI
+                if (dcRef.current && dcRef.current.readyState === 'open') {
+                  dcRef.current.send(JSON.stringify({
+                    type: 'conversation.item.create',
+                    item: {
+                      type: 'function_call_output',
+                      call_id: data.call_id,
+                      output: JSON.stringify({ success: true, message: "Star awarded to the user!" })
+                    }
+                  }));
+                  // Trigger the AI to continue the conversation after awarding the star
+                  dcRef.current.send(JSON.stringify({ type: 'response.create' }));
+                }
               }
               break;
             case 'error':
