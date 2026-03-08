@@ -10,6 +10,7 @@ export const VoiceDebugComponent = () => {
     connectionError,
     audioLevel,
     conversationHistory,
+    setState,
   } = useVoiceStore();
 
   const {
@@ -37,14 +38,15 @@ export const VoiceDebugComponent = () => {
     console.log('🔇 Current state before click:', state);
     console.log('🔇 Button disabled state:', state !== 'listening');
     
-    if (state !== 'listening') {
-      console.log('❌ Stop Recording button is disabled because state is not "listening"');
-      console.log('❌ Current state:', state);
-      return;
-    }
-    
-    console.log('✅ Stop Recording button is enabled, calling stopRecording function...');
+    // Always try to stop recording regardless of state
+    console.log('🔇 Force calling stopRecording function...');
     stopRecording();
+    
+    // Add a small delay to state change to allow the function to execute
+    setTimeout(() => {
+      console.log('🔇 Delayed state change to thinking...');
+      setState('thinking');
+    }, 100);
   };
 
   const handleStopSession = () => {
