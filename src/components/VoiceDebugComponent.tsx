@@ -10,7 +10,6 @@ export const VoiceDebugComponent = () => {
     connectionError,
     audioLevel,
     conversationHistory,
-    setState,
   } = useVoiceStore();
 
   const {
@@ -33,32 +32,9 @@ export const VoiceDebugComponent = () => {
   };
 
   const handleStopRecording = () => {
-    console.log('🔇🔇🔇 STOP RECORDING BUTTON CLICKED!!!');
-    console.log('🔇🔇🔇 This should appear when you click the Stop Recording button');
-    console.log('🔇 Current state before click:', state);
-    console.log('🔇 stopRecording function exists:', typeof stopRecording);
-    console.log('🔇 stopRecording function:', stopRecording);
-    
-    // Check state inside the function instead of disabled attribute
-    if (state !== 'listening') {
-      console.log('❌ Not in listening state, current state:', state);
-      return;
-    }
-    
-    console.log('✅ In listening state, calling stopRecording function...');
-    
-    try {
+    if (state === 'listening') {
       stopRecording();
-      console.log('✅ stopRecording function called successfully');
-    } catch (error) {
-      console.log('❌ Error calling stopRecording:', error);
     }
-    
-    // Add a small delay to state change to allow the function to execute
-    setTimeout(() => {
-      console.log('🔇 Delayed state change to thinking...');
-      setState('thinking');
-    }, 100);
   };
 
   const handleStopSession = () => {
@@ -112,7 +88,8 @@ export const VoiceDebugComponent = () => {
           </button>
           <button
             onClick={handleStopRecording}
-            className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+            disabled={state !== 'listening'}
+            className="px-6 py-2 bg-orange-600 text-white rounded-lg disabled:bg-gray-400 hover:bg-orange-700 transition-colors"
           >
             Stop Recording
           </button>

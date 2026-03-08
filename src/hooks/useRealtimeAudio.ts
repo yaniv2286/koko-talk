@@ -161,229 +161,80 @@ export const useRealtimeAudio = ({
       setState('connecting');
       setConnectionError(null);
 
-      // Get API key and configuration from our API
-      console.log('🔌 Starting API key fetch...');
       const response = await fetch('/api/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
-      
-      console.log('🔌 API response received');
-      console.log('🔌 Response status:', response.status);
-      console.log('🔌 Response ok:', response.ok);
-      console.log('🔌 Response headers:', response.headers);
 
       if (!response.ok) {
-        console.log('❌ API response not ok:', response.status, response.statusText);
         throw new Error('Failed to get API configuration');
       }
 
-      const data = await response.json();
-      console.log('🔌 API response data:', data);
+      const { apiKey, model, instructions } = await response.json();
 
-      const { apiKey, model, instructions } = data;
+      // Initialize audio
+      await initializeAudio();
 
-      if (!apiKey) {
-        console.log('❌ No API key in response');
-        throw new Error('No API key received from server');
-      }
+      // Create WebSocket connection
+      const ws = new WebSocket(
+        `wss://api.openai.com/v1/realtime?model=${model}`,
+        ['realtime', `openai-insecure-api-key.${apiKey}`]
+      );
 
-      console.log('🔑 API key received:', apiKey.substring(0, 10) + '...');
-      console.log('🔑 API key length:', apiKey.length);
-      console.log('🔑 Model:', model);
+      websocketRef.current = ws;
 
-      // Initialize audio right after API key is retrieved
-      console.log('🎤 Initializing audio pipeline...');
-      try {
-        await initializeAudio();
-        console.log('✅ Audio pipeline initialized successfully');
-      } catch (audioError) {
-        console.log('❌ Audio pipeline initialization failed:', audioError);
-        // Don't throw error here - let user try recording manually
-      }
-
-      // Create WebSocket connection to OpenAI Realtime API with auto-fixing
-      const createWebSocketWithFallback = (apiKey: string, model: string) => {
-        const methods = [
-          {
-            name: 'subprotocol-openai-insecure',
-            create: () => new WebSocket(
-              `wss://api.openai.com/v1/realtime?model=${model}`,
-              ['realtime', `openai-insecure-api-key.${apiKey}`]
-            )
-          },
-          {
-            name: 'subprotocol-bearer',
-            create: () => new WebSocket(
-              `wss://api.openai.com/v1/realtime?model=${model}`,
-              ['realtime', `Bearer ${apiKey}`.replace(/ /g, '_')]
-            )
-          },
-          {
-            name: 'query-bearer',
-            create: () => new WebSocket(
-              `wss://api.openai.com/v1/realtime?model=${model}&authorization=${encodeURIComponent(`Bearer ${apiKey}`)}`
-            )
-          },
-          {
-            name: 'query-api-key',
-            create: () => new WebSocket(
-              `wss://api.openai.com/v1/realtime?model=${model}&api_key=${encodeURIComponent(apiKey)}`
-            )
-          }
-        ];
-
-        let currentMethodIndex = 0;
-
-        const tryNextMethod = () => {
-          if (currentMethodIndex >= methods.length) {
-            console.error('🔌 All authentication methods failed');
-            setConnectionError('All authentication methods failed');
-            setState('error');
-            return null;
-          }
-
-          const method = methods[currentMethodIndex];
-          console.log(`🔌 Trying authentication method: ${method.name}`);
-          
-          const ws = method.create();
-          
-          const originalOnerror = ws.onerror;
-          const originalOnclose = ws.onclose;
-          
-          ws.onerror = (error) => {
-            console.error(`🔌 Method ${method.name} failed:`, error);
-            currentMethodIndex++;
-            
-            if (currentMethodIndex < methods.length) {
-              console.log(`🔌 Trying next method...`);
-              setTimeout(() => tryNextMethod(), 1000);
-            } else {
-              originalOnerror?.call(ws, error);
-            }
-          };
-          
-          ws.onclose = (event) => {
-            if (event.code !== 1000) { // Not a normal close
-              console.log(`🔌 Method ${method.name} closed with code ${event.code}: ${event.reason}`);
-              currentMethodIndex++;
-              
-              if (currentMethodIndex < methods.length && event.code === 1006) {
-                console.log(`🔌 Trying next method...`);
-                setTimeout(() => tryNextMethod(), 1000);
-              } else {
-                originalOnclose?.call(ws, event);
-              }
-            } else {
-              originalOnclose?.call(ws, event);
-            }
-          };
-          
-          return ws;
-        };
-
-        return tryNextMethod();
-      };
-
-      const ws = createWebSocketWithFallback(apiKey, model);
-
-      if (ws) {
-        websocketRef.current = ws;
-
-        ws.onopen = () => {
-          console.log('🔌 WebSocket connected successfully');
-          console.log('🔌 WebSocket readyState:', ws.readyState);
-          console.log('🔌 WebSocket URL:', ws.url);
-          setState('idle');
-          setConnected(true);
-          setSessionId(apiKey);
-          
-          // Send session configuration
-          const sessionConfig = {
-            type: 'session.update',
-            session: {
-              type: 'realtime',
-              instructions: instructions,
-            }
-          };
-          
-          console.log('🔌 Sending session configuration:', sessionConfig);
-          console.log('🔌 Session config stringified:', JSON.stringify(sessionConfig));
-          
-          try {
-            ws.send(JSON.stringify(sessionConfig));
-            console.log('🔌 Session configuration sent successfully');
-          } catch (error) {
-            console.error('🔌 Failed to send session configuration:', error);
-          }
-        };
-
-        ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          setConnectionError('WebSocket connection error');
-          setState('error');
-        };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log('=== OpenAI Message Received ===');
-          console.log('Type:', data.type);
-          console.log('Full Data:', JSON.stringify(data, null, 2));
-          console.log('==============================');
-          
-          // Handle different message types from OpenAI
-          switch (data.type) {
-            case 'session.updated':
-              // Session successfully updated
-              console.log('✅ Session updated successfully:', data.session);
-              console.log('🎉 SUCCESS: WebSocket connection and session working!');
-              break;
-              
-            case 'session.created':
-              // Session successfully created (alternative event)
-              console.log('✅ Session created successfully:', data.session);
-              console.log('� SUCCESS: WebSocket connection and session working!');
-              break;
-              
-            case 'error':
-              console.error('❌ OpenAI error:', data);
-              const errorMessage = data.error?.message || data.error || 'Unknown OpenAI error';
-              console.error('❌ Parsed error message:', errorMessage);
-              setConnectionError(errorMessage);
-              setState('error');
-              break;
-              
-            default:
-              console.log('❓ Unhandled message type:', data.type, data);
-              if (data.type === 'response.text.done') {
-                console.log('🎉 SUCCESS: Got AI response!');
-              }
-          }
-        } catch (error) {
-          console.error('❌ Error parsing WebSocket message:', error, event.data);
-        }
-      };
-
-      ws.onclose = (event) => {
-        console.log('🔌 WebSocket closed:');
-        console.log('🔌 Close code:', event.code);
-        console.log('🔌 Close reason:', event.reason);
-        console.log('🔌 Was clean:', event.wasClean);
-        setConnected(false);
+      ws.onopen = () => {
         setState('idle');
-        if (state !== 'idle') {
-          const closeReason = event.reason || 'Connection closed unexpectedly';
-          console.log('🔌 WebSocket closed unexpectedly:', closeReason);
-          setConnectionError(closeReason);
-        }
+        setConnected(true);
+        setSessionId(apiKey);
+        
+        // Send session configuration
+        ws.send(JSON.stringify({
+          type: 'session.update',
+          session: {
+            type: 'realtime',
+            instructions: instructions,
+          }
+        }));
       };
-      }
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
         setConnectionError('WebSocket connection error');
         setState('error');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          switch (data.type) {
+            case 'session.updated':
+              console.log('Session updated successfully');
+              break;
+            case 'response.text.done':
+              console.log('Got AI response:', data.text);
+              addConversationMessage({
+                role: 'assistant',
+                content: data.text,
+                timestamp: new Date(),
+              });
+              setState('idle');
+              break;
+            case 'error':
+              console.error('OpenAI error:', data);
+              setConnectionError(data.error?.message || 'Unknown OpenAI error');
+              setState('error');
+              break;
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
+      ws.onclose = (event) => {
+        setConnected(false);
+        setState('idle');
       };
 
     } catch (error) {
@@ -399,74 +250,26 @@ export const useRealtimeAudio = ({
     setSessionId,
     addConversationMessage,
     onError,
-    monitorAudioLevel,
+    initializeAudio,
   ]);
 
   // Start recording and sending audio
   const startRecording = useCallback(() => {
-    console.log('🎤 Start recording called');
-    console.log('🎤 Current state before recording:', state);
-    console.log('🎤 Analyser exists:', !!analyserRef.current);
-    console.log('🎤 Audio context state:', audioContextRef.current?.state);
-    
-    // Audio capture is now handled automatically by the Web Audio API processor
     setState('listening');
-    console.log('🎤 State set to listening');
-    
-    // Start audio level monitoring immediately
-    console.log('🎤 Starting audio level monitoring...');
-    
-    // Force an immediate audio level test
-    if (analyserRef.current) {
-      console.log('🎵 Testing audio level immediately...');
-      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-      analyserRef.current.getByteTimeDomainData(dataArray);
-      
-      let sum = 0;
-      for (let i = 0; i < dataArray.length; i++) {
-        const normalizedValue = (dataArray[i] - 128) / 128;
-        sum += normalizedValue * normalizedValue;
-      }
-      const rms = Math.sqrt(sum / dataArray.length);
-      const audioLevel = Math.min(100, rms * 200);
-      
-      console.log('🎵 Immediate test - Audio level:', audioLevel.toFixed(2) + '%');
-      console.log('🎵 Immediate test - RMS value:', rms.toFixed(4));
-      setAudioLevel(audioLevel);
-      onAudioLevelChange?.(audioLevel);
-    }
-    
     monitorAudioLevel();
-  }, [setState, monitorAudioLevel, state, onAudioLevelChange]);
+  }, [setState, monitorAudioLevel]);
 
   // Stop recording
   const stopRecording = useCallback(() => {
-    console.log('🔇🔇🔇 STOP RECORDING FUNCTION CALLED!!!');
-    console.log('🔇🔇🔇 This should appear when you click Stop Recording');
-    console.log('🔇 Stop recording called');
-    console.log('🔇 Current state before stopping:', state);
-    console.log('🔇 WebSocket readyState:', websocketRef.current?.readyState);
-    console.log('🔇 WebSocket exists:', !!websocketRef.current);
-    
-    // Audio capture stops automatically when state changes from 'listening'
     setState('thinking');
-    console.log('🔇 State set to thinking');
     
     // Trigger response generation
     if (websocketRef.current?.readyState === WebSocket.OPEN) {
-      console.log('🔇 Sending response.create to OpenAI');
-      const responseMessage = JSON.stringify({
+      websocketRef.current.send(JSON.stringify({
         type: 'response.create'
-      });
-      console.log('🔇 Message to send:', responseMessage);
-      
-      websocketRef.current.send(responseMessage);
-      console.log('🔇 response.create sent successfully');
-    } else {
-      console.log('❌ WebSocket not ready for response.create');
-      console.log('❌ WebSocket readyState:', websocketRef.current?.readyState);
+      }));
     }
-  }, [setState, state]);
+  }, [setState]);
 
   // Disconnect
   const disconnect = useCallback(() => {
