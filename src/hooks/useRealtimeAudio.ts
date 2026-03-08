@@ -110,43 +110,49 @@ export const useRealtimeAudio = ({
 
   // Monitor audio levels
   const monitorAudioLevel = useCallback(() => {
-    console.log('🎵 Monitoring audio level...');
-    console.log('Analyser exists:', !!analyserRef.current);
-    console.log('Current state:', state);
+    if (!analyserRef.current || state !== 'listening') return;
+
+    const analyser = analyserRef.current;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
     
-    if (!analyserRef.current) {
-      console.log('❌ No analyser reference');
-      return;
-    }
-
-    try {
-      // Use time-domain data for voice level detection (better for voice)
-      const dataArray = new Uint8Array(analyserRef.current.fftSize);
-      analyserRef.current.getByteTimeDomainData(dataArray);
-
-      // Calculate RMS (Root Mean Square) for voice levels
+    const updateLevel = () => {
+      if (state !== 'listening') return;
+      
+      // Get time-domain data for better voice detection
+      analyser.getByteTimeDomainData(dataArray);
+      
+      // Calculate RMS (Root Mean Square) for accurate volume measurement
       let sum = 0;
       for (let i = 0; i < dataArray.length; i++) {
-        const normalized = (dataArray[i] - 128) / 128; // Convert to -1 to 1 range
-        sum += normalized * normalized;
+        const normalizedValue = (dataArray[i] - 128) / 128; // Convert from 0-255 to -1 to 1
+        sum += normalizedValue * normalizedValue;
       }
       const rms = Math.sqrt(sum / dataArray.length);
-      const normalizedLevel = Math.min(100, rms * 200); // Scale to 0-100
       
-      console.log('🎵 Audio level:', normalizedLevel.toFixed(2));
-      console.log('🎵 RMS value:', rms.toFixed(4));
+      // Convert RMS to percentage (more sensitive to voice)
+      const audioLevel = Math.min(100, rms * 200); // Increased sensitivity
       
-      setAudioLevel(normalizedLevel);
-      onAudioLevelChange?.(normalizedLevel);
-
-      if (state === 'listening') {
-        animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
-      } else {
-        console.log('🔇 Stopping audio monitoring, state:', state);
+      // Update audio level with more responsive changes
+      setAudioLevel(audioLevel);
+      onAudioLevelChange?.(audioLevel);
+      
+      // Log values for debugging
+      if (Math.random() < 0.3) { // Log 30% of the time to see more changes
+        console.log('🎵 Audio level:', audioLevel.toFixed(2) + '%');
+        console.log('🎵 RMS value:', rms.toFixed(4));
+        console.log('🎵 State:', state);
+        console.log('🎵 Raw RMS:', rms);
+        console.log('🎵 Calculated level:', (rms * 200).toFixed(2));
       }
-    } catch (error) {
-      console.error('❌ Error in audio level monitoring:', error);
-    }
+      
+      // Continue monitoring if still in listening state
+      if (state === 'listening') {
+        animationFrameRef.current = requestAnimationFrame(updateLevel);
+      }
+    };
+    
+    // Start the monitoring loop
+    updateLevel();
   }, [state, setAudioLevel, onAudioLevelChange]);
 
   // Start WebSocket connection
