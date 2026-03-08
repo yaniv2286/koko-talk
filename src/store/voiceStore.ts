@@ -60,6 +60,7 @@ interface VoiceStore {
   addConversationMessage: (role: 'user' | 'assistant', content: string) => void;
   incrementStarCount: () => void;
   setVisualAid: (visualAid: VisualAid | null) => void;
+  disconnect: () => void;
   reset: () => void;
 }
 
@@ -110,6 +111,17 @@ export const useVoiceStore = create<VoiceStore>()(
       },
       
       incrementStarCount: () => set((state) => ({ starCount: state.starCount + 1 })),
+      
+      disconnect: () => {
+        set({
+          state: 'idle',
+          isConnected: false,
+          connectionError: null,
+          sessionId: null,
+          audioLevel: 0,
+          visualAid: null
+        });
+      },
       
       reset: () => set(initialState),
     }),
