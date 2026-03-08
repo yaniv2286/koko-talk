@@ -21,7 +21,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
       {/* Star Counter */}
       <StarCounter />
       
@@ -30,7 +30,7 @@ export default function Home() {
         <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold text-slate-800 mb-4 tracking-tight">
           Koko
         </h1>
-        <p className="text-xl sm:text-2xl text-slate-600 font-light">
+        <p className="text-xl sm:text-2xl text-slate-800 font-light">
           Your AI English Tutor
         </p>
       </div>

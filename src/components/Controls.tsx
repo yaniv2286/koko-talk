@@ -90,108 +90,59 @@ export const Controls = ({ className = '' }: ControlsProps) => {
 
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
-      {/* Glass Control Panel */}
+      {/* Premium Glass Button */}
       <motion.button
         className={`
-          relative w-64 h-20 sm:w-80 sm:h-24 md:w-96 md:h-28 
-          rounded-3xl
-          bg-white/20
-          backdrop-blur-xl
-          border border-white/30
-          shadow-xl
-          disabled:opacity-50
-          disabled:cursor-not-allowed
-          transition-all duration-300
+          relative px-12 py-6 sm:px-16 sm:py-8 md:px-20 md:py-10
+          bg-white/60
+          backdrop-blur-md
+          border border-white/50
+          shadow-lg
+          rounded-full
+          text-blue-600
+          font-semibold
+          text-lg sm:text-xl md:text-2xl
           flex
           items-center
           justify-center
           gap-4
           select-none
-          overflow-hidden
+          transition-all duration-200
+          disabled:opacity-50
+          disabled:cursor-not-allowed
         `}
-        style={{
-          boxShadow: state === 'listening' 
-            ? '0 20px 40px rgba(34, 197, 94, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.2)'
-            : '0 10px 30px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2)',
-          background: buttonConfig.disabled 
-            ? 'rgba(255, 255, 255, 0.1)'
-            : state === 'listening'
-              ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.1))'
-              : state === 'speaking'
-                ? 'linear-gradient(135deg, rgba(251, 146, 60, 0.2), rgba(245, 158, 11, 0.1))'
-                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1))'
-        }}
         onClick={handleButtonPress}
         onMouseUp={handleButtonRelease}
         onTouchEnd={handleButtonRelease}
         disabled={buttonConfig.disabled}
         whileHover={{ 
-          scale: buttonConfig.disabled ? 1 : 1.02,
-          boxShadow: buttonConfig.disabled ? 'none' : '0 15px 35px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.3)'
+          scale: buttonConfig.disabled ? 1 : 1.05,
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)'
         }}
         whileTap={{ 
-          scale: 0.98,
-          boxShadow: '0 8px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.4)'
+          scale: 0.95,
+          boxShadow: '0 10px 20px rgba(0, 0, 0, 0.1)'
         }}
       >
-        {/* Subtle inner glow */}
-        <div 
-          className="absolute inset-0 opacity-50"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent)',
+        <motion.div
+          animate={{
+            scale: state === 'listening' ? [1, 1.2, 1] : 1,
           }}
-        />
+          transition={{
+            duration: 1,
+            repeat: state === 'listening' ? Infinity : 0,
+            ease: "easeInOut" as const,
+          }}
+        >
+          {buttonConfig.icon}
+        </motion.div>
         
-        {/* Button content */}
-        <div className="relative z-10 flex items-center justify-center gap-4">
-          <motion.div
-            animate={{
-              scale: state === 'listening' ? [1, 1.1, 1] : 1,
-              opacity: state === 'listening' ? [0.8, 1, 0.8] : 1,
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: state === 'listening' ? Infinity : 0,
-              ease: "easeInOut" as const,
-            }}
-            className="text-slate-700"
-          >
-            {buttonConfig.icon}
-          </motion.div>
-          
-          <motion.span
-            className="text-lg sm:text-xl md:text-2xl font-medium text-slate-700 tracking-wide"
-            animate={{
-              opacity: buttonConfig.disabled ? 0.6 : 1,
-            }}
-            transition={{ duration: 0.2 }}
-          >
-            {buttonConfig.text}
-          </motion.span>
-        </div>
-
-        {/* Subtle shimmer effect on hover */}
-        {!buttonConfig.disabled && (
-          <motion.div
-            className="absolute inset-0 opacity-0"
-            style={{
-              background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
-            }}
-            whileHover={{
-              opacity: 1,
-              x: ['0%', '100%'],
-            }}
-            transition={{
-              x: { duration: 0.6, repeat: Infinity, ease: "linear" },
-              opacity: { duration: 0.2 }
-            }}
-          />
-        )}
+        <span>{buttonConfig.text}</span>
       </motion.button>
 
       {/* Status indicator */}
       <motion.div
-        className="mt-6 text-sm sm:text-base text-slate-600 font-light tracking-wide text-center"
+        className="mt-6 text-sm sm:text-base text-slate-800 font-light text-center"
         animate={{
           opacity: [0.6, 1, 0.6],
         }}
