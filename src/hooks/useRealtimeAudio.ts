@@ -76,6 +76,18 @@ export const useRealtimeAudio = ({
       const dc = pc.createDataChannel('oai-events');
       dcRef.current = dc;
 
+      // Trigger initial response when data channel opens
+      dc.addEventListener('open', () => {
+        console.log('🌐 Data channel opened, triggering initial response...');
+        dc.send(JSON.stringify({
+          type: 'response.create',
+          response: {
+            modalities: ['audio', 'text'],
+            instructions: 'Please begin the lesson now.'
+          }
+        }));
+      });
+
       // Handle data channel messages
       dc.addEventListener('message', (event) => {
         try {

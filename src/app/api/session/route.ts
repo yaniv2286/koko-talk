@@ -106,8 +106,6 @@ NEVER break the learning loop. Always drive the conversation forward with Hebrew
           prefix_padding_ms: 300,
           silence_duration_ms: 500
         },
-        input_audio_format: 'pcm16',
-        output_audio_format: 'pcm16',
         tools: [
           {
             type: 'function',
