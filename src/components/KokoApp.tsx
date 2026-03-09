@@ -19,7 +19,7 @@ export default function KokoApp() {
   const [showDebugDrawer, setShowDebugDrawer] = useState(false);
   const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
   
-  const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect, reset, currentView, setCurrentView } = useVoiceStore();
+  const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect, reset, currentView, setCurrentView, incrementStarCount, starCount } = useVoiceStore();
   const { connect, disconnect: rtcDisconnect } = useRealtimeAudio({});
   
   // Emergency Console Trace - Detect component re-mounting
@@ -315,7 +315,21 @@ export default function KokoApp() {
                   <p>State: {state}</p>
                   <p>Audio Level: {audioLevel.toFixed(0)}%</p>
                   <p>Timer: {formatTimer(callTimer)}</p>
+                  <p>Stars: {starCount}</p>
                   <StarCounter />
+                </div>
+                
+                <div className="space-y-2">
+                  <h4 className="font-bold">Test Functions</h4>
+                  <button
+                    onClick={() => {
+                      console.log('🌟 Testing star increment');
+                      incrementStarCount();
+                    }}
+                    className="w-full py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 transition-colors"
+                  >
+                    Test: Add Star ⭐
+                  </button>
                 </div>
                 <button
                   onClick={() => setShowDebugDrawer(false)}
