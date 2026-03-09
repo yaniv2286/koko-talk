@@ -431,8 +431,8 @@ export default function KokoApp() {
 
           {/* Bottom Call Controls */}
           <div className="absolute bottom-0 left-0 right-0 z-20 p-6 pb-8">
-            {/* Start Call Button - Show when not connected */}
-            {state === 'idle' && (
+            {/* Start Call Button - Only show when not in call view */}
+            {currentView !== 'call' && state === 'idle' && (
               <div className="flex justify-center items-center">
                 <button
                   onClick={handleStartCall}
