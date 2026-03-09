@@ -277,7 +277,7 @@ export default function KokoApp() {
       {/* Phone Call Interface - Always mounted, visibility controlled by CSS */}
       <div className={`relative h-screen transition-opacity duration-300 ${
         currentView === 'call' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none absolute inset-0'
-      }`}>
+      } ${showDebugDrawer ? 'pr-80' : ''}`}>
         {/* Blurred Background with Avatar */}
         <div className="absolute inset-0">
           <div 
@@ -304,10 +304,10 @@ export default function KokoApp() {
         <AnimatePresence>
           {showDebugDrawer && (
             <motion.div
-              initial={{ x: 300 }}
+              initial={{ x: 320 }}
               animate={{ x: 0 }}
-              exit={{ x: 300 }}
-              className="absolute top-0 right-0 h-full w-80 glass-dark z-40 p-4 overflow-y-auto"
+              exit={{ x: 320 }}
+              className="absolute top-0 right-0 h-full w-80 glass-dark z-50 p-4 overflow-y-auto border-l border-white/20"
             >
               <div className="text-primary space-y-4">
                 <h3 className="text-lg font-bold">Debug Info</h3>
