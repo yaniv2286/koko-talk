@@ -70,15 +70,27 @@ export default function KokoApp() {
   };
 
   const handleGenderSelect = (gender: 'boy' | 'girl') => {
-    console.log('🚀 Selection made:', gender);
-    console.log('🏠 Before setKidGender - kidGender:', kidGender);
-    setSelectedGender(gender);
-    setKidGender(gender);
-    console.log('🏠 After setKidGender - calling handleGenderSelected');
-    setTimeout(() => {
-      console.log('🏠 Timeout - calling handleGenderSelected');
-      handleGenderSelected();
-    }, 300); // Brief delay to show selection animation
+    console.log('� Transitioning to Avatar Selection for:', gender);
+    
+    try {
+      console.log('�🚀 Selection made:', gender);
+      console.log('🏠 Before setKidGender - kidGender:', kidGender);
+      
+      setSelectedGender(gender);
+      setKidGender(gender);
+      
+      console.log('🏠 After setKidGender - calling handleGenderSelected');
+      
+      setTimeout(() => {
+        console.log('🏠 Timeout - calling handleGenderSelected');
+        handleGenderSelected();
+      }, 300); // Brief delay to show selection animation
+    } catch (error) {
+      console.error('❌ Gender selection failed:', error);
+      // Fallback: try to proceed anyway
+      setSelectedGender(gender);
+      setKidGender(gender);
+    }
   };
 
   const handleStartCall = () => {

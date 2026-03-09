@@ -234,8 +234,14 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
       {/* Step 2: Character Selection */}
       {step === 'character' && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 w-full max-w-6xl mb-12">
-            {characters.map((character, index) => (
+          {/* Guard clause for avatar grid safety */}
+          {!characters || characters.length === 0 ? (
+            <div className="text-center text-white text-xl">
+              Loading Teachers...
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 w-full max-w-6xl mb-12">
+              {characters.map((character, index) => (
               <motion.div
                 key={character.id}
                 className={`
@@ -264,13 +270,15 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
                     flex items-center justify-center
                     overflow-hidden
                   `}>
-                    <img 
-                      src={character.avatar} 
-                      alt={character.name}
-                      className="w-full h-full object-contain"
-                      onLoad={() => console.log('🖼️ Avatar loaded:', character.avatar)}
-                      onError={() => console.error('🖼️ Avatar failed to load:', character.avatar)}
-                    />
+                    {character.avatar && (
+                      <img 
+                        src={character.avatar} 
+                        alt={character.name}
+                        className="w-full h-full object-contain"
+                        onLoad={() => console.log('🖼️ Avatar loaded:', character.avatar)}
+                        onError={() => console.error('🖼️ Avatar failed to load:', character.avatar)}
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -294,7 +302,7 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
               </motion.div>
             ))}
           </div>
-
+          )}
           {/* Start Call Button - Only show when character is selected */}
           {selectedCharacter && (
             <motion.div
