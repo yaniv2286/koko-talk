@@ -360,7 +360,7 @@ export default function KokoApp() {
                 }}
               >
                 <img
-                  src={userProfile?.avatar || '/koko.png'}
+                  src={userProfile?.avatar || '/avatars/boy_avatar.png'}
                   alt="Koko"
                   className="w-full h-full rounded-full object-contain"
                 />

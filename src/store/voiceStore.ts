@@ -133,6 +133,7 @@ export const useVoiceStore = create<VoiceStore>()(
         starCount: state.starCount,
         conversationHistory: state.conversationHistory,
       }),
+      skipHydration: true,
     }
   )
 );
