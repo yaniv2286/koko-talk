@@ -292,13 +292,13 @@ export default function KokoApp() {
           <StarCounter />
         </div>
 
-        {/* Debug Drawer Toggle */}
-        <button
+        {/* Debug Drawer Toggle - Hidden for production */}
+        {/* <button
           onClick={() => setShowDebugDrawer(!showDebugDrawer)}
           className="absolute top-4 right-4 z-50 p-2 glass-dark rounded-full text-primary hover:bg-white/20 transition-colors"
         >
           <span className="text-xs">Debug</span>
-        </button>
+        </button> */}
 
         {/* Debug Drawer */}
         <AnimatePresence>
