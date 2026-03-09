@@ -20,6 +20,9 @@ interface VoiceStore {
   // Current voice state
   state: VoiceStateEnum;
   
+  // UI View state
+  currentView: 'gender' | 'avatar' | 'call';
+  
   // User profile
   userProfile: UserProfile | null;
   
@@ -49,6 +52,7 @@ interface VoiceStore {
   
   // Actions
   setState: (state: VoiceStateEnum) => void;
+  setCurrentView: (view: 'gender' | 'avatar' | 'call') => void;
   setProfile: (profile: UserProfile) => void;
   setKidGender: (kidGender: 'boy' | 'girl' | null) => void;
   setConnected: (connected: boolean) => void;
@@ -64,6 +68,7 @@ interface VoiceStore {
 
 const initialState = {
   state: 'idle' as const,
+  currentView: 'gender' as const,
   isConnected: false,
   connectionError: null,
   sessionId: null,
@@ -81,6 +86,8 @@ export const useVoiceStore = create<VoiceStore>()(
       ...initialState,
       
       setState: (state) => set({ state }),
+      
+      setCurrentView: (currentView) => set({ currentView }),
       
       setProfile: (userProfile) => set({ userProfile }),
       

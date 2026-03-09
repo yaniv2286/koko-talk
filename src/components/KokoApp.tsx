@@ -14,19 +14,18 @@ import { Mic, MicOff, Phone, PhoneOff, Volume2 } from 'lucide-react';
 export default function KokoApp() {
   console.log('🏠 KokoApp component rendering');
   
-  const [showMainApp, setShowMainApp] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [callTimer, setCallTimer] = useState(0);
   const [showDebugDrawer, setShowDebugDrawer] = useState(false);
   const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
   
-  const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect, reset } = useVoiceStore();
+  const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect, reset, currentView, setCurrentView } = useVoiceStore();
   const { connect, disconnect: rtcDisconnect } = useRealtimeAudio({});
   
   // Call timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (showMainApp && state === 'listening') {
+    if (currentView === 'call' && state === 'listening') {
       interval = setInterval(() => {
         setCallTimer(prev => prev + 1);
       }, 1000);
@@ -34,15 +33,14 @@ export default function KokoApp() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [showMainApp, state]);
+  }, [currentView, state]);
 
   console.log('🏠 Store state (real-time):', { 
     userProfile: userProfile?.name, 
     kidGender, 
     state,
-    showMainApp: false // Will check this next
+    currentView
   });
-  console.log('🏠 Local state:', { showMainApp });
 
   const hardcodedAvatars = [
     '/avatars/boy_avatar.png',
@@ -59,8 +57,8 @@ export default function KokoApp() {
   };
 
   const handleProfileSelected = () => {
-    console.log('🏠 handleProfileSelected called - setting showMainApp to true');
-    setShowMainApp(true);
+    console.log('🏠 handleProfileSelected called - setting currentView to call');
+    setCurrentView('call');
   };
 
   const handleGenderSelect = (gender: 'boy' | 'girl') => {
@@ -93,12 +91,12 @@ export default function KokoApp() {
   };
 
   const handleEndCall = () => {
-    console.log('� CALL ENDED: WebRTC disconnected, state reset.');
+    console.log('🛑 CALL ENDED: WebRTC disconnected, state reset.');
     
     // Execute full teardown sequence
     rtcDisconnect(); // Disconnect WebRTC
     reset(); // Reset all state including starCount, kidGender, profile
-    setShowMainApp(false); // Return to Gender Selection screen
+    setCurrentView('gender'); // Return to Gender Selection screen
   };
 
   // Format timer as MM:SS
@@ -249,9 +247,9 @@ export default function KokoApp() {
     return <ProfileSelector onProfileSelected={handleProfileSelected} connect={connect} />;
   }
 
-  // Show main app if both profile and gender are selected
-  if (!showMainApp) {
-    console.log('🏠 showMainApp is false, returning null');
+  // Show main app if currentView is 'call'
+  if (currentView !== 'call') {
+    console.log('🏠 currentView is not call, returning null');
     return null; // Will show gender selection above
   }
 

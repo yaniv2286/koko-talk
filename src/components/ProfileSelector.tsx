@@ -39,7 +39,8 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
   const { setProfile, kidGender, userProfile } = useVoiceStore();
 
   const handleCharacterSelect = (character: typeof characters[0]) => {
-    console.log('� IGNITION: Calling', character.name);
+    console.log('🚀 IGNITION: Calling', character.name);
+    console.log('🔒 VIEW LOCKED TO: call');
     
     // Triple-Action Click - Execute all three commands simultaneously
     const userProfile = {
@@ -49,13 +50,13 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
     };
     
     console.log('👤 Setting profile:', userProfile);
-    setProfile(userProfile);
+    setProfile(userProfile); // setSelectedAvatar(character.image)
     
     console.log('🔄 Switching to call view');
-    onProfileSelected(); // This changes the view to Call Screen
+    onProfileSelected(); // setCurrentView('call')
     
     console.log('🔗 Triggering WebRTC connection');
-    connect(); // This triggers the WebRTC audio engine
+    connect(); // connect()
   };
 
   return (
