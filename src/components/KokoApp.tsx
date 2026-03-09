@@ -17,7 +17,6 @@ export default function KokoApp() {
   const [isMuted, setIsMuted] = useState(false);
   const [callTimer, setCallTimer] = useState(0);
   const [showDebugDrawer, setShowDebugDrawer] = useState(false);
-  const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
   
   const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect, reset, currentView, setCurrentView } = useVoiceStore();
   const { connect, disconnect: rtcDisconnect } = useRealtimeAudio({});
@@ -72,27 +71,9 @@ export default function KokoApp() {
   };
 
   const handleGenderSelect = (gender: 'boy' | 'girl') => {
-    console.log('� Transitioning to Avatar Selection for:', gender);
-    
-    try {
-      console.log('�🚀 Selection made:', gender);
-      console.log('🏠 Before setKidGender - kidGender:', kidGender);
-      
-      setSelectedGender(gender);
-      setKidGender(gender);
-      
-      console.log('🏠 After setKidGender - calling handleGenderSelected');
-      
-      setTimeout(() => {
-        console.log('🏠 Timeout - calling handleGenderSelected');
-        handleGenderSelected();
-      }, 300); // Brief delay to show selection animation
-    } catch (error) {
-      console.error('❌ Gender selection failed:', error);
-      // Fallback: try to proceed anyway
-      setSelectedGender(gender);
-      setKidGender(gender);
-    }
+    console.log('🔄 Transitioning to Avatar Selection for:', gender);
+    setKidGender(gender);
+    setCurrentView('avatar');
   };
 
   const handleStartCall = () => {
@@ -117,276 +98,128 @@ export default function KokoApp() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Show Gender Selection as the first page (mandatory onboarding)
-  if (!kidGender) {
-    console.log('🏠 Showing Gender Selection (first page)');
-    return (
-      <main className="flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
-        {/* Content */}
-        <div className="relative z-10 w-full max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-4 tracking-tight drop-shadow-lg">
-              Koko
-            </h1>
-            <p className="text-xl sm:text-2xl text-gray-300 font-medium drop-shadow">
-              One more thing before we start...
-            </p>
-          </div>
-
-          {/* 3D Avatar Selection */}
-          <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 mb-8 justify-center items-center">
-            {/* Boy Avatar */}
-            <div className="relative group">
-              <button
-                onClick={() => handleGenderSelect('boy')}
-                className="relative transform transition-all duration-300 hover:scale-105 focus:outline-none"
-              >
-                {/* Selection Halo */}
-                <AnimatePresence>
-                  {selectedGender === 'boy' && (
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1.2, opacity: 1 }}
-                      exit={{ scale: 0.8, opacity: 0 }}
-                      className="absolute inset-0 rounded-full bg-green-400/20 blur-xl"
-                    />
-                  )}
-                </AnimatePresence>
-                
-                {/* Checkmark */}
-                <AnimatePresence>
-                  {selectedGender === 'boy' && (
-                    <motion.div
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center"
-                    >
-                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-8-8a1 1 0 010-1.414l8-8z" clipRule="evenodd" />
-                      </svg>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                
-                {/* Avatar Container with Blue Glowing Border */}
-                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full border-[3px] border-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.5)] overflow-hidden">
-                  <img
-                    src="/avatars/boy_avatar.png"
-                    alt="Boy Avatar"
-                    className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                
-                {/* Label */}
-                <div className="mt-6 text-center">
-                  <h3 className="text-2xl sm:text-3xl font-bold text-blue-400">
-                    I am a Boy
-                  </h3>
-                </div>
-              </button>
+  // Main Render Logic - Strict switch based on currentView
+  switch (currentView) {
+    case 'gender':
+      console.log('🏠 Showing Gender Selection');
+      return (
+        <main className="flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
+          {/* Content */}
+          <div className="relative z-10 w-full max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="text-center mb-12">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-4 tracking-tight drop-shadow-lg">
+                Koko
+              </h1>
+              <p className="text-xl sm:text-2xl text-gray-300 font-medium drop-shadow">
+                One more thing before we start...
+              </p>
             </div>
 
-            {/* Girl Avatar */}
-            <div className="relative group">
-              <button
-                onClick={() => handleGenderSelect('girl')}
-                className="relative transform transition-all duration-300 hover:scale-105 focus:outline-none"
-              >
-                {/* Selection Halo */}
-                <AnimatePresence>
-                  {selectedGender === 'girl' && (
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1.2, opacity: 1 }}
-                      exit={{ scale: 0.8, opacity: 0 }}
-                      className="absolute inset-0 rounded-full bg-green-400/20 blur-xl"
-                    />
-                  )}
-                </AnimatePresence>
-                
-                {/* Checkmark */}
-                <AnimatePresence>
-                  {selectedGender === 'girl' && (
-                    <motion.div
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center"
-                    >
-                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-8-8a1 1 0 010-1.414l8-8z" clipRule="evenodd" />
-                      </svg>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                
-                {/* Avatar Container with Pink Glowing Border */}
-                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full border-[3px] border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] overflow-hidden">
-                  <img
-                    src="/avatars/girl_avatar.png"
-                    alt="Girl Avatar"
-                    className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                
-                {/* Label */}
-                <div className="mt-6 text-center">
-                  <h3 className="text-2xl sm:text-3xl font-bold text-pink-400">
-                    I am a Girl
-                  </h3>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Footer Text */}
-          <div className="text-center mt-8">
-            <p className="text-gray-400 text-sm">
-              This helps Koko know how to talk to you in Hebrew! 🌟
-            </p>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  // Show ProfileSelector if gender is selected but no profile
-  if (!userProfile) {
-    console.log('🏠 Showing ProfileSelector (avatar selection)');
-    return <ProfileSelector onProfileSelected={handleProfileSelected} connect={connect} />;
-  }
-
-  console.log('🏠 Showing Main App');
-  return (
-    <main className="relative overflow-hidden">
-      {/* Visual Aid Modal - Always mounted */}
-      <VisualAid />
-      
-      {/* Phone Call Interface - Always mounted, visibility controlled by CSS */}
-      <div className={`relative h-screen transition-opacity duration-300 ${
-        currentView === 'call' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none absolute inset-0'
-      }`}>
-        {/* Blurred Background with Avatar */}
-        <div className="absolute inset-0">
-          <div 
-            className="w-full h-full bg-cover bg-center opacity-20 blur-xl"
-            style={{ backgroundImage: `url(${userProfile?.avatar})` }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0D021A]/80 to-[#0D021A]" />
-        </div>
-
-        {/* Premium Star Counter - Top Center */}
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40">
-          <StarCounter />
-        </div>
-
-        {/* Debug Drawer Toggle */}
-        <button
-          onClick={() => setShowDebugDrawer(!showDebugDrawer)}
-          className="absolute top-4 right-4 z-50 p-2 glass-dark rounded-full text-primary hover:bg-white/20 transition-colors"
-        >
-          <span className="text-xs">Debug</span>
-        </button>
-
-        {/* Debug Drawer */}
-        <AnimatePresence>
-          {showDebugDrawer && (
-            <motion.div
-              initial={{ x: 300 }}
-              animate={{ x: 0 }}
-              exit={{ x: 300 }}
-              className="absolute top-0 right-0 h-full w-80 glass-dark z-40 p-4 overflow-y-auto"
-            >
-              <div className="text-primary space-y-4">
-                <h3 className="text-lg font-bold">Debug Info</h3>
-                <div className="text-sm space-y-2">
-                  <p>State: {state}</p>
-                  <p>Audio Level: {audioLevel.toFixed(0)}%</p>
-                  <p>Timer: {formatTimer(callTimer)}</p>
-                  <StarCounter />
-                </div>
+            {/* 3D Avatar Selection */}
+            <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 mb-8 justify-center items-center">
+              {/* Boy Avatar */}
+              <div className="relative group">
                 <button
-                  onClick={() => setShowDebugDrawer(false)}
-                  className="w-full py-2 bg-red-500 text-primary rounded-lg hover:bg-red-600 transition-colors"
+                  onClick={() => handleGenderSelect('boy')}
+                  className="relative transform transition-all duration-300 hover:scale-105 focus:outline-none"
                 >
-                  Close
+                  {/* Avatar Container with Blue Glowing Border */}
+                  <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full border-[3px] border-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.5)] overflow-hidden">
+                    <img
+                      src="/avatars/boy_avatar.png"
+                      alt="Boy Avatar"
+                      className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  
+                  {/* Label */}
+                  <div className="mt-6 text-center">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-blue-400">
+                      I am a Boy
+                    </h3>
+                  </div>
                 </button>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        {/* Main Call Interface */}
-        <div className="relative h-full flex flex-col">
-          {/* Status Bar */}
-          <div className="absolute top-0 left-0 right-0 z-20 p-4 text-center">
-            <div className="text-secondary text-sm font-medium">
-              {state === 'connecting' ? 'Connecting...' : state === 'error' ? 'Connection Error' : formatTimer(callTimer)}
+              {/* Girl Avatar */}
+              <div className="relative group">
+                <button
+                  onClick={() => handleGenderSelect('girl')}
+                  className="relative transform transition-all duration-300 hover:scale-105 focus:outline-none"
+                >
+                  {/* Avatar Container with Pink Glowing Border */}
+                  <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full border-[3px] border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] overflow-hidden">
+                    <img
+                      src="/avatars/girl_avatar.png"
+                      alt="Girl Avatar"
+                      className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  
+                  {/* Label */}
+                  <div className="mt-6 text-center">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-pink-400">
+                      I am a Girl
+                    </h3>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Footer Text */}
+            <div className="text-center mt-8">
+              <p className="text-gray-400 text-sm">
+                This helps Koko know how to talk to you in Hebrew! 🌟
+              </p>
             </div>
           </div>
+        </main>
+      );
 
-          {/* Central Avatar */}
-          <div className="flex-1 flex items-center justify-center relative">
-            <div className="relative">
-              {/* Voice Ripple Animation */}
-              <div className="absolute inset-0 flex items-center justify-center">
+    case 'avatar':
+      console.log('🏠 Showing ProfileSelector (avatar selection)');
+      return <ProfileSelector onProfileSelected={handleProfileSelected} connect={connect} />;
+
+    case 'call':
+      console.log('🏠 Showing Main App');
+      return (
+        <main className="relative overflow-hidden">
+          {/* Visual Aid Modal - Always mounted */}
+          <VisualAid />
+          
+          {/* Phone Call Interface - Always mounted, visibility controlled by CSS */}
+          <div className="relative h-screen transition-opacity duration-300">
+            {/* Blurred Background with Avatar */}
+            <div className="absolute inset-0">
+              <div 
+                className="w-full h-full bg-cover bg-center opacity-20 blur-xl"
+                style={{ backgroundImage: `url(${userProfile?.avatar})` }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0D021A]/80 to-[#0D021A]" />
+            </div>
+
+            {/* Premium Star Counter - Top Center */}
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40">
+              <StarCounter />
+            </div>
+
+            {/* Debug Drawer Toggle */}
+            <button
+              onClick={() => setShowDebugDrawer(!showDebugDrawer)}
+              className="absolute top-4 right-4 z-50 p-2 glass-dark rounded-full text-primary hover:bg-white/20 transition-colors"
+            >
+              <span className="text-xs">Debug</span>
+            </button>
+
+            {/* Debug Drawer */}
+            <AnimatePresence>
+              {showDebugDrawer && (
                 <motion.div
-                  className="absolute rounded-full border-2 border-blue-400/30"
-                  animate={{
-                    scale: [1, 1.5, 2],
-                    opacity: [0.5, 0.2, 0],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeOut"
-                  }}
-                  style={{
-                    width: `${200 + audioLevel * 2}px`,
-                    height: `${200 + audioLevel * 2}px`,
-                  }}
-                />
-                <motion.div
-                  className="absolute rounded-full border-2 border-blue-400/50"
-                  animate={{
-                    scale: [1, 1.3, 1.6],
-                    opacity: [0.7, 0.3, 0],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeOut",
-                    delay: 0.5
-                  }}
-                  style={{
-                    width: `${200 + audioLevel * 1.5}px`,
-                    height: `${200 + audioLevel * 1.5}px`,
-                  }}
-                />
-              </div>
-
-              {/* Avatar */}
-              <motion.div
-                className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20"
-                animate={{
-                  scale: state === 'speaking' ? [1, 1.05, 1] : 1,
-                }}
-                transition={{
-                  duration: 0.5,
-                  repeat: state === 'speaking' ? Infinity : 0,
-                  ease: "easeInOut"
-                }}
-              >
-                <img
-                  src={userProfile?.avatar || '/avatars/boy_avatar.png'}
-                  alt="Koko"
-                  className="w-full h-full rounded-full object-contain"
-                />
-              </motion.div>
-
-              {/* Voice Wave Indicator */}
+                  initial={{ x: 300 }}
+                  animate={{ x: 0 }}
+                  exit={{ x: 300 }}
+                  className="absolute top-0 right-0 h-full w-80 glass-dark z-40 p-4 overflow-y-auto"
               {state === 'speaking' && (
                 <motion.div
                   className="absolute -bottom-2 left-1/2 transform -translate-x-1/2"
