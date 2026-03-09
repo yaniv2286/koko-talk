@@ -206,7 +206,14 @@ export const useRealtimeAudio = ({
           setState('error');
           return;
         }
-        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaStream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 16000 // Lower sample rate for voice focus
+          }
+        });
       } catch (error) {
         console.warn('🎤 Microphone access denied:', error);
         setConnectionError('Microphone access required. Please allow microphone permissions and refresh the page to try again.');

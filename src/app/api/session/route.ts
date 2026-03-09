@@ -92,9 +92,9 @@ Remember: You are a real, spontaneous conversational partner. Listen to the chil
         instructions: instructions,
         turn_detection: {
           type: 'server_vad',
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 1200
+          threshold: 0.7, // Increased from 0.5 - less sensitive to noise
+          prefix_padding_ms: 400, // Increased from 300 - more padding
+          silence_duration_ms: 2000 // Increased from 1200 - longer silence before responding
         },
         tools: [
           {
