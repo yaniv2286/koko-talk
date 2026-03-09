@@ -14,25 +14,42 @@ import { Mic, MicOff, Phone, PhoneOff, Volume2 } from 'lucide-react';
 export default function Home() {
   console.log('🏠 Home component rendering');
   
-  // Hydration fix - prevent SSR/Client mismatch
+  // HOIST ALL HOOKS TO TOP - Rules of Hooks compliance
   const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => setIsMounted(true), []);
-  if (!isMounted) return null;
+  const [showMainApp, setShowMainApp] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [callTimer, setCallTimer] = useState(0);
+  const [showDebugDrawer, setShowDebugDrawer] = useState(false);
+  const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
   
   const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect } = useVoiceStore();
+  const { connect, disconnect: rtcDisconnect } = useRealtimeAudio({});
+  
+  useEffect(() => setIsMounted(true), []);
+  
+  // Call timer effect - moved to top for Rules of Hooks compliance
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (showMainApp && state === 'listening') {
+      interval = setInterval(() => {
+        setCallTimer(prev => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [showMainApp, state]);
+  
+  // Early return guard moved to VERY END after all hooks
+  if (!isMounted) return null;
+  
   console.log('🏠 Store state (real-time):', { 
     userProfile: userProfile?.name, 
     kidGender, 
     state,
     showMainApp: false // Will check this next
   });
-  const { connect, disconnect: rtcDisconnect } = useRealtimeAudio({});
-  const [showMainApp, setShowMainApp] = useState(false);
   console.log('🏠 Local state:', { showMainApp });
-  const [isMuted, setIsMuted] = useState(false);
-  const [callTimer, setCallTimer] = useState(0);
-  const [showDebugDrawer, setShowDebugDrawer] = useState(false);
-  const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
 
   const hardcodedAvatars = [
     '/avatars/boy_avatar.png',
@@ -80,19 +97,6 @@ export default function Home() {
     console.log('📞 Ending call...');
     rtcDisconnect();
   };
-
-  // Call timer effect
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (showMainApp && state === 'listening') {
-      interval = setInterval(() => {
-        setCallTimer(prev => prev + 1);
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [showMainApp, state]);
 
   // Format timer as MM:SS
   const formatTimer = (seconds: number) => {

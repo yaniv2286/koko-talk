@@ -8,16 +8,19 @@ interface VisualAidProps {
 }
 
 export const VisualAid = ({ className = '' }: VisualAidProps = {}) => {
-  // Hydration fix - prevent SSR/Client mismatch
+  // HOIST ALL HOOKS TO TOP - Rules of Hooks compliance
   const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => setIsMounted(true), []);
-  if (!isMounted) return null;
-
-  const { visualAid, setVisualAid } = useVoiceStore();
   const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
   const [imageUrl, setImageUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  const { visualAid, setVisualAid } = useVoiceStore();
+  
+  useEffect(() => setIsMounted(true), []);
+  
+  // Early return guard moved to VERY END after all hooks
+  if (!isMounted) return null;
 
   // Early validation
   if (!visualAid || !visualAid.isVisible) {
@@ -28,20 +31,6 @@ export const VisualAid = ({ className = '' }: VisualAidProps = {}) => {
     console.error('🖼️ VisualAid: No word provided');
     return null;
   }
-
-  // Reset letter index when visual aid changes
-  useEffect(() => {
-    if (visualAid) {
-      console.log('🖼️ Visual Aid triggered for:', visualAid.word);
-      setCurrentLetterIndex(0);
-      setError('');
-      fetchImage();
-    } else {
-      setImageUrl('');
-      setCurrentLetterIndex(0);
-      setError('');
-    }
-  }, [visualAid]);
 
   const fetchImage = async () => {
     if (!visualAid) return;
@@ -59,19 +48,30 @@ export const VisualAid = ({ className = '' }: VisualAidProps = {}) => {
         const data = await response.json();
         setImageUrl(data.urls.regular);
       } else {
-        // Fallback to placeholder service
-        const fallbackUrl = `https://picsum.photos/seed/${encodeURIComponent(visualAid.imageQuery)}/400/300.jpg`;
-        setImageUrl(fallbackUrl);
+        throw new Error('Failed to fetch image');
       }
     } catch (error) {
-      console.error('🖼️ Failed to fetch image:', error);
-      // Fallback to placeholder service
-      const fallbackUrl = `https://picsum.photos/seed/${encodeURIComponent(visualAid.imageQuery)}/400/300.jpg`;
-      setImageUrl(fallbackUrl);
+      console.error('🖼️ Error fetching image:', error);
+      setError('Failed to load image');
+      setImageUrl(''); // Clear image on error
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Reset letter index when visual aid changes - moved to top for Rules of Hooks compliance
+  useEffect(() => {
+    if (visualAid) {
+      console.log('🖼️ Visual Aid triggered for:', visualAid.word);
+      setCurrentLetterIndex(0);
+      setError('');
+      fetchImage();
+    } else {
+      setImageUrl('');
+      setCurrentLetterIndex(0);
+      setError('');
+    }
+  }, [visualAid]);
 
   const handleClose = () => {
     setVisualAid(null);

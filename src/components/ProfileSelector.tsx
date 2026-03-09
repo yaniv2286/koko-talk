@@ -13,15 +13,18 @@ interface ProfileSelectorProps {
 }
 
 export const ProfileSelector = ({ className = '', onProfileSelected, connect }: ProfileSelectorProps) => {
-  // Hydration fix - prevent SSR/Client mismatch
+  // HOIST ALL HOOKS TO TOP - Rules of Hooks compliance
   const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => setIsMounted(true), []);
-  if (!isMounted) return null;
-  
-  const { setProfile, kidGender, userProfile } = useVoiceStore();
   const [step, setStep] = useState<'age' | 'character'>('age');
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<typeof characters[0] | null>(null);
+  
+  const { setProfile, kidGender, userProfile } = useVoiceStore();
+  
+  useEffect(() => setIsMounted(true), []);
+  
+  // Early return guard moved to VERY END after all hooks
+  if (!isMounted) return null;
 
   const profiles = [
     {
