@@ -108,7 +108,7 @@ export default function KokoApp() {
   if (!kidGender) {
     console.log('🏠 Showing Gender Selection (first page)');
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
+      <main className="flex flex-col items-center justify-center p-4 sm:p-8 font-sans">
         {/* Content */}
         <div className="relative z-10 w-full max-w-4xl mx-auto">
           {/* Header */}
@@ -253,7 +253,7 @@ export default function KokoApp() {
 
   console.log('🏠 Showing Main App');
   return (
-    <main className="relative min-h-screen overflow-hidden">
+    <main className="relative overflow-hidden">
       {/* Visual Aid Modal */}
       <VisualAid />
       
@@ -355,7 +355,7 @@ export default function KokoApp() {
 
               {/* Avatar */}
               <motion.div
-                className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 glass-dark rounded-full flex items-center justify-center"
+                className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20"
                 animate={{
                   scale: state === 'speaking' ? [1, 1.05, 1] : 1,
                 }}

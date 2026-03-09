@@ -2,9 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Baby, User, Users, Sparkles } from 'lucide-react';
 import { useVoiceStore } from '@/store/voiceStore';
-import { AgeGroup } from '@/store/voiceStore';
 
 interface ProfileSelectorProps {
   className?: string;
@@ -13,7 +11,7 @@ interface ProfileSelectorProps {
 }
 
 export const ProfileSelector = ({ className = '', onProfileSelected, connect }: ProfileSelectorProps) => {
-  // Define data arrays before state that references them
+  // Define characters array before state that references them
   const characters = [
     {
       id: 'avatar1',
@@ -53,198 +51,69 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
   ];
 
   // HOIST ALL HOOKS TO TOP - Rules of Hooks compliance
-  const [step, setStep] = useState<'age' | 'character'>('age');
-  const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<typeof characters[0] | null>(null);
   
   const { setProfile, kidGender, userProfile } = useVoiceStore();
-
-  const profiles = [
-    {
-      id: 'little-kids',
-      name: 'Little Kids',
-      ageGroup: '4-7' as AgeGroup,
-      icon: <Baby className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20" />,
-      description: 'Ages 4-7',
-      color: 'bg-pink-500 hover:bg-pink-600',
-      bgColor: 'bg-pink-100 dark:bg-pink-900',
-      borderColor: 'border-pink-300 dark:border-pink-700',
-      features: [
-        '🌟 Very simple words',
-        '🐢 Speak slowly',
-        '🎉 Super enthusiastic',
-        '🧸 Fun games'
-      ]
-    },
-    {
-      id: 'big-kids',
-      name: 'Big Kids',
-      ageGroup: '8-12' as AgeGroup,
-      icon: <User className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20" />,
-      description: 'Ages 8-12',
-      color: 'bg-blue-500 hover:bg-blue-600',
-      bgColor: 'bg-blue-100 dark:bg-blue-900',
-      borderColor: 'border-blue-300 dark:border-blue-700',
-      features: [
-        '🚀 Cool vocabulary',
-        '⚡ Normal speed',
-        '😎 Witty & fun',
-        '📚 Grammar help'
-      ]
-    }
-  ];
-
-  const handleAgeSelect = (profile: typeof profiles[0]) => {
-    setSelectedAgeGroup(profile.ageGroup);
-    setStep('character');
-  };
 
   const handleCharacterSelect = (character: typeof characters[0]) => {
     console.log('🖼️ Selected Avatar Path:', character.avatar);
     setSelectedCharacter(character);
     
     const userProfile = {
-      id: `${selectedAgeGroup}-${character.id}`,
-      name: `${selectedAgeGroup === '4-7' ? 'Little Kid' : 'Big Kid'}`,
-      ageGroup: selectedAgeGroup as AgeGroup,
+      id: `${kidGender}-${character.id}`,
+      name: character.name,
       avatar: character.avatar,
     };
-
+    
+    console.log('👤 Creating profile:', userProfile);
     setProfile(userProfile);
-    // Don't call onProfileSelected() immediately - wait for Start Call button
   };
 
   const handleStartCall = () => {
-    console.log('🚀 IGNITION TRIGGERED: Gender=', kidGender, ' Avatar=', userProfile?.avatar);
-    
-    // State verification
-    if (!kidGender || !userProfile?.avatar) {
-      console.error('❌ IGNITION FAILED: Missing state', { kidGender, userProfile: userProfile?.avatar });
-      return;
-    }
-    
-    console.log('✅ IGNITION SUCCESS: All state verified, connecting...');
+    console.log('🚀 Starting call with selected character...');
+    onProfileSelected();
     connect();
-    onProfileSelected(); // Transition to main app after successful ignition
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-screen p-4 sm:p-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 ${className}`}>
-      {/* Header */}
+    <div className={`flex flex-col items-center justify-center p-4 sm:p-8 font-sans ${className}`}>
       <motion.div
-        className="text-center mb-12 max-w-2xl"
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
+        className="text-center mb-12"
       >
-        <div className="flex justify-center mb-4">
-          <motion.div
-            animate={{
-              rotate: [0, 10, -10, 0],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut" as const,
-            }}
-          >
-            <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 text-yellow-500" />
-          </motion.div>
-        </div>
-        
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold text-slate-800 mb-4">
-          {step === 'age' ? 'Welcome to Koko Talk!' : 'Choose your Koko!'}
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold text-white mb-4">
+          Choose your Koko!
         </h1>
         
-        <p className="text-lg sm:text-xl text-slate-800 mb-2">
-          {step === 'age' ? 'Choose your learning adventure 🎓' : 'Pick your character friend! 🎭'}
+        <p className="text-lg sm:text-xl text-purple-200 mb-2">
+          Pick your character friend! 🎭
         </p>
         
-        <p className="text-sm sm:text-base text-slate-600">
-          {step === 'age' ? 'Pick the right level for you' : 'Which character do you want to learn with?'}
+        <p className="text-sm text-gray-300">
+          Which character do you want to learn with?
         </p>
       </motion.div>
 
-      {/* Step 1: Age Selection */}
-      {step === 'age' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-4xl mb-12">
-          {profiles.map((profile, index) => (
-            <motion.div
-              key={profile.id}
-              className={`
-                relative rounded-2xl p-8 sm:p-10 md:p-12
-                bg-white/60 backdrop-blur-md border border-white/50 shadow-lg
-                cursor-pointer
-                transition-all duration-300
-                hover:shadow-xl
-                hover:scale-105
-              `}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.2 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleAgeSelect(profile)}
-            >
-              {/* Profile Icon */}
-              <div className="flex justify-center mb-6">
-                <div className={`
-                  w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32
-                  rounded-full 
-                  ${profile.color}
-                  flex items-center justify-center
-                  text-white
-                  shadow-lg
-                `}>
-                  {profile.icon}
-                </div>
-              </div>
-
-              {/* Profile Name */}
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-slate-800 text-center mb-2">
-                {profile.name}
-              </h2>
-
-              {/* Description */}
-              <p className="text-lg sm:text-xl text-slate-600 text-center mb-6">
-                {profile.description}
-              </p>
-
-              {/* Features */}
-              <div className="space-y-2">
-                {profile.features.map((feature, featureIndex) => (
-                  <div
-                    key={featureIndex}
-                    className="text-sm sm:text-base text-slate-700 text-center"
-                  >
-                    {feature}
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
-
-      {/* Step 2: Character Selection */}
-      {step === 'character' && (
-        <>
-          {/* Guard clause for avatar grid safety */}
-          {!characters || characters.length === 0 ? (
-            <div className="text-center text-white text-xl">
-              Loading Teachers...
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 w-full max-w-6xl mb-12">
-              {characters.map((character, index) => (
+      {/* Avatar Selection Grid */}
+      <div className="w-full max-w-6xl">
+        {/* Guard clause for avatar grid safety */}
+        {!characters || characters.length === 0 ? (
+          <div className="text-center text-white text-xl">
+            Loading Teachers...
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 w-full max-w-6xl mb-12">
+            {characters.map((character, index) => (
               <motion.div
                 key={character.id}
                 className={`
                   relative rounded-2xl p-4 sm:p-6
-                  bg-white/60 backdrop-blur-md border border-white/50 shadow-lg
+                  bg-white/10 backdrop-blur-md border border-white/20 shadow-lg
                   cursor-pointer
                   transition-all duration-300
-                  hover:shadow-xl
+                  hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]
                   hover:scale-105
                   ${selectedCharacter?.id === character.id ? 'ring-4 ring-green-500 ring-offset-2' : ''}
                 `}
@@ -278,17 +147,18 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
                 </div>
 
                 {/* Character Name */}
-                <h2 className="text-sm sm:text-base md:text-lg font-semibold text-slate-800 text-center mb-2">
+                <h2 className="text-sm sm:text-base md:text-lg font-semibold text-white text-center mb-2">
                   {character.name}
                 </h2>
 
                 {/* Selection indicator */}
                 <div className="flex justify-center">
-                  <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
-                    selectedCharacter?.id === character.id 
+                  <div className={`
+                    w-8 h-8 rounded-full flex items-center justify-center
+                    ${selectedCharacter?.id === character.id 
                       ? 'bg-green-500' 
                       : 'bg-blue-500'
-                  }`}>
+                    }`}>
                     <span className="text-white text-xs sm:text-sm">
                       {selectedCharacter?.id === character.id ? '✓' : '→'}
                     </span>
@@ -297,43 +167,26 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
               </motion.div>
             ))}
           </div>
-          )}
-          {/* Start Call Button - Only show when character is selected */}
-          {selectedCharacter && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="flex flex-col items-center gap-4"
-            >
-              <motion.button
-                onClick={handleStartCall}
-                className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                🚀 Start Call with {selectedCharacter.name}
-              </motion.button>
-              
-              <p className="text-sm text-slate-600 text-center">
-                Ready to start learning with your Koko teacher!
-              </p>
-            </motion.div>
-          )}
-        </>
-      )}
+        )}
+      </div>
 
-      {/* Back button for character selection */}
-      {step === 'character' && (
-        <motion.button
-          className="px-6 py-3 bg-white/60 backdrop-blur-md border border-white/50 rounded-full text-slate-700 font-medium hover:bg-white/80 transition-all duration-200"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          onClick={() => setStep('age')}
+      {/* Start Call Button - Only show when character is selected */}
+      {selectedCharacter && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col items-center gap-4"
         >
-          ← Back to Age Selection
-        </motion.button>
+          <motion.button
+            onClick={handleStartCall}
+            className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            🚀 Start Call with {selectedCharacter.name}
+          </motion.button>
+        </motion.div>
       )}
     </div>
   );

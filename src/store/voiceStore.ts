@@ -2,12 +2,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export type VoiceStateEnum = 'idle' | 'connecting' | 'listening' | 'thinking' | 'speaking' | 'error';
-export type AgeGroup = '4-7' | '8-12';
 
 interface UserProfile {
   id: string;
   name: string;
-  ageGroup: AgeGroup;
   avatar: string;
 }
 
