@@ -9,12 +9,14 @@ import { AgeGroup } from '@/store/voiceStore';
 interface ProfileSelectorProps {
   className?: string;
   onProfileSelected: () => void;
+  connect: () => void;
 }
 
-export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSelectorProps) => {
-  const { setProfile } = useVoiceStore();
+export const ProfileSelector = ({ className = '', onProfileSelected, connect }: ProfileSelectorProps) => {
+  const { setProfile, kidGender, userProfile } = useVoiceStore();
   const [step, setStep] = useState<'age' | 'character'>('age');
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);
+  const [selectedCharacter, setSelectedCharacter] = useState<typeof characters[0] | null>(null);
 
   const profiles = [
     {
@@ -96,6 +98,7 @@ export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSe
 
   const handleCharacterSelect = (character: typeof characters[0]) => {
     console.log('🖼️ Selected Avatar Path:', character.avatar);
+    setSelectedCharacter(character);
     
     const userProfile = {
       id: `${selectedAgeGroup}-${character.id}`,
@@ -105,7 +108,21 @@ export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSe
     };
 
     setProfile(userProfile);
-    onProfileSelected();
+    // Don't call onProfileSelected() immediately - wait for Start Call button
+  };
+
+  const handleStartCall = () => {
+    console.log('🚀 IGNITION TRIGGERED: Gender=', kidGender, ' Avatar=', userProfile?.avatar);
+    
+    // State verification
+    if (!kidGender || !userProfile?.avatar) {
+      console.error('❌ IGNITION FAILED: Missing state', { kidGender, userProfile: userProfile?.avatar });
+      return;
+    }
+    
+    console.log('✅ IGNITION SUCCESS: All state verified, connecting...');
+    connect();
+    onProfileSelected(); // Transition to main app after successful ignition
   };
 
   return (
@@ -208,60 +225,91 @@ export const ProfileSelector = ({ className = '', onProfileSelected }: ProfileSe
 
       {/* Step 2: Character Selection */}
       {step === 'character' && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 w-full max-w-6xl mb-12">
-          {characters.map((character, index) => (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 w-full max-w-6xl mb-12">
+            {characters.map((character, index) => (
+              <motion.div
+                key={character.id}
+                className={`
+                  relative rounded-2xl p-4 sm:p-6
+                  bg-white/60 backdrop-blur-md border border-white/50 shadow-lg
+                  cursor-pointer
+                  transition-all duration-300
+                  hover:shadow-xl
+                  hover:scale-105
+                  ${selectedCharacter?.id === character.id ? 'ring-4 ring-green-500 ring-offset-2' : ''}
+                `}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleCharacterSelect(character)}
+              >
+                {/* Character Image */}
+                <div className="flex justify-center mb-4">
+                  <div className={`
+                    w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24
+                    rounded-full 
+                    ${character.color}
+                    border-2 ${character.borderColor}
+                    flex items-center justify-center
+                    overflow-hidden
+                  `}>
+                    <img 
+                      src={character.avatar} 
+                      alt={character.name}
+                      className="w-full h-full object-contain"
+                      onLoad={() => console.log('🖼️ Avatar loaded:', character.avatar)}
+                      onError={() => console.error('🖼️ Avatar failed to load:', character.avatar)}
+                    />
+                  </div>
+                </div>
+
+                {/* Character Name */}
+                <h2 className="text-sm sm:text-base md:text-lg font-semibold text-slate-800 text-center mb-2">
+                  {character.name}
+                </h2>
+
+                {/* Selection indicator */}
+                <div className="flex justify-center">
+                  <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
+                    selectedCharacter?.id === character.id 
+                      ? 'bg-green-500' 
+                      : 'bg-blue-500'
+                  }`}>
+                    <span className="text-white text-xs sm:text-sm">
+                      {selectedCharacter?.id === character.id ? '✓' : '→'}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Start Call Button - Only show when character is selected */}
+          {selectedCharacter && (
             <motion.div
-              key={character.id}
-              className={`
-                relative rounded-2xl p-4 sm:p-6
-                bg-white/60 backdrop-blur-md border border-white/50 shadow-lg
-                cursor-pointer
-                transition-all duration-300
-                hover:shadow-xl
-                hover:scale-105
-              `}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleCharacterSelect(character)}
+              transition={{ duration: 0.6 }}
+              className="flex flex-col items-center gap-4"
             >
-              {/* Character Image */}
-              <div className="flex justify-center mb-4">
-                <div className={`
-                  w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24
-                  rounded-full 
-                  ${character.color}
-                  border-2 ${character.borderColor}
-                  flex items-center justify-center
-                  overflow-hidden
-                  border-red-500  // Debugging border
-                `}>
-                  <img 
-                    src={character.avatar} 
-                    alt={character.name}
-                    className="w-full h-full object-contain"
-                    onLoad={() => console.log('🖼️ Avatar loaded:', character.avatar)}
-                    onError={() => console.error('🖼️ Avatar failed to load:', character.avatar)}
-                  />
-                </div>
-              </div>
-
-              {/* Character Name */}
-              <h2 className="text-sm sm:text-base md:text-lg font-semibold text-slate-800 text-center mb-2">
-                {character.name}
-              </h2>
-
-              {/* Selection indicator */}
-              <div className="flex justify-center">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">→</span>
-                </div>
-              </div>
+              <motion.button
+                onClick={handleStartCall}
+                className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                🚀 Start Call with {selectedCharacter.name}
+              </motion.button>
+              
+              <p className="text-sm text-slate-600 text-center">
+                Ready to start learning with your Koko teacher!
+              </p>
             </motion.div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {/* Back button for character selection */}

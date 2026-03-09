@@ -233,7 +233,7 @@ export default function Home() {
   // Show ProfileSelector if gender is selected but no profile
   if (!userProfile) {
     console.log('🏠 Showing ProfileSelector (avatar selection)');
-    return <ProfileSelector onProfileSelected={handleProfileSelected} />;
+    return <ProfileSelector onProfileSelected={handleProfileSelected} connect={connect} />;
   }
 
   // Show main app if both profile and gender are selected
