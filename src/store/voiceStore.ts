@@ -108,7 +108,11 @@ export const useVoiceStore = create<VoiceStore>()(
         }));
       },
       
-      incrementStarCount: () => set((state) => ({ starCount: state.starCount + 1 })),
+      incrementStarCount: () => {
+        const newCount = get().starCount + 1;
+        console.log('🌟 STAR AWARDED! Current count:', newCount);
+        set((state) => ({ starCount: newCount }));
+      },
       
       disconnect: () => {
         set({

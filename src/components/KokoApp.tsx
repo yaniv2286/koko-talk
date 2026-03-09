@@ -268,6 +268,11 @@ export default function KokoApp() {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0D021A]/80 to-[#0D021A]" />
         </div>
 
+        {/* Premium Star Counter - Top Center */}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-40">
+          <StarCounter />
+        </div>
+
         {/* Debug Drawer Toggle */}
         <button
           onClick={() => setShowDebugDrawer(!showDebugDrawer)}

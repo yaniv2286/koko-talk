@@ -20,6 +20,7 @@ export const useRealtimeAudio = ({
     setSessionId, 
     addConversationMessage,
     incrementStarCount,
+    reset,
     userProfile,
     kidGender,
     setVisualAid
@@ -37,6 +38,9 @@ export const useRealtimeAudio = ({
   const connect = useCallback(async () => {
     try {
       console.log('🔗 Starting WebRTC connection...');
+      console.log('🔄 Resetting star count for new session');
+      reset(); // Reset star count to 0 for new call
+      
       setState('connecting');
       setConnectionError(null);
 
