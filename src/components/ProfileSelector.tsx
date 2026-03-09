@@ -36,28 +36,31 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
     }
   ];
 
-  const { setProfile, kidGender, userProfile } = useVoiceStore();
+  const { setProfile, kidGender, userProfile, setCurrentView } = useVoiceStore();
 
-  const handleCharacterSelect = (character: typeof characters[0]) => {
-    console.log('🚀 IGNITION: Calling', character.name);
-    console.log('🔒 VIEW LOCKED TO: call');
-    
-    // Triple-Action Click - Execute all three commands simultaneously
-    const userProfile = {
-      id: `${kidGender}-${character.id}`,
-      name: character.name,
-      avatar: character.avatar,
-    };
-    
-    console.log('👤 Setting profile:', userProfile);
-    setProfile(userProfile); // setSelectedAvatar(character.image)
-    
-    console.log('🔄 Switching to call view');
-    onProfileSelected(); // setCurrentView('call')
-    
-    console.log('🔗 Triggering WebRTC connection');
-    connect(); // connect()
+  const handleCharacterSelect = async (character: typeof characters[0]) => {
+  console.log('🚀 IGNITION: Calling', character.name);
+  console.log('1. Setting View to Call');
+  
+  // Triple-Action Click - Execute sequence with delay
+  const userProfile = {
+    id: `${kidGender}-${character.id}`,
+    name: character.name,
+    avatar: character.avatar,
   };
+  
+  console.log('👤 Setting profile:', userProfile);
+  setProfile(userProfile);
+  
+  console.log('🔄 Switching to call view');
+  setCurrentView('call'); 
+
+  // Small delay to let React/Zustand settle before WebRTC heavy lifting
+  setTimeout(async () => {
+    console.log('2. Starting WebRTC Connection');
+    await connect();
+  }, 100);
+};
 
   return (
     <div className={`flex flex-col items-center justify-center p-4 sm:p-8 font-sans ${className}`}>

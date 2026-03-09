@@ -22,6 +22,11 @@ export default function KokoApp() {
   const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect, reset, currentView, setCurrentView } = useVoiceStore();
   const { connect, disconnect: rtcDisconnect } = useRealtimeAudio({});
   
+  // Who Reset Me? Probe - Track all view changes
+  useEffect(() => {
+    console.log('🕵️ VIEW WATCHER: Current view is now:', currentView);
+  }, [currentView]);
+  
   // Call timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout;

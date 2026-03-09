@@ -137,6 +137,7 @@ export const useVoiceStore = create<VoiceStore>()(
     {
       name: 'koko-talk-store',
       partialize: (state) => ({
+        currentView: state.currentView,
         userProfile: state.userProfile,
         kidGender: state.kidGender,
         starCount: state.starCount,
