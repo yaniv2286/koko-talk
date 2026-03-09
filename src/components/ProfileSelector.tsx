@@ -98,7 +98,8 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 w-full max-w-6xl mb-12">
             {characters.map((character, index) => (
-              <motion.div
+              <motion.button
+                type="button"
                 key={character.id}
                 className={`
                   relative rounded-2xl p-4 sm:p-6
@@ -107,13 +108,18 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
                   transition-all duration-300
                   hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]
                   hover:scale-105
+                  w-full
                 `}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => handleCharacterSelect(character)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleCharacterSelect(character);
+                }}
               >
                 {/* Character Image */}
                 <div className="flex justify-center mb-4">
@@ -148,7 +154,7 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
                     <span className="text-white text-xs sm:text-sm">→</span>
                   </div>
                 </div>
-              </motion.div>
+              </motion.button>
             ))}
           </div>
         )}

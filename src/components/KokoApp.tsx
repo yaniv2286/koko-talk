@@ -101,6 +101,7 @@ export default function KokoApp() {
   };
 
   const handleEndCall = () => {
+    console.trace('VIEW RESET TRIGGERED - End Call button clicked');
     console.log('🛑 CALL ENDED: WebRTC disconnected, state reset.');
     
     // Execute full teardown sequence
@@ -257,20 +258,16 @@ export default function KokoApp() {
     return <ProfileSelector onProfileSelected={handleProfileSelected} connect={connect} />;
   }
 
-  // Show main app if currentView is 'call'
-  if (currentView !== 'call') {
-    console.log('🏠 currentView is not call, returning null');
-    return null; // Will show gender selection above
-  }
-
   console.log('🏠 Showing Main App');
   return (
     <main className="relative overflow-hidden">
-      {/* Visual Aid Modal */}
+      {/* Visual Aid Modal - Always mounted */}
       <VisualAid />
       
-      {/* Phone Call Interface */}
-      <div className="relative h-screen">
+      {/* Phone Call Interface - Always mounted, visibility controlled by CSS */}
+      <div className={`relative h-screen transition-opacity duration-300 ${
+        currentView === 'call' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none absolute inset-0'
+      }`}>
         {/* Blurred Background with Avatar */}
         <div className="absolute inset-0">
           <div 
