@@ -39,6 +39,11 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
   const { setProfile, kidGender, userProfile, setCurrentView } = useVoiceStore();
 
   const handleCharacterSelect = async (character: typeof characters[0]) => {
+  // Prevent any default browser behavior
+  if (typeof window !== 'undefined' && window.event) {
+    window.event.preventDefault();
+  }
+  
   console.log('🚀 IGNITION: Calling', character.name);
   console.log('1. Setting View to Call');
   

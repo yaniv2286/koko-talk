@@ -22,6 +22,11 @@ export default function KokoApp() {
   const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect, reset, currentView, setCurrentView } = useVoiceStore();
   const { connect, disconnect: rtcDisconnect } = useRealtimeAudio({});
   
+  // Emergency Console Trace - Detect component re-mounting
+  useEffect(() => { 
+    console.log('🚨 KOKO_APP MOUNTED - View is:', currentView); 
+  }, []);
+  
   // Who Reset Me? Probe - Track all view changes
   useEffect(() => {
     console.log('🕵️ VIEW WATCHER: Current view is now:', currentView);
