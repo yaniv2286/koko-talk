@@ -17,6 +17,7 @@ export default function KokoApp() {
   const [isMuted, setIsMuted] = useState(false);
   const [callTimer, setCallTimer] = useState(0);
   const [showDebugDrawer, setShowDebugDrawer] = useState(false);
+  const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
   
   const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect, reset, currentView, setCurrentView } = useVoiceStore();
   const { connect, disconnect: rtcDisconnect } = useRealtimeAudio({});
@@ -71,9 +72,27 @@ export default function KokoApp() {
   };
 
   const handleGenderSelect = (gender: 'boy' | 'girl') => {
-    console.log('🔄 Transitioning to Avatar Selection for:', gender);
-    setKidGender(gender);
-    setCurrentView('avatar');
+    console.log('� Transitioning to Avatar Selection for:', gender);
+    
+    try {
+      console.log('�🚀 Selection made:', gender);
+      console.log('🏠 Before setKidGender - kidGender:', kidGender);
+      
+      setSelectedGender(gender);
+      setKidGender(gender);
+      
+      console.log('🏠 After setKidGender - calling handleGenderSelected');
+      
+      setTimeout(() => {
+        console.log('🏠 Timeout - calling handleGenderSelected');
+        handleGenderSelected();
+      }, 300); // Brief delay to show selection animation
+    } catch (error) {
+      console.error('❌ Gender selection failed:', error);
+      // Fallback: try to proceed anyway
+      setSelectedGender(gender);
+      setKidGender(gender);
+    }
   };
 
   const handleStartCall = () => {
@@ -123,6 +142,34 @@ export default function KokoApp() {
                 onClick={() => handleGenderSelect('boy')}
                 className="relative transform transition-all duration-300 hover:scale-105 focus:outline-none"
               >
+                {/* Selection Halo */}
+                <AnimatePresence>
+                  {selectedGender === 'boy' && (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1.2, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      className="absolute inset-0 rounded-full bg-green-400/20 blur-xl"
+                    />
+                  )}
+                </AnimatePresence>
+                
+                {/* Checkmark */}
+                <AnimatePresence>
+                  {selectedGender === 'boy' && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center"
+                    >
+                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-8-8a1 1 0 010-1.414l8-8z" clipRule="evenodd" />
+                      </svg>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
                 {/* Avatar Container with Blue Glowing Border */}
                 <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full border-[3px] border-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.5)] overflow-hidden">
                   <img
@@ -147,6 +194,34 @@ export default function KokoApp() {
                 onClick={() => handleGenderSelect('girl')}
                 className="relative transform transition-all duration-300 hover:scale-105 focus:outline-none"
               >
+                {/* Selection Halo */}
+                <AnimatePresence>
+                  {selectedGender === 'girl' && (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1.2, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      className="absolute inset-0 rounded-full bg-green-400/20 blur-xl"
+                    />
+                  )}
+                </AnimatePresence>
+                
+                {/* Checkmark */}
+                <AnimatePresence>
+                  {selectedGender === 'girl' && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center"
+                    >
+                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-8-8a1 1 0 010-1.414l8-8z" clipRule="evenodd" />
+                      </svg>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
                 {/* Avatar Container with Pink Glowing Border */}
                 <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full border-[3px] border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] overflow-hidden">
                   <img
