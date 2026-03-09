@@ -429,8 +429,8 @@ export default function KokoApp() {
               </div>
             )}
 
-            {/* Call Controls - Show when connected */}
-            {state !== 'idle' && (
+            {/* Call Controls - Always show when in call view */}
+            {currentView === 'call' && (
               <div className="flex justify-center items-center gap-8">
                 {/* Mute Button */}
                 <button
