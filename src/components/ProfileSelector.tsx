@@ -36,8 +36,7 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
     }
   ];
 
-  const { setProfile, kidGender, userProfile } = useVoiceStore();
-  const { setCurrentView } = useVoiceStore();
+  const { setProfile, kidGender, userProfile, currentView } = useVoiceStore();
 
   const handleCharacterSelect = async (character: typeof characters[0]) => {
   // Prevent any default browser behavior
@@ -46,17 +45,19 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
   }
   
   console.log('🚀 IGNITION: Calling', character.name);
-  console.log('1. Setting View to Call');
+  console.log('🚀 Before anything - currentView:', currentView);
+  console.log('🚀 Before anything - store userProfile:', userProfile);
+  console.log('🚀 Before anything - kidGender:', kidGender);
   
   // Triple-Action Click - Execute sequence with delay
-  const userProfile = {
+  const newProfile = {
     id: `${kidGender}-${character.id}`,
     name: character.name,
     avatar: character.avatar,
   };
   
-  console.log('👤 Setting profile:', userProfile);
-  setProfile(userProfile);
+  console.log('👤 Setting profile:', newProfile);
+  setProfile(newProfile);
   
   console.log('🔄 Calling onProfileSelected callback');
   onProfileSelected(); // Call the callback instead of setCurrentView directly
@@ -64,6 +65,8 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
   // Small delay to let React/Zustand settle before WebRTC heavy lifting
   setTimeout(async () => {
     console.log('2. Starting WebRTC Connection');
+    console.log('🚀 After timeout - currentView:', currentView);
+    console.log('🚀 After timeout - userProfile:', userProfile);
     await connect();
   }, 100);
 };

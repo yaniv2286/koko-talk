@@ -38,8 +38,7 @@ export const useRealtimeAudio = ({
   const connect = useCallback(async () => {
     try {
       console.log('🔗 Starting WebRTC connection...');
-      console.log('🔄 Resetting star count for new session');
-      reset(); // Reset star count to 0 for new call
+      // NOTE: Removed star count reset to prevent state reset that breaks routing
       
       setState('connecting');
       setConnectionError(null);
@@ -199,7 +198,19 @@ export const useRealtimeAudio = ({
       });
 
       // Get microphone access
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      let mediaStream;
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Microphone access not available - browser may not support getUserMedia or permissions denied');
+        }
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (error) {
+        console.error('🎤 Microphone access error:', error);
+        setConnectionError('Microphone access required. Please allow microphone permissions and refresh.');
+        setState('error');
+        return;
+      }
+      
       mediaStreamRef.current = mediaStream;
       
       // Add microphone track to peer connection
