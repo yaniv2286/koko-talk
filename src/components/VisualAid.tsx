@@ -19,19 +19,6 @@ export const VisualAid = ({ className = '' }: VisualAidProps = {}) => {
   
   useEffect(() => setIsMounted(true), []);
   
-  // Early return guard moved to VERY END after all hooks
-  if (!isMounted) return null;
-
-  // Early validation
-  if (!visualAid || !visualAid.isVisible) {
-    return null;
-  }
-
-  if (!visualAid.word) {
-    console.error('🖼️ VisualAid: No word provided');
-    return null;
-  }
-
   const fetchImage = async () => {
     if (!visualAid) return;
     
@@ -88,8 +75,20 @@ export const VisualAid = ({ className = '' }: VisualAidProps = {}) => {
   };
 
   // Safely get word and letters
-  const word = visualAid.word ? visualAid.word.toUpperCase() : '';
+  const word = visualAid?.word ? visualAid.word.toUpperCase() : '';
   const letters = word ? word.split('') : [];
+
+  // ALL GUARD CLAUSES MOVED TO END - No hooks can be skipped during render
+  if (!isMounted) return null;
+  
+  if (!visualAid || !visualAid.isVisible) {
+    return null;
+  }
+
+  if (!visualAid.word) {
+    console.error('🖼️ VisualAid: No word provided');
+    return null;
+  }
 
   // If no letters after validation, don't render
   if (!letters || letters.length === 0) {
