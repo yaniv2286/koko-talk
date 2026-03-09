@@ -15,64 +15,47 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
   const characters = [
     {
       id: 'avatar1',
-      name: 'Boy',
-      avatar: '/avatars/boy_avatar.png',
-      color: 'bg-blue-100 hover:bg-blue-200',
-      borderColor: 'border-blue-300'
-    },
-    {
-      id: 'avatar2',
-      name: 'Girl',
-      avatar: '/avatars/girl_avatar.png',
-      color: 'bg-pink-100 hover:bg-pink-200',
-      borderColor: 'border-pink-300'
-    },
-    {
-      id: 'avatar3',
-      name: 'Character 3',
+      name: 'Koko the Dog',
       avatar: '/avatars/cute-dog-studio.jpg',
       color: 'bg-green-100 hover:bg-green-200',
       borderColor: 'border-green-300'
     },
     {
-      id: 'avatar4',
-      name: 'Character 4',
+      id: 'avatar2',
+      name: 'Morah Sarah',
       avatar: '/avatars/Gemini_Generated_Image_sndvtosndvtosndv.png',
       color: 'bg-purple-100 hover:bg-purple-200',
       borderColor: 'border-purple-300'
     },
     {
-      id: 'avatar5',
-      name: 'Character 5',
+      id: 'avatar3',
+      name: 'Moreh Dan',
       avatar: '/avatars/Gemini_Generated_Image_4xj7d14xj7d14xj7.png',
       color: 'bg-amber-100 hover:bg-amber-200',
       borderColor: 'border-amber-300'
     }
   ];
 
-  // HOIST ALL HOOKS TO TOP - Rules of Hooks compliance
-  const [selectedCharacter, setSelectedCharacter] = useState<typeof characters[0] | null>(null);
-  
   const { setProfile, kidGender, userProfile } = useVoiceStore();
 
   const handleCharacterSelect = (character: typeof characters[0]) => {
-    console.log('🖼️ Selected Avatar Path:', character.avatar);
-    setSelectedCharacter(character);
+    console.log('� IGNITION: Calling', character.name);
     
+    // Triple-Action Click - Execute all three commands simultaneously
     const userProfile = {
       id: `${kidGender}-${character.id}`,
       name: character.name,
       avatar: character.avatar,
     };
     
-    console.log('👤 Creating profile:', userProfile);
+    console.log('👤 Setting profile:', userProfile);
     setProfile(userProfile);
-  };
-
-  const handleStartCall = () => {
-    console.log('🚀 Starting call with selected character...');
-    onProfileSelected();
-    connect();
+    
+    console.log('🔄 Switching to call view');
+    onProfileSelected(); // This changes the view to Call Screen
+    
+    console.log('🔗 Triggering WebRTC connection');
+    connect(); // This triggers the WebRTC audio engine
   };
 
   return (
@@ -115,7 +98,6 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
                   transition-all duration-300
                   hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]
                   hover:scale-105
-                  ${selectedCharacter?.id === character.id ? 'ring-4 ring-green-500 ring-offset-2' : ''}
                 `}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -153,15 +135,8 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
 
                 {/* Selection indicator */}
                 <div className="flex justify-center">
-                  <div className={`
-                    w-8 h-8 rounded-full flex items-center justify-center
-                    ${selectedCharacter?.id === character.id 
-                      ? 'bg-green-500' 
-                      : 'bg-blue-500'
-                    }`}>
-                    <span className="text-white text-xs sm:text-sm">
-                      {selectedCharacter?.id === character.id ? '✓' : '→'}
-                    </span>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-500">
+                    <span className="text-white text-xs sm:text-sm">→</span>
                   </div>
                 </div>
               </motion.div>
@@ -169,25 +144,6 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
           </div>
         )}
       </div>
-
-      {/* Start Call Button - Only show when character is selected */}
-      {selectedCharacter && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col items-center gap-4"
-        >
-          <motion.button
-            onClick={handleStartCall}
-            className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            🚀 Start Call with {selectedCharacter.name}
-          </motion.button>
-        </motion.div>
-      )}
     </div>
   );
 };
