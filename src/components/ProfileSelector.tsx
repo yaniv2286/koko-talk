@@ -36,7 +36,8 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
     }
   ];
 
-  const { setProfile, kidGender, userProfile, setCurrentView } = useVoiceStore();
+  const { setProfile, kidGender, userProfile } = useVoiceStore();
+  const { setCurrentView } = useVoiceStore();
 
   const handleCharacterSelect = async (character: typeof characters[0]) => {
   // Prevent any default browser behavior
@@ -57,8 +58,8 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
   console.log('👤 Setting profile:', userProfile);
   setProfile(userProfile);
   
-  console.log('🔄 Switching to call view');
-  setCurrentView('call'); 
+  console.log('🔄 Calling onProfileSelected callback');
+  onProfileSelected(); // Call the callback instead of setCurrentView directly
 
   // Small delay to let React/Zustand settle before WebRTC heavy lifting
   setTimeout(async () => {
