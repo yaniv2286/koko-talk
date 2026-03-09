@@ -13,6 +13,12 @@ import { Mic, MicOff, Phone, PhoneOff, Volume2 } from 'lucide-react';
 
 export default function Home() {
   console.log('🏠 Home component rendering');
+  
+  // Hydration fix - prevent SSR/Client mismatch
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
+  if (!isMounted) return null;
+  
   const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect } = useVoiceStore();
   console.log('🏠 Store state (real-time):', { 
     userProfile: userProfile?.name, 

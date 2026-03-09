@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Baby, User, Users, Sparkles } from 'lucide-react';
 import { useVoiceStore } from '@/store/voiceStore';
@@ -13,6 +13,11 @@ interface ProfileSelectorProps {
 }
 
 export const ProfileSelector = ({ className = '', onProfileSelected, connect }: ProfileSelectorProps) => {
+  // Hydration fix - prevent SSR/Client mismatch
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
+  if (!isMounted) return null;
+  
   const { setProfile, kidGender, userProfile } = useVoiceStore();
   const [step, setStep] = useState<'age' | 'character'>('age');
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);

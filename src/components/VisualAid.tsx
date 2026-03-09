@@ -7,7 +7,12 @@ interface VisualAidProps {
   className?: string;
 }
 
-export const VisualAid: React.FC<VisualAidProps> = ({ className = '' }) => {
+export const VisualAid = ({ className = '' }: VisualAidProps = {}) => {
+  // Hydration fix - prevent SSR/Client mismatch
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
+  if (!isMounted) return null;
+
   const { visualAid, setVisualAid } = useVoiceStore();
   const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
   const [imageUrl, setImageUrl] = useState('');
