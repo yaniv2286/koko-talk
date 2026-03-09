@@ -201,12 +201,15 @@ export const useRealtimeAudio = ({
       let mediaStream;
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error('Microphone access not available - browser may not support getUserMedia or permissions denied');
+          console.warn('🎤 Microphone not available in this browser/environment');
+          setConnectionError('Please allow microphone access to use Koko. Click the microphone icon in your browser address bar to enable.');
+          setState('error');
+          return;
         }
         mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       } catch (error) {
-        console.error('🎤 Microphone access error:', error);
-        setConnectionError('Microphone access required. Please allow microphone permissions and refresh.');
+        console.warn('🎤 Microphone access denied:', error);
+        setConnectionError('Microphone access required. Please allow microphone permissions and refresh the page to try again.');
         setState('error');
         return;
       }
