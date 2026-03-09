@@ -40,14 +40,28 @@ export const VisualAid = ({ className = '' }: VisualAidProps = {}) => {
         setError('');
         
         try {
-          // Use Unsplash API or placeholder service for images
-          const response = await fetch(
-            `https://api.unsplash.com/photos/random?query=${encodeURIComponent(visualAid.imageQuery)}&client_id=${process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || ''}`
+          // Try Unsplash API first if key is available
+          const unsplashKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY;
+          
+          if (unsplashKey && unsplashKey !== 'your_unsplash_api_key_here') {
+            const response = await fetch(
+              `https://api.unsplash.com/photos/random?query=${encodeURIComponent(visualAid.imageQuery)}&client_id=${unsplashKey}`
+            );
+            
+            if (response.ok) {
+              const data = await response.json();
+              setImageUrl(data.urls.regular);
+              return;
+            }
+          }
+          
+          // Fallback to placeholder images service
+          const fallbackResponse = await fetch(
+            `https://picsum.photos/seed/${encodeURIComponent(visualAid.word)}/400/300.jpg`
           );
           
-          if (response.ok) {
-            const data = await response.json();
-            setImageUrl(data.urls.regular);
+          if (fallbackResponse.ok) {
+            setImageUrl(fallbackResponse.url);
           } else {
             throw new Error('Failed to fetch image');
           }
