@@ -53,15 +53,9 @@ export default function KokoApp() {
   ];
 
   const handleGenderSelected = () => {
-    console.log('🏠 handleGenderSelected called, showing avatar selection');
-    // Create a default profile and show avatar selection
-    const defaultProfile = {
-      id: `default-${selectedGender}`,
-      name: selectedGender === 'boy' ? 'Boy' : 'Girl',
-      ageGroup: '8-12' as const,
-      avatar: selectedGender === 'boy' ? '/avatars/boy_avatar.png' : '/avatars/girl_avatar.png',
-    };
-    setProfile(defaultProfile);
+    console.log('🏠 handleGenderSelected called - transitioning to ProfileSelector');
+    // Don't create profile here - let ProfileSelector handle it
+    // Just log the transition
   };
 
   const handleProfileSelected = () => {

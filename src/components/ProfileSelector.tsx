@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Baby, User, Users, Sparkles } from 'lucide-react';
 import { useVoiceStore } from '@/store/voiceStore';
@@ -13,54 +13,7 @@ interface ProfileSelectorProps {
 }
 
 export const ProfileSelector = ({ className = '', onProfileSelected, connect }: ProfileSelectorProps) => {
-  // HOIST ALL HOOKS TO TOP - Rules of Hooks compliance
-  const [isMounted, setIsMounted] = useState(false);
-  const [step, setStep] = useState<'age' | 'character'>('age');
-  const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);
-  const [selectedCharacter, setSelectedCharacter] = useState<typeof characters[0] | null>(null);
-  
-  const { setProfile, kidGender, userProfile } = useVoiceStore();
-  
-  useEffect(() => setIsMounted(true), []);
-  
-  // Early return guard moved to VERY END after all hooks
-  if (!isMounted) return null;
-
-  const profiles = [
-    {
-      id: 'little-kids',
-      name: 'Little Kids',
-      ageGroup: '4-7' as AgeGroup,
-      icon: <Baby className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20" />,
-      description: 'Ages 4-7',
-      color: 'bg-pink-500 hover:bg-pink-600',
-      bgColor: 'bg-pink-100 dark:bg-pink-900',
-      borderColor: 'border-pink-300 dark:border-pink-700',
-      features: [
-        '🌟 Very simple words',
-        '🐢 Speak slowly',
-        '🎉 Super enthusiastic',
-        '🧸 Fun games'
-      ]
-    },
-    {
-      id: 'big-kids',
-      name: 'Big Kids',
-      ageGroup: '8-12' as AgeGroup,
-      icon: <User className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20" />,
-      description: 'Ages 8-12',
-      color: 'bg-blue-500 hover:bg-blue-600',
-      bgColor: 'bg-blue-100 dark:bg-blue-900',
-      borderColor: 'border-blue-300 dark:border-blue-700',
-      features: [
-        '🚀 Cool vocabulary',
-        '⚡ Normal speed',
-        '😎 Witty & fun',
-        '📚 Grammar help'
-      ]
-    }
-  ];
-
+  // Define data arrays before state that references them
   const characters = [
     {
       id: 'avatar1',
@@ -96,6 +49,48 @@ export const ProfileSelector = ({ className = '', onProfileSelected, connect }: 
       avatar: '/avatars/Gemini_Generated_Image_4xj7d14xj7d14xj7.png',
       color: 'bg-amber-100 hover:bg-amber-200',
       borderColor: 'border-amber-300'
+    }
+  ];
+
+  // HOIST ALL HOOKS TO TOP - Rules of Hooks compliance
+  const [step, setStep] = useState<'age' | 'character'>('age');
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);
+  const [selectedCharacter, setSelectedCharacter] = useState<typeof characters[0] | null>(null);
+  
+  const { setProfile, kidGender, userProfile } = useVoiceStore();
+
+  const profiles = [
+    {
+      id: 'little-kids',
+      name: 'Little Kids',
+      ageGroup: '4-7' as AgeGroup,
+      icon: <Baby className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20" />,
+      description: 'Ages 4-7',
+      color: 'bg-pink-500 hover:bg-pink-600',
+      bgColor: 'bg-pink-100 dark:bg-pink-900',
+      borderColor: 'border-pink-300 dark:border-pink-700',
+      features: [
+        '🌟 Very simple words',
+        '🐢 Speak slowly',
+        '🎉 Super enthusiastic',
+        '🧸 Fun games'
+      ]
+    },
+    {
+      id: 'big-kids',
+      name: 'Big Kids',
+      ageGroup: '8-12' as AgeGroup,
+      icon: <User className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20" />,
+      description: 'Ages 8-12',
+      color: 'bg-blue-500 hover:bg-blue-600',
+      bgColor: 'bg-blue-100 dark:bg-blue-900',
+      borderColor: 'border-blue-300 dark:border-blue-700',
+      features: [
+        '🚀 Cool vocabulary',
+        '⚡ Normal speed',
+        '😎 Witty & fun',
+        '📚 Grammar help'
+      ]
     }
   ];
 
