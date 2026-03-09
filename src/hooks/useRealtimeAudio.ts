@@ -362,9 +362,33 @@ export const useRealtimeAudio = ({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      disconnect();
+      // Direct cleanup without calling disconnect to avoid circular dependency
+      if (pcRef.current) {
+        pcRef.current.close();
+        pcRef.current = null;
+      }
+      if (dcRef.current) {
+        dcRef.current.close();
+        dcRef.current = null;
+      }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+        mediaStreamRef.current = null;
+      }
+      if (audioElementRef.current) {
+        audioElementRef.current.srcObject = null;
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+      
+      setConnected(false);
+      setState('idle');
+      setSessionId(null);
+      console.log('🔌 WebRTC disconnected on unmount');
     };
-  }, [disconnect]);
+  }, [setConnected, setState, setSessionId]);
 
   return {
     connect,
