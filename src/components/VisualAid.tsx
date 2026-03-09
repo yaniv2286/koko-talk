@@ -15,43 +15,51 @@ export const VisualAid = ({ className = '' }: VisualAidProps = {}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { visualAid, setVisualAid } = useVoiceStore();
+  // Atomic selectors - only re-render when these specific values change
+  const visualAid = useVoiceStore((state) => state.visualAid);
+  const setVisualAid = useVoiceStore((state) => state.setVisualAid);
   
   useEffect(() => setIsMounted(true), []);
   
-  const fetchImage = async () => {
-    if (!visualAid) return;
-    
-    setIsLoading(true);
-    setError('');
-    
-    try {
-      // Use Unsplash API or placeholder service for images
-      const response = await fetch(
-        `https://api.unsplash.com/photos/random?query=${encodeURIComponent(visualAid.imageQuery)}&client_id=${process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || ''}`
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        setImageUrl(data.urls.regular);
-      } else {
-        throw new Error('Failed to fetch image');
-      }
-    } catch (error) {
-      console.error('🖼️ Error fetching image:', error);
-      setError('Failed to load image');
-      setImageUrl(''); // Clear image on error
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Reset letter index when visual aid changes - moved to top for Rules of Hooks compliance
   useEffect(() => {
     if (visualAid) {
       console.log('🖼️ Visual Aid triggered for:', visualAid.word);
       setCurrentLetterIndex(0);
       setError('');
+      
+      // Memoized fetchImage function inside useEffect
+      const fetchImage = async () => {
+        // Query safety guard - prevent bad network requests
+        if (!visualAid?.imageQuery) {
+          setImageUrl('');
+          return;
+        }
+        
+        setIsLoading(true);
+        setError('');
+        
+        try {
+          // Use Unsplash API or placeholder service for images
+          const response = await fetch(
+            `https://api.unsplash.com/photos/random?query=${encodeURIComponent(visualAid.imageQuery)}&client_id=${process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || ''}`
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            setImageUrl(data.urls.regular);
+          } else {
+            throw new Error('Failed to fetch image');
+          }
+        } catch (error) {
+          console.error('🖼️ Error fetching image:', error);
+          setError('Failed to load image');
+          setImageUrl(''); // Clear image on error
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
       fetchImage();
     } else {
       setImageUrl('');
@@ -61,7 +69,16 @@ export const VisualAid = ({ className = '' }: VisualAidProps = {}) => {
   }, [visualAid]);
 
   const handleClose = () => {
-    setVisualAid(null);
+    try {
+      setVisualAid(null);
+    } catch (error) {
+      console.error('🖼️ Error closing visual aid:', error);
+      // Force close even if store update fails
+      setError('');
+      setImageUrl('');
+      setCurrentLetterIndex(0);
+      setIsLoading(false);
+    }
   };
 
   const nextLetter = () => {
