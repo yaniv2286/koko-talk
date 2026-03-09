@@ -20,7 +20,7 @@ export default function KokoApp() {
   const [showDebugDrawer, setShowDebugDrawer] = useState(false);
   const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
   
-  const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect } = useVoiceStore();
+  const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect, reset } = useVoiceStore();
   const { connect, disconnect: rtcDisconnect } = useRealtimeAudio({});
   
   // Call timer effect
@@ -93,8 +93,12 @@ export default function KokoApp() {
   };
 
   const handleEndCall = () => {
-    console.log('📞 Ending call...');
-    rtcDisconnect();
+    console.log('� CALL ENDED: WebRTC disconnected, state reset.');
+    
+    // Execute full teardown sequence
+    rtcDisconnect(); // Disconnect WebRTC
+    reset(); // Reset all state including starCount, kidGender, profile
+    setShowMainApp(false); // Return to Gender Selection screen
   };
 
   // Format timer as MM:SS
@@ -430,9 +434,9 @@ export default function KokoApp() {
                 {/* End Call Button */}
                 <button
                   onClick={handleEndCall}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full btn-glass flex items-center justify-center transition-all transform hover:scale-105 neon-red"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all transform hover:scale-105 shadow-lg hover:shadow-red-500/50 border-2 border-red-600"
                 >
-                  <PhoneOff className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+                  <PhoneOff className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                 </button>
 
                 {/* Speaker Button */}
