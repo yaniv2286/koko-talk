@@ -137,8 +137,8 @@ export const useRealtimeAudio = ({
                   // Trigger the AI to continue the conversation after awarding the star
                   dcRef.current.send(JSON.stringify({ type: 'response.create' }));
                 }
-              } else if (data.name === 'show_visual_aid') {
-                console.log('🎯 Visual aid requested:', data.arguments);
+              } else if (data.name === 'show_spelling') {
+                console.log('🎯 Spelling aid requested:', data.arguments);
                 
                 // Parse arguments safely - OpenAI often sends as string
                 let args;
@@ -147,24 +147,24 @@ export const useRealtimeAudio = ({
                     ? JSON.parse(data.arguments) 
                     : data.arguments;
                 } catch (error) {
-                  console.error('🎯 Failed to parse visual aid arguments:', error);
+                  console.error('🎯 Failed to parse spelling arguments:', error);
                   return;
                 }
                 
-                const { word, image_query } = args || {};
+                const { word } = args || {};
                 
                 // Validate required fields
-                if (!word || !image_query) {
-                  console.error('🎯 Missing required visual aid fields:', { word, image_query });
+                if (!word) {
+                  console.error('🎯 Missing required spelling word:', { word });
                   return;
                 }
                 
-                console.log('🖼️ Visual Aid triggered for:', word);
+                console.log('🖼️ Spelling aid triggered for:', word);
                 
                 // Show visual aid in UI
                 setVisualAid({
                   word,
-                  imageQuery: image_query,
+                  imageQuery: word, // Use word as image query
                   imageUrl: '',
                   isVisible: true
                 });
@@ -176,10 +176,10 @@ export const useRealtimeAudio = ({
                     item: {
                       type: 'function_call_output',
                       call_id: data.call_id,
-                      output: JSON.stringify({ success: true, message: "Visual aid displayed!" })
+                      output: JSON.stringify({ word })
                     }
                   }));
-                  // Trigger the AI to continue the conversation
+                  // Trigger the AI to continue the conversation after showing spelling
                   dcRef.current.send(JSON.stringify({ type: 'response.create' }));
                 }
               }
