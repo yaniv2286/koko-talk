@@ -94,7 +94,10 @@ export const useRealtimeAudio = ({
         
         // Let the main system instructions handle the greeting naturally
         const createResponse = {
-          type: 'response.create'
+          type: 'response.create',
+          response: {
+            modalities: ['text', 'audio']
+          }
         };
         console.log('📤 Sending initial response:', createResponse);
         dc.send(JSON.stringify(createResponse));
@@ -109,6 +112,7 @@ export const useRealtimeAudio = ({
           switch (data.type) {
             case 'response.created':
               console.log('🎤 Response created:', data);
+              console.log('🎤 Response details:', JSON.stringify(data.response, null, 2));
               break;
             case 'response.audio.delta':
               console.log('🔊 Audio delta received:', data);
