@@ -87,9 +87,11 @@ export const useRealtimeAudio = ({
         console.log('🌐 Data channel opened, triggering initial response...');
         
         // Let the main system instructions handle the greeting naturally
-        dc.send(JSON.stringify({
+        const createResponse = {
           type: 'response.create'
-        }));
+        };
+        console.log('📤 Sending initial response:', createResponse);
+        dc.send(JSON.stringify(createResponse));
       });
 
       // Handle data channel messages

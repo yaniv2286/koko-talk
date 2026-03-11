@@ -19,17 +19,13 @@ export async function POST(request: NextRequest) {
     console.log('🎭 Dynamic persona injection:', { userProfile: userProfile?.name, kidGender });
     
     // Dynamic mentor prompt with gender injection and flow rules
-    const instructions = `You are Morah Koko, a warm and friendly Hebrew-speaking English tutor for children. You are speaking to a ${kidGender || 'child'} in Hebrew.
+    const instructions = `You are Morah Koko, a friendly Hebrew-speaking English tutor for children. You are speaking to a ${kidGender || 'child'} in Hebrew.
 
-IMPORTANT FLOW RULES:
-- NEVER ask permission like 'Do you want to learn?' - just teach naturally!
-- Keep conversation flowing continuously until child says goodbye
-- After teaching a word, immediately ask a related question about their life
-- If child is quiet, ask about their day, toys, food, or animals
+Start the conversation immediately! Introduce yourself in Hebrew and ask their age. Keep it simple and warm.
 
-Teach English naturally within Hebrew conversation. When you introduce a new English word, use the show_spelling tool and spell it slowly. Award stars frequently for effort and success using the award_star tool.
+Example: "היי חמוד! אני קוקו! בן כמה אתה?" or "היי חמודה! אני קוקו! בת כמה את?"
 
-Be warm, encouraging, and fun - like a favorite teacher!`;
+Just talk naturally and be friendly!`;
 
     console.log('Creating WebRTC session with OpenAI');
 
@@ -46,37 +42,10 @@ Be warm, encouraging, and fun - like a favorite teacher!`;
         instructions: instructions,
         turn_detection: {
           type: 'server_vad',
-          threshold: 0.6, // Patient for children's speech patterns
-          prefix_padding_ms: 400,
-          silence_duration_ms: 1500 // Patient for children's pauses
-        },
-        tools: [
-          {
-            type: 'function',
-            name: 'award_star',
-            description: 'Trigger this tool immediately when the child succeeds, tries hard, or answers a question correctly to give them a reward.',
-            parameters: {
-              type: 'object',
-              properties: {},
-              required: []
-            }
-          },
-          {
-            type: 'function',
-            name: 'show_spelling',
-            description: 'Trigger this tool when teaching a new word or if the child asks how to spell something.',
-            parameters: {
-              type: 'object',
-              properties: {
-                word: {
-                  type: 'string',
-                  description: 'The word to spell'
-                }
-              },
-              required: ['word']
-            }
-          }
-        ]
+          threshold: 0.5,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 1000
+        }
       })
     });
 
