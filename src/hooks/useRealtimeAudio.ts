@@ -1,7 +1,10 @@
 'use client';
 
+// Cache bust: 2025-03-11-21-22
 import { useCallback, useRef, useEffect } from 'react';
 import { useVoiceStore } from '@/store/voiceStore';
+
+console.log('🔄 useRealtimeAudio.ts loaded with fresh code - 2025-03-11-21-22');
 
 interface UseRealtimeAudioProps {
   onError?: (error: string) => void;
