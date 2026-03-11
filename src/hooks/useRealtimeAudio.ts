@@ -132,6 +132,7 @@ export const useRealtimeAudio = ({
               break;
             case 'response.done':
               console.log('✅ Response completed:', data);
+              console.log('✅ Response content details:', JSON.stringify(data.response, null, 2));
               break;
             case 'response.function_call_arguments.done':
               console.log('⭐ Function call complete:', data.name);
