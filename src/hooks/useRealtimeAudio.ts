@@ -86,17 +86,9 @@ export const useRealtimeAudio = ({
       dc.addEventListener('open', () => {
         console.log('🌐 Data channel opened, triggering initial response...');
         
-        // Create Morah Koko persona opening script
-        const genderAwareGreeting = kidGender === 'girl' 
-          ? 'היי חמודה! אני קוקו! כל כך שמחה ללמד אותך אנגלית היום! בת כמה את?' 
-          : 'היי חמוד! אני קוקו! כל כך שמח ללמד אותך אנגלית היום! בן כמה אתה?';
-        
+        // Let the main system instructions handle the greeting naturally
         dc.send(JSON.stringify({
-          type: 'response.create',
-          response: {
-            modalities: ['audio', 'text'],
-            instructions: `You are Morah Koko, a warm, high-energy Israeli English teacher. Start IMMEDIATELY with this exact Hebrew greeting: "${genderAwareGreeting}". Stay in Hebrew for 95% of this first turn to build comfort. Express genuine excitement about learning English together. Ask the child's age as the final part of your first turn. Wait for their response before introducing any English. Use the 1200ms VAD silence threshold to give them time to process and answer.`
-          }
+          type: 'response.create'
         }));
       });
 
