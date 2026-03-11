@@ -104,21 +104,27 @@ export const useRealtimeAudio = ({
           console.log('📨 Received WebRTC event:', data.type);
 
           switch (data.type) {
+            case 'response.created':
+              console.log('🎤 Response created:', data);
+              break;
             case 'response.audio.delta':
-              console.log('� Audio delta received');
+              console.log('🔊 Audio delta received:', data);
               setState('speaking');
               break;
             case 'response.audio.done':
-              console.log('� Audio response done');
+              console.log('🔊 Audio response done:', data);
               setState('listening');
               break;
             case 'response.text.delta':
               console.log('💬 Text delta:', data.delta);
               break;
             case 'response.text.done':
-              console.log('� Full response:', data.text);
+              console.log('💬 Full response:', data.text);
               addConversationMessage('assistant', data.text);
               setState('listening');
+              break;
+            case 'response.done':
+              console.log('✅ Response completed:', data);
               break;
             case 'response.function_call_arguments.done':
               console.log('⭐ Function call complete:', data.name);
