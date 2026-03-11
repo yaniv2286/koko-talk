@@ -44,13 +44,16 @@ export const useRealtimeAudio = ({
       setConnectionError(null);
 
       // Fetch ephemeral token from API
+      const requestData = {
+        userProfile: userProfile || undefined,
+        kidGender: kidGender || undefined
+      };
+      console.log('📤 Sending to API:', requestData);
+      
       const response = await fetch('/api/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userProfile: userProfile || undefined,
-          kidGender: kidGender || undefined
-        }),
+        body: JSON.stringify(requestData),
       });
       
       console.log('📡 API response received, status:', response.status);

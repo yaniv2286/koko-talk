@@ -37,7 +37,7 @@ Just talk naturally and be friendly!`;
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-realtime-preview-2024-12-17',
+        model: 'gpt-4o-realtime-preview',
         voice: 'alloy',
         instructions: instructions,
         turn_detection: {
@@ -51,9 +51,9 @@ Just talk naturally and be friendly!`;
 
     if (!sessionResponse.ok) {
       const errorText = await sessionResponse.text();
-      console.error('Failed to create OpenAI session:', errorText);
+      console.error('❌ Failed to create OpenAI session:', sessionResponse.status, errorText);
       return NextResponse.json(
-        { error: 'Failed to create session', details: errorText },
+        { error: 'Failed to create session', details: errorText, status: sessionResponse.status },
         { status: 500 }
       );
     }
