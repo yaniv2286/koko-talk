@@ -65,10 +65,10 @@ export const useGeminiAudio = ({
       mediaStreamRef.current = stream;
 
       // Create audio source
-      sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
+      sourceRef.current = audioContextRef.current?.createMediaStreamSource(stream);
       
       // Create script processor for 16-bit PCM conversion
-      processorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
+      processorRef.current = audioContextRef.current?.createScriptProcessor(4096, 1, 1);
       
       processorRef.current.onaudioprocess = (event) => {
         if (websocketRef.current?.readyState === WebSocket.OPEN && state === 'listening') {
@@ -92,8 +92,10 @@ export const useGeminiAudio = ({
       };
 
       // Connect audio processing chain
-      sourceRef.current.connect(processorRef.current);
-      processorRef.current.connect(audioContextRef.current.destination);
+      if (sourceRef.current && processorRef.current && audioContextRef.current) {
+        sourceRef.current.connect(processorRef.current);
+        processorRef.current.connect(audioContextRef.current.destination);
+      }
       
       console.log('✅ Web Audio API initialized');
       
@@ -221,7 +223,7 @@ export const useGeminiAudio = ({
                     
                     // Play audio immediately
                     const source = audioContextRef.current?.createBufferSource();
-                    if (source) {
+                    if (source && audioContextRef.current) {
                       source.buffer = audioBuffer;
                       source.connect(audioContextRef.current.destination);
                       source.start();
@@ -327,7 +329,7 @@ export const useGeminiAudio = ({
         audioContextRef.current = null;
       }
       
-      setState('connected');
+      setState('idle');
       console.log('✅ Audio streaming stopped');
 
     } catch (error) {
