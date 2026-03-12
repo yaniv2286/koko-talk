@@ -33,9 +33,23 @@ export async function GET(request: NextRequest) {
       model.supportedGenerationMethods?.includes('generateContent')
     ) || [];
 
+    // Filter for models that support bidiGenerateContent (Live API)
+    const liveApiModels = data.models?.filter((model: any) => 
+      model.supportedGenerationMethods?.includes('bidiGenerateContent')
+    ) || [];
+
+    console.log('🎙️ Live API models:', liveApiModels.map((m: any) => m.name));
+
     return NextResponse.json({
       total_models: data.models?.length || 0,
       generate_content_models: generateContentModels.length,
+      live_api_models: liveApiModels.length,
+      live_api_models_details: liveApiModels.map((model: any) => ({
+        name: model.name,
+        displayName: model.displayName,
+        description: model.description,
+        supportedMethods: model.supportedGenerationMethods
+      })),
       all_models: data.models?.map((model: any) => ({
         name: model.name,
         displayName: model.displayName,
