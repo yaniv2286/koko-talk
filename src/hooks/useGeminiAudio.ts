@@ -149,7 +149,7 @@ export const useGeminiAudio = ({
         // 1. Send Setup Config
         websocket.send(JSON.stringify({
           setup: {
-            model: "models/gemini-2.0-flash-thinking-exp-1219",
+            model: "gemini-2.0-flash-exp",
             systemInstruction: {
               parts: [{ text: `You are Morah Koko. You are speaking to a ${kidGender} in Hebrew. DO NOT ask if they want to learn a word. Keep conversation flowing continuously.` }]
             },
