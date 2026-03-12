@@ -146,26 +146,32 @@ export const useGeminiAudio = ({
       websocket.onopen = () => {
         console.log('✅ WebSocket connected, sending setup config...');
         
-        // Send initial setup configuration
+        // 1. Send Setup Config
         websocket.send(JSON.stringify({
-          setup: setupConfigRef.current
+          setup: {
+            model: "models/gemini-2.0-flash-exp",
+            systemInstruction: {
+              parts: [{ text: `You are Morah Koko. You are speaking to a ${kidGender} in Hebrew. DO NOT ask if they want to learn a word. Keep conversation flowing continuously.` }]
+            },
+            tools: [{
+              functionDeclarations: [
+                { name: "award_star", description: "Reward the child" },
+                { name: "show_spelling", description: "Show word", parameters: { type: "OBJECT", properties: { word: { type: "STRING" } }, required: ["word"] } }
+              ]
+            }]
+          }
         }));
-        
-        // Trigger initial greeting from Koko
+
+        // 2. Force Initial Greeting
         setTimeout(() => {
+          console.log('🗣️ Triggering Initial Greeting...');
           websocket.send(JSON.stringify({
             clientContent: {
-              turns: [
-                {
-                  role: "user",
-                  parts: [{ text: "Hello! I am ready to learn English. Please introduce yourself and ask me how I am doing today in Hebrew." }]
-                }
-              ],
+              turns: [{ role: "user", parts: [{ text: "Hello! I am ready to learn English. Please introduce yourself and ask me how I am doing today in Hebrew." }] }],
               turnComplete: true
             }
           }));
-          console.log('🗣️ Initial greeting triggered');
-        }, 100); // Small delay to ensure setup is processed first
+        }, 500);
         
         setState('listening');
         setConnected(true);
@@ -175,21 +181,16 @@ export const useGeminiAudio = ({
       websocket.onmessage = async (event) => {
         try {
           const data = JSON.parse(event.data);
+          if (data.setupComplete) console.log('✅ Gemini Setup Complete');
           
-          // Event logging - No Silent Failures
-          if (data.setupComplete) {
-            console.log('✅ Gemini Setup Complete');
-          }
-          
-          // Handle tool calls
+          // Tool Calls
           if (data.toolCall) {
+            console.log('🛠️ Tool called:', data.toolCall);
             const { functionCalls } = data.toolCall;
-            console.log('� Tool call received:', functionCalls);
             
             if (functionCalls && functionCalls.length > 0) {
               for (const call of functionCalls) {
                 const { name, args, id } = call;
-                console.log(`🔧 Executing tool: ${name}`, args);
                 
                 if (name === 'award_star') {
                   incrementStarCount();
@@ -206,7 +207,7 @@ export const useGeminiAudio = ({
                   console.log('🔤 Spelling aid shown:', args.word);
                 }
                 
-                // Send tool response back to server
+                // Send tool response
                 websocket.send(JSON.stringify({
                   toolResponse: {
                     functionResponses: [{
@@ -216,88 +217,54 @@ export const useGeminiAudio = ({
                     }]
                   }
                 }));
-                console.log('✅ Tool response sent');
               }
             }
           }
+
+          // Audio Playback
+          if (data.serverContent?.modelTurn?.parts) {
+            const audioPart = data.serverContent.modelTurn.parts.find(p => p.inlineData && p.inlineData.data);
+            if (audioPart && audioContextRef.current) {
+              const base64Audio = audioPart.inlineData.data;
+              
+              // Decode Base64 PCM16 to Float32Array
+              const binaryString = atob(base64Audio);
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+              
+              const int16Array = new Int16Array(bytes.buffer);
+              const float32Array = new Float32Array(int16Array.length);
+              for (let i = 0; i < int16Array.length; i++) float32Array[i] = int16Array[i] / 32768.0;
+
+              // Play Audio (Gemini outputs 24kHz)
+              const audioBuffer = audioContextRef.current.createBuffer(1, float32Array.length, 24000);
+              audioBuffer.getChannelData(0).set(float32Array);
+              
+              const source = audioContextRef.current.createBufferSource();
+              source.buffer = audioBuffer;
+              source.connect(audioContextRef.current.destination);
+              source.start();
+              
+              console.log('🔊 Audio playing:', float32Array.length, 'samples');
+              setState('speaking');
+            }
+            
+            // Handle text
+            const textPart = data.serverContent.modelTurn.parts.find(p => p.text);
+            if (textPart) {
+              console.log('💬 Text:', textPart.text);
+              addConversationMessage('assistant', textPart.text);
+            }
+          }
           
-          // Handle server content (audio/text responses)
-          if (data.serverContent) {
-            const { serverContent } = data;
-            
-            // Handle model turn with parts
-            if (serverContent.modelTurn?.parts) {
-              for (const part of serverContent.modelTurn.parts) {
-                // Handle text content
-                if (part.text) {
-                  console.log('💬 Received text:', part.text);
-                  addConversationMessage('assistant', part.text);
-                }
-                
-                // Handle inlineData audio (Gemini Live API format)
-                if (part.inlineData?.data && part.inlineData?.mimeType?.includes('audio')) {
-                  console.log('🔊 Received audio chunk (inlineData)');
-                  setState('speaking');
-                  
-                  try {
-                    // Decode Base64 PCM16 audio at 24kHz
-                    const base64Audio = part.inlineData.data;
-                    const binaryString = atob(base64Audio);
-                    const bytes = new Uint8Array(binaryString.length);
-                    for (let i = 0; i < binaryString.length; i++) {
-                      bytes[i] = binaryString.charCodeAt(i);
-                    }
-                    
-                    // Convert PCM16 to Float32Array
-                    const pcm16 = new Int16Array(bytes.buffer);
-                    const float32 = new Float32Array(pcm16.length);
-                    for (let i = 0; i < pcm16.length; i++) {
-                      float32[i] = pcm16[i] / 32768.0; // Convert to -1.0 to 1.0 range
-                    }
-                    
-                    // Create audio buffer at 24kHz (Gemini's sample rate)
-                    const audioBuffer = audioContextRef.current?.createBuffer(1, float32.length, 24000);
-                    
-                    if (audioBuffer && audioContextRef.current) {
-                      audioBuffer.getChannelData(0).set(float32);
-                      
-                      // Play audio immediately
-                      const source = audioContextRef.current.createBufferSource();
-                      source.buffer = audioBuffer;
-                      source.connect(audioContextRef.current.destination);
-                      source.start();
-                      
-                      console.log('🔊 Audio playing:', float32.length, 'samples at 24kHz');
-                    }
-                  } catch (audioError) {
-                    console.error('🚨 AUDIO DECODE FAILURE:', audioError);
-                  }
-                }
-              }
-            }
-            
-            // Handle turn completion
-            if (serverContent.turnComplete) {
-              console.log('✅ Turn complete');
-              setState('listening');
-            }
-            
-            // Handle generation completion
-            if (serverContent.generationComplete) {
-              console.log('✅ Generation complete');
-              setState('listening');
-            }
-            
-            // Handle interruption
-            if (serverContent.interrupted) {
-              console.log('⚠️ Generation interrupted');
-              setState('listening');
-            }
+          // State transitions
+          if (data.serverContent?.turnComplete) {
+            console.log('✅ Turn complete');
+            setState('listening');
           }
           
         } catch (error) {
-          console.error('🚨 WEBSOCKET MESSAGE PARSING FAILURE:', error);
-          console.error('Raw event data:', event.data);
+          console.error('🚨 WebSocket Message Error:', error);
         }
       };
 
