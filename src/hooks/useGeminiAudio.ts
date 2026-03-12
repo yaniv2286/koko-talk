@@ -227,7 +227,7 @@ export const useGeminiAudio = ({
 
           // Audio Playback
           if (data.serverContent?.modelTurn?.parts) {
-            const audioPart = data.serverContent.modelTurn.parts.find(p => p.inlineData && p.inlineData.data);
+            const audioPart = data.serverContent.modelTurn.parts.find((p: any) => p.inlineData && p.inlineData.data);
             if (audioPart && audioContextRef.current) {
               const base64Audio = audioPart.inlineData.data;
               
@@ -254,7 +254,7 @@ export const useGeminiAudio = ({
             }
             
             // Handle text
-            const textPart = data.serverContent.modelTurn.parts.find(p => p.text);
+            const textPart = data.serverContent.modelTurn.parts.find((p: any) => p.text);
             if (textPart) {
               console.log('💬 Text:', textPart.text);
               addConversationMessage('assistant', textPart.text);
