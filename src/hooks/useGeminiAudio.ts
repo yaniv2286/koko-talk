@@ -52,6 +52,12 @@ export const useGeminiAudio = ({
         sampleRate: 16000
       });
 
+      // Unlock AudioContext autoplay policy
+      if (audioContextRef.current?.state === 'suspended') {
+        await audioContextRef.current.resume();
+        console.log('🔓 AudioContext resumed from suspended state');
+      }
+
       // Get microphone stream
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
@@ -144,6 +150,22 @@ export const useGeminiAudio = ({
         websocket.send(JSON.stringify({
           setup: setupConfigRef.current
         }));
+        
+        // Trigger initial greeting from Koko
+        setTimeout(() => {
+          websocket.send(JSON.stringify({
+            clientContent: {
+              turns: [
+                {
+                  role: "user",
+                  parts: [{ text: "Hello! I am ready to learn English. Please introduce yourself and ask me how I am doing today in Hebrew." }]
+                }
+              ],
+              turnComplete: true
+            }
+          }));
+          console.log('🗣️ Initial greeting triggered');
+        }, 100); // Small delay to ensure setup is processed first
         
         setState('listening');
         setConnected(true);
