@@ -149,7 +149,7 @@ export const useGeminiAudio = ({
         // 1. Send Setup Config
         websocket.send(JSON.stringify({
           setup: {
-            model: "models/gemini-2.0-flash-exp",
+            model: "models/gemini-2.0-flash",
             systemInstruction: {
               parts: [{ text: `You are Morah Koko. You are speaking to a ${kidGender} in Hebrew. DO NOT ask if they want to learn a word. Keep conversation flowing continuously.` }]
             },
@@ -175,7 +175,7 @@ export const useGeminiAudio = ({
           } else {
             console.warn('⚠️ WebSocket not open, skipping greeting');
           }
-        }, 500);
+        }, 1500);
         
         setState('listening');
         setConnected(true);
