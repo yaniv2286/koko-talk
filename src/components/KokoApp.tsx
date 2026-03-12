@@ -8,7 +8,7 @@ import { ProfileSelector } from '@/components/ProfileSelector';
 import { StarCounter } from '@/components/StarCounter';
 import { VisualAid } from '@/components/VisualAid';
 import { useVoiceStore } from '@/store/voiceStore';
-import { useRealtimeAudio } from '@/hooks/useRealtimeAudio';
+import { useGeminiAudio } from '@/hooks/useGeminiAudio';
 import { Mic, MicOff, Phone, PhoneOff, Volume2 } from 'lucide-react';
 
 export default function KokoApp() {
@@ -20,7 +20,7 @@ export default function KokoApp() {
   const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
   
   const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect, reset, currentView, setCurrentView, incrementStarCount, starCount } = useVoiceStore();
-  const { connect, disconnect: rtcDisconnect } = useRealtimeAudio({});
+  const { initialize, startRecording, stopRecording, disconnect: geminiDisconnect } = useGeminiAudio({});
   
   // Emergency Console Trace - Detect component re-mounting
   useEffect(() => { 
@@ -100,17 +100,19 @@ export default function KokoApp() {
     }
   };
 
-  const handleStartCall = () => {
-    console.log('📞 Attempting to connect...');
-    connect();
+  const handleStartCall = async () => {
+    console.log('📞 Starting Gemini Live call...');
+    await initialize();
+    await startRecording();
   };
 
   const handleEndCall = () => {
     console.trace('VIEW RESET TRIGGERED - End Call button clicked');
-    console.log('🛑 CALL ENDED: WebRTC disconnected, state reset.');
+    console.log('🛑 CALL ENDED: Gemini Live disconnected, state reset.');
     
     // Execute full teardown sequence
-    rtcDisconnect(); // Disconnect WebRTC
+    stopRecording(); // Stop audio streaming
+    geminiDisconnect(); // Disconnect WebSocket
     reset(); // Reset all state including starCount, kidGender, profile
     setCurrentView('gender'); // Return to Gender Selection screen
   };
@@ -263,7 +265,7 @@ export default function KokoApp() {
     console.log('🏠 Showing ProfileSelector (avatar selection) - userProfile is null/undefined');
     console.log('🏠 Current currentView:', currentView);
     console.log('🏠 kidGender:', kidGender);
-    return <ProfileSelector onProfileSelected={handleProfileSelected} connect={connect} />;
+    return <ProfileSelector onProfileSelected={handleProfileSelected} connect={handleStartCall} />;
   }
 
   console.log('🏠 Showing Main App - both kidGender and userProfile are set');
