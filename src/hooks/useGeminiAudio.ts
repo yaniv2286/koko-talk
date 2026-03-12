@@ -85,10 +85,7 @@ export const useGeminiAudio = ({
           
           websocketRef.current.send(JSON.stringify({
             realtimeInput: {
-              mediaChunks: [{
-                mimeType: "audio/pcm",
-                data: base64
-              }]
+              audio: base64
             }
           }));
         }
@@ -143,7 +140,7 @@ export const useGeminiAudio = ({
         
         // Send initial setup configuration
         websocket.send(JSON.stringify({
-          setup: setupConfig
+          setup: setupConfigRef.current
         }));
         
         setState('listening');
@@ -157,85 +154,91 @@ export const useGeminiAudio = ({
           
           // Handle server content (audio/text responses)
           if (data.serverContent) {
-            const { turns } = data.serverContent;
+            const { serverContent } = data;
             
-            if (turns && turns.length > 0) {
-              const turn = turns[turns.length - 1];
-              
-              // Handle text content
-              if (turn.parts) {
-                for (const part of turn.parts) {
-                  if (part.text) {
-                    console.log('💬 Received text:', part.text);
-                    addConversationMessage('assistant', part.text);
+            // Handle text content
+            if (serverContent.modelTurn && serverContent.modelTurn.parts) {
+              for (const part of serverContent.modelTurn.parts) {
+                if (part.text) {
+                  console.log('💬 Received text:', part.text);
+                  addConversationMessage('assistant', part.text);
+                }
+                
+                // Handle function calls
+                if (part.functionCall) {
+                  const { name, args } = part.functionCall;
+                  console.log('🔧 Function call:', name, args);
+                  
+                  if (name === 'award_star') {
+                    incrementStarCount();
+                    // Send function response
+                    websocket.send(JSON.stringify({
+                      toolResponse: {
+                        functionResponses: [{
+                          id: Date.now().toString(),
+                          name: name,
+                          response: { success: true }
+                        }]
+                      }
+                    }));
                   }
                   
-                  // Handle function calls
-                  if (part.functionCall) {
-                    const { name, args } = part.functionCall;
-                    console.log('🔧 Function call:', name, args);
+                  if (name === 'show_spelling') {
+                    setVisualAid({
+                      word: args.word,
+                      imageQuery: args.imageQuery || args.word,
+                      imageUrl: '',
+                      isVisible: true
+                    });
                     
-                    if (name === 'award_star') {
-                      incrementStarCount();
-                      // Send function response
-                      websocket.send(JSON.stringify({
-                        toolResponse: {
-                          functionResponses: [{
-                            id: Date.now().toString(),
-                            name: name,
-                            response: { success: true }
-                          }]
-                        }
-                      }));
-                    }
-                    
-                    if (name === 'show_spelling') {
-                      setVisualAid({
-                        word: args.word,
-                        imageQuery: args.imageQuery || args.word,
-                        imageUrl: '',
-                        isVisible: true
-                      });
-                      
-                      // Send function response
-                      websocket.send(JSON.stringify({
-                        toolResponse: {
-                          functionResponses: [{
-                            id: Date.now().toString(),
-                            name: name,
-                            response: { success: true }
-                          }]
-                        }
-                      }));
-                    }
+                    // Send function response
+                    websocket.send(JSON.stringify({
+                      toolResponse: {
+                        functionResponses: [{
+                          id: Date.now().toString(),
+                          name: name,
+                          response: { success: true }
+                        }]
+                      }
+                    }));
                   }
+                }
+                
+                // Handle audio content
+                if (part.data && part.mimeType === 'audio/pcm') {
+                  console.log('🔊 Received audio chunk');
                   
-                  // Handle audio content
-                  if (part.data && part.mimeType === 'audio/pcm') {
-                    console.log('🔊 Received audio chunk');
+                  // Convert base64 to PCM and play
+                  const pcmData = Uint8Array.from(atob(part.data), c => c.charCodeAt(0));
+                  const audioBuffer = audioContextRef.current?.createBuffer(1, pcmData.length / 2, 16000);
+                  
+                  if (audioBuffer) {
+                    const channelData = audioBuffer.getChannelData(0);
+                    for (let i = 0; i < channelData.length; i++) {
+                      const sample = (pcmData[i * 2] | (pcmData[i * 2 + 1] << 8));
+                      channelData[i] = sample / 32768.0;
+                    }
                     
-                    // Convert base64 to PCM and play
-                    const pcmData = Uint8Array.from(atob(part.data), c => c.charCodeAt(0));
-                    const audioBuffer = audioContextRef.current?.createBuffer(1, pcmData.length / 2, 16000);
-                    
-                    if (audioBuffer) {
-                      const channelData = audioBuffer.getChannelData(0);
-                      for (let i = 0; i < channelData.length; i++) {
-                        const sample = (pcmData[i * 2] | (pcmData[i * 2 + 1] << 8));
-                        channelData[i] = sample / 32768.0;
-                      }
-                      
-                      // Play audio immediately
-                      const source = audioContextRef.current?.createBufferSource();
-                      if (source) {
-                        source.buffer = audioBuffer;
-                        source.connect(audioContextRef.current.destination);
-                        source.start();
-                      }
+                    // Play audio immediately
+                    const source = audioContextRef.current?.createBufferSource();
+                    if (source) {
+                      source.buffer = audioBuffer;
+                      source.connect(audioContextRef.current.destination);
+                      source.start();
                     }
                   }
                 }
               }
+            }
+            
+            // Handle turn completion
+            if (serverContent.turnComplete) {
+              setState('listening');
+            }
+            
+            // Handle generation completion
+            if (serverContent.generationComplete) {
+              setState('listening');
             }
           }
           
@@ -344,11 +347,8 @@ export const useGeminiAudio = ({
       if (websocketRef.current?.readyState === WebSocket.OPEN) {
         websocketRef.current.send(JSON.stringify({
           clientContent: {
-            turns: [{
-              role: 'user',
-              parts: [{
-                text: message
-              }]
+            parts: [{
+              text: message
             }]
           }
         }));

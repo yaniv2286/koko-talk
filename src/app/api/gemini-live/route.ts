@@ -74,28 +74,29 @@ CRITICAL RULES:
 
     // Return WebSocket connection details and setup config
     return NextResponse.json({
-      websocketUrl: `wss://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${GOOGLE_AI_API_KEY}`,
+      websocketUrl: `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${GOOGLE_AI_API_KEY}`,
       setupConfig: {
+        model: 'models/gemini-2.5-flash',
         generationConfig: {
           temperature: 0.8,
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 8192,
+          responseModalities: ["AUDIO", "TEXT"],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: {
+                voiceName: "Aoede"
+              }
+            }
+          }
         },
         systemInstruction: {
           parts: [{
             text: systemInstruction
           }]
         },
-        tools: tools,
-        responseModalities: ["AUDIO", "TEXT"],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: {
-              voiceName: "Aoede"
-            }
-          }
-        }
+        tools: tools
       },
       model: 'gemini-2.5-flash-live',
       timestamp: new Date().toISOString()
