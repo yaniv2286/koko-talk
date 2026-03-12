@@ -36,39 +36,26 @@ CRITICAL RULES:
 - Award stars for correct English responses
 - Show spelling aids when child struggles`;
 
-    // Tools for function calling
+    // Tools for function calling - Gemini Live API format
     const tools = [
       {
-        name: "award_star",
-        description: "Award a star to the child for correct answers or good effort",
-        parameters: {
-          type: "object",
-          properties: {
-            reason: {
-              type: "string",
-              description: "Why the star is being awarded"
-            }
+        functionDeclarations: [
+          {
+            name: "award_star",
+            description: "Call this immediately when the child succeeds, tries hard, or answers correctly to give them a star reward."
           },
-          required: ["reason"]
-        }
-      },
-      {
-        name: "show_spelling",
-        description: "Show spelling help for a word the child is struggling with",
-        parameters: {
-          type: "object",
-          properties: {
-            word: {
-              type: "string",
-              description: "The English word to show spelling for"
-            },
-            imageQuery: {
-              type: "string",
-              description: "Query for finding an image of the word"
+          {
+            name: "show_spelling",
+            description: "Call this when teaching a new word to display it visually.",
+            parameters: {
+              type: "OBJECT",
+              properties: {
+                word: { type: "STRING" }
+              },
+              required: ["word"]
             }
-          },
-          required: ["word"]
-        }
+          }
+        ]
       }
     ];
 
