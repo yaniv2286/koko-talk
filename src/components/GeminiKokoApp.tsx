@@ -1,25 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGeminiAudio } from '@/hooks/useGeminiAudio';
 import { useVoiceStore } from '@/store/voiceStore';
-import { Mic, MicOff, Send } from 'lucide-react';
+import { Mic, MicOff, Send, Play, Square } from 'lucide-react';
 
 export default function GeminiKokoApp() {
-  const [isRecording, setIsRecording] = useState(false);
   const [message, setMessage] = useState('');
-  const { sendMessage, isConnected, connect, disconnect } = useGeminiAudio();
-  const { conversationHistory, state, starCount, visualAid } = useVoiceStore();
+  const { initialize, startRecording, stopRecording, sendMessage, disconnect, isConnected, isRecording } = useGeminiAudio();
+  const { conversationHistory, state, starCount, visualAid, userProfile, kidGender } = useVoiceStore();
+
+  // Initialize connection on mount
+  useEffect(() => {
+    if (!isConnected && userProfile && kidGender) {
+      initialize();
+    }
+  }, [initialize, isConnected, userProfile, kidGender]);
 
   const handleStartRecording = async () => {
     if (!isConnected) {
-      await connect();
+      await initialize();
     }
-    setIsRecording(true);
+    await startRecording();
   };
 
   const handleStopRecording = () => {
-    setIsRecording(false);
+    stopRecording();
   };
 
   const handleSendMessage = async () => {
@@ -29,6 +35,10 @@ export default function GeminiKokoApp() {
     }
   };
 
+  const handleDisconnect = () => {
+    disconnect();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4">
       <div className="max-w-4xl mx-auto">
@@ -36,8 +46,8 @@ export default function GeminiKokoApp() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-purple-800">קוקו (Koko) - Gemini Version</h1>
-              <p className="text-purple-600">Cost-effective AI Tutor</p>
+              <h1 className="text-2xl font-bold text-purple-800">קוקו (Koko) - Gemini Live API</h1>
+              <p className="text-purple-600">Continuous voice streaming with cost savings</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-sm">
@@ -47,6 +57,7 @@ export default function GeminiKokoApp() {
                 <span className={`px-2 py-1 rounded-full ${
                   isConnected ? 'bg-green-100 text-green-800' :
                   state === 'connecting' ? 'bg-yellow-100 text-yellow-800' :
+                  state === 'thinking' ? 'bg-blue-100 text-blue-800' :
                   state === 'error' ? 'bg-red-100 text-red-800' :
                   'bg-gray-100 text-gray-800'
                 }`}>
@@ -100,19 +111,26 @@ export default function GeminiKokoApp() {
                 </div>
               </div>
             ))}
+            {state === 'thinking' && (
+              <div className="flex justify-start">
+                <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-2xl">
+                  🤔 Thinking...
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Controls */}
         <div className="bg-white rounded-2xl shadow-lg p-6">
-          <div className="flex gap-4">
+          <div className="flex gap-4 mb-4">
             {/* Text Input */}
             <input
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Type your message..."
+              placeholder="Type your message (or use voice)..."
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               disabled={!isConnected}
             />
@@ -125,25 +143,49 @@ export default function GeminiKokoApp() {
             >
               <Send className="w-5 h-5" />
             </button>
+          </div>
 
+          {/* Voice Controls */}
+          <div className="flex gap-4 mb-4">
             {/* Microphone Button */}
             <button
               onClick={isRecording ? handleStopRecording : handleStartRecording}
-              className={`px-6 py-2 rounded-lg transition-colors ${
+              disabled={!isConnected}
+              className={`flex-1 px-6 py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
                 isRecording
                   ? 'bg-red-500 hover:bg-red-600 text-white'
-                  : 'bg-purple-600 hover:bg-purple-700 text-white'
-              }`}
+                  : 'bg-green-500 hover:bg-green-600 text-white'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              {isRecording ? (
+                <>
+                  <Square className="w-5 h-5" />
+                  Stop Recording
+                </>
+              ) : (
+                <>
+                  <Mic className="w-5 h-5" />
+                  Start Voice Chat
+                </>
+              )}
+            </button>
+
+            {/* Disconnect Button */}
+            <button
+              onClick={handleDisconnect}
+              disabled={!isConnected}
+              className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Disconnect
             </button>
           </div>
 
           {/* Instructions */}
-          <div className="mt-4 text-sm text-gray-600">
-            <p>💡 <strong>Gemini Version:</strong> Cost-effective AI tutor using Google's Gemini API</p>
-            <p>🎯 <strong>Cost:</strong> ~90% cheaper than OpenAI Realtime API</p>
-            <p>🔊 <strong>Audio:</strong> Text-based for now (TTS coming soon)</p>
+          <div className="mt-4 text-sm text-gray-600 space-y-1">
+            <p>🎤 <strong>Voice Mode:</strong> Continuous streaming with Gemini Live API</p>
+            <p>💰 <strong>Cost:</strong> ~90% cheaper than OpenAI Realtime</p>
+            <p>🔊 <strong>Audio:</strong> Real-time bidirectional conversation</p>
+            <p>🎯 <strong>Features:</strong> Function calling, visual aids, star rewards</p>
           </div>
         </div>
       </div>
