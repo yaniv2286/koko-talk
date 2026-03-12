@@ -176,80 +176,101 @@ export const useGeminiAudio = ({
         try {
           const data = JSON.parse(event.data);
           
+          // Event logging - No Silent Failures
+          if (data.setupComplete) {
+            console.log('✅ Gemini Setup Complete');
+          }
+          
+          // Handle tool calls
+          if (data.toolCall) {
+            const { functionCalls } = data.toolCall;
+            console.log('� Tool call received:', functionCalls);
+            
+            if (functionCalls && functionCalls.length > 0) {
+              for (const call of functionCalls) {
+                const { name, args, id } = call;
+                console.log(`🔧 Executing tool: ${name}`, args);
+                
+                if (name === 'award_star') {
+                  incrementStarCount();
+                  console.log('⭐ Star awarded!');
+                }
+                
+                if (name === 'show_spelling' && args?.word) {
+                  setVisualAid({
+                    word: args.word,
+                    imageQuery: args.word,
+                    imageUrl: '',
+                    isVisible: true
+                  });
+                  console.log('🔤 Spelling aid shown:', args.word);
+                }
+                
+                // Send tool response back to server
+                websocket.send(JSON.stringify({
+                  toolResponse: {
+                    functionResponses: [{
+                      id: id || Date.now().toString(),
+                      name: name,
+                      response: { success: true }
+                    }]
+                  }
+                }));
+                console.log('✅ Tool response sent');
+              }
+            }
+          }
+          
           // Handle server content (audio/text responses)
           if (data.serverContent) {
             const { serverContent } = data;
             
-            // Handle text content
-            if (serverContent.modelTurn && serverContent.modelTurn.parts) {
+            // Handle model turn with parts
+            if (serverContent.modelTurn?.parts) {
               for (const part of serverContent.modelTurn.parts) {
+                // Handle text content
                 if (part.text) {
                   console.log('💬 Received text:', part.text);
                   addConversationMessage('assistant', part.text);
                 }
                 
-                // Handle function calls
-                if (part.functionCall) {
-                  const { name, args } = part.functionCall;
-                  console.log('🔧 Function call:', name, args);
+                // Handle inlineData audio (Gemini Live API format)
+                if (part.inlineData?.data && part.inlineData?.mimeType?.includes('audio')) {
+                  console.log('🔊 Received audio chunk (inlineData)');
+                  setState('speaking');
                   
-                  if (name === 'award_star') {
-                    incrementStarCount();
-                    // Send function response
-                    websocket.send(JSON.stringify({
-                      toolResponse: {
-                        functionResponses: [{
-                          id: Date.now().toString(),
-                          name: name,
-                          response: { success: true }
-                        }]
-                      }
-                    }));
-                  }
-                  
-                  if (name === 'show_spelling') {
-                    setVisualAid({
-                      word: args.word,
-                      imageQuery: args.imageQuery || args.word,
-                      imageUrl: '',
-                      isVisible: true
-                    });
-                    
-                    // Send function response
-                    websocket.send(JSON.stringify({
-                      toolResponse: {
-                        functionResponses: [{
-                          id: Date.now().toString(),
-                          name: name,
-                          response: { success: true }
-                        }]
-                      }
-                    }));
-                  }
-                }
-                
-                // Handle audio content
-                if (part.data && part.mimeType === 'audio/pcm') {
-                  console.log('🔊 Received audio chunk');
-                  
-                  // Convert base64 to PCM and play
-                  const pcmData = Uint8Array.from(atob(part.data), c => c.charCodeAt(0));
-                  const audioBuffer = audioContextRef.current?.createBuffer(1, pcmData.length / 2, 16000);
-                  
-                  if (audioBuffer) {
-                    const channelData = audioBuffer.getChannelData(0);
-                    for (let i = 0; i < channelData.length; i++) {
-                      const sample = (pcmData[i * 2] | (pcmData[i * 2 + 1] << 8));
-                      channelData[i] = sample / 32768.0;
+                  try {
+                    // Decode Base64 PCM16 audio at 24kHz
+                    const base64Audio = part.inlineData.data;
+                    const binaryString = atob(base64Audio);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                      bytes[i] = binaryString.charCodeAt(i);
                     }
                     
-                    // Play audio immediately
-                    const source = audioContextRef.current?.createBufferSource();
-                    if (source && audioContextRef.current) {
+                    // Convert PCM16 to Float32Array
+                    const pcm16 = new Int16Array(bytes.buffer);
+                    const float32 = new Float32Array(pcm16.length);
+                    for (let i = 0; i < pcm16.length; i++) {
+                      float32[i] = pcm16[i] / 32768.0; // Convert to -1.0 to 1.0 range
+                    }
+                    
+                    // Create audio buffer at 24kHz (Gemini's sample rate)
+                    const audioBuffer = audioContextRef.current?.createBuffer(1, float32.length, 24000);
+                    
+                    if (audioBuffer && audioContextRef.current) {
+                      audioBuffer.getChannelData(0).set(float32);
+                      
+                      // Play audio immediately
+                      const source = audioContextRef.current.createBufferSource();
                       source.buffer = audioBuffer;
                       source.connect(audioContextRef.current.destination);
                       source.start();
+                      
+                      console.log('🔊 Audio playing:', float32.length, 'samples at 24kHz');
                     }
+                  } catch (audioError) {
+                    console.error('🚨 AUDIO DECODE FAILURE:', audioError);
                   }
                 }
               }
@@ -257,17 +278,26 @@ export const useGeminiAudio = ({
             
             // Handle turn completion
             if (serverContent.turnComplete) {
+              console.log('✅ Turn complete');
               setState('listening');
             }
             
             // Handle generation completion
             if (serverContent.generationComplete) {
+              console.log('✅ Generation complete');
+              setState('listening');
+            }
+            
+            // Handle interruption
+            if (serverContent.interrupted) {
+              console.log('⚠️ Generation interrupted');
               setState('listening');
             }
           }
           
         } catch (error) {
           console.error('🚨 WEBSOCKET MESSAGE PARSING FAILURE:', error);
+          console.error('Raw event data:', event.data);
         }
       };
 
