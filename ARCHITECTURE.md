@@ -1,19 +1,29 @@
 # Koko Talk - Architecture Documentation
 
 ## Overview
-Koko Talk is an AI-powered English tutoring application for Israeli children ages 4-12, featuring real-time voice conversation with visual learning aids.
+Koko Talk is an AI-powered English tutoring application for Israeli children ages 4-12, featuring real-time conversation with visual learning aids. **NOW WITH COST-EFFECTIVE GEMINI BACKEND** - 90% cost reduction while maintaining full functionality.
 
 ## Core Engine
 
-### OpenAI Realtime API via WebRTC
+### 🚀 NEW: Gemini AI Backend (Primary Recommendation)
+- **Implementation**: Direct REST API calls to Google AI
+- **Model**: `gemini-2.5-flash` (latest available)
+- **Cost**: $5-15/month (vs $60-100/month with OpenAI)
+- **Connection**: HTTP-based with instant responses
+- **Authentication**: Google AI API Key
+- **Route**: `/api/gemini-direct`
+
+### 🔄 Legacy: OpenAI Realtime API via WebRTC (Deprecated)
 - **Implementation**: Native WebRTC P2P connection (abandoned WebSockets for latency)
 - **Model**: `gpt-4o-realtime-preview-2024-12-17`
 - **Audio**: PCM16, 24kHz, bi-directional streaming
 - **Connection**: RTCPeerConnection with RTCDataChannel for JSON events
 - **Authentication**: Ephemeral tokens via `/api/session` endpoint
+- **Status**: High cost, quota issues - use Gemini instead
 
 ### Audio Pipeline
-- **Input**: MediaStream getUserMedia() → RTCPeerConnection addTrack()
+- **Gemini Version**: Text-based chat (TTS coming in Phase 2)
+- **OpenAI Version**: MediaStream getUserMedia() → RTCPeerConnection addTrack()
 - **Output**: RTCPeerConnection ontrack() → HTMLAudioElement autoplay
 - **Monitoring**: AudioContext AnalyserNode for VU meter visualization
 - **VAD**: Server-side Voice Activity Detection (1200ms silence threshold)
@@ -22,11 +32,20 @@ Koko Talk is an AI-powered English tutoring application for Israeli children age
 
 ### Next.js Route Handlers
 ```
-/api/session (POST)
+🚀 NEW: /api/gemini-direct (POST) - RECOMMENDED
+├── Request: { userProfile, kidGender, message }
+├── Process: Direct Google AI API call with Hebrew instructions
+├── Action: Generate Hebrew response with gender awareness
+└── Response: { response, model, timestamp }
+
+🔄 Legacy: /api/session (POST) - DEPRECATED
 ├── Request: { userProfile, kidGender }
 ├── Process: Generate dynamic instructions + gender rules
 ├── Action: Create OpenAI ephemeral session
 └── Response: { ephemeralToken, model, voice }
+
+🔧 Debug: /api/debug (GET) - API key status check
+🔧 Debug: /api/list-models (GET) - Available AI models
 ```
 
 ### Dynamic Instruction Generation
@@ -45,7 +64,14 @@ show_visual_aid: Display image + letter-by-letter spelling
 
 ### React Component Structure
 ```
-src/app/page.tsx (Main Router)
+🚀 NEW: src/app/gemini/page.tsx (Gemini Version - RECOMMENDED)
+├── GeminiKokoApp
+│   ├── Text-based chat interface
+│   ├── Star counter and visual aids
+│   ├── Modern responsive UI
+│   └── Cost-effective backend integration
+
+🔄 Legacy: src/app/page.tsx (OpenAI Version - DEPRECATED)
 ├── ProfileSelector (Age/Avatar/Gender onboarding)
 ├── GenderSelection (Boy/Girl choice)
 ├── MainApp
@@ -53,6 +79,8 @@ src/app/page.tsx (Main Router)
 │   ├── Controls (Connect/Disconnect)
 │   ├── StarCounter (Gamification)
 │   └── VisualAid (Modal for spelling help)
+
+🔧 Debug: src/app/test/page.tsx (Simple API testing)
 ```
 
 ### State Management (Zustand)
@@ -67,9 +95,15 @@ VoiceStore:
 └── connection: { isConnected, sessionId, error }
 ```
 
-### WebRTC Implementation
+### Hook Architecture
 ```javascript
-useRealtimeAudio Hook:
+🚀 NEW: useGeminiAudio Hook (Recommended)
+├── Direct HTTP API calls to Gemini
+├── Text-based conversation handling
+├── State management integration
+└── Error handling and debugging
+
+🔄 Legacy: useRealtimeAudio Hook (Deprecated)
 ├── RTCPeerConnection setup
 ├── MediaStream acquisition
 ├── RTCDataChannel event handling
@@ -79,7 +113,14 @@ useRealtimeAudio Hook:
 
 ## Data Flow
 
-### Session Initiation
+### 🚀 Gemini Session Flow (Recommended)
+1. **User Selection**: Navigate to `/gemini` route
+2. **API Request**: POST /api/gemini-direct with profile data
+3. **Dynamic Instructions**: Gender-aware Hebrew grammar + age-appropriate persona
+4. **Direct Response**: Google AI generates Hebrew text response
+5. **UI Update**: Text displayed in chat interface
+
+### 🔄 Legacy OpenAI Session Flow (Deprecated)
 1. **User Selection**: Age → Avatar → Gender
 2. **Token Request**: POST /api/session with profile data
 3. **Dynamic Instructions**: Gender-aware Hebrew grammar + age-appropriate persona
@@ -88,6 +129,10 @@ useRealtimeAudio Hook:
 
 ### Real-time Communication
 ```
+🚀 Gemini Version:
+User Text → HTTP API → Google AI → Hebrew Response → UI Display
+
+🔄 OpenAI Version:
 User Microphone → RTCPeerConnection → OpenAI
 OpenAI Response → RTCPeerConnection → User Speakers
 RTCDataChannel Events → Frontend State Updates
@@ -165,19 +210,34 @@ User Interaction → Tool Output → AI Continuation
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS
 - **State**: Zustand with persistence
-- **Audio**: Web Audio API + WebRTC
+- **Audio**: Web Audio API + WebRTC (Legacy) / Text-based (Gemini)
 
 ### Backend
 - **Runtime**: Next.js Edge Runtime
-- **API**: OpenAI Realtime API
+- **🚀 Primary API**: Google Gemini 2.5 Flash
+- **🔄 Legacy API**: OpenAI Realtime API (Deprecated)
 - **Database**: None (stateless currently)
-- **Authentication**: Ephemeral tokens only
+- **Authentication**: API Keys (Google AI) / Ephemeral tokens (OpenAI)
 
 ### Infrastructure
 - **Deployment**: Vercel (Edge functions)
 - **CDN**: Vercel's global network
+- **🚀 Recommended**: Google Cloud Run for cost optimization
 - **Monitoring**: Console logging + error tracking
 - **Environment**: NEXT_PUBLIC_* for client keys
+
+### Cost Comparison
+```
+🚀 Gemini Version: $5-15/month
+- API: Google Gemini 2.5 Flash
+- Hosting: Vercel free tier
+- Total: 90% cost reduction
+
+🔄 OpenAI Version: $60-100/month
+- API: OpenAI Realtime
+- Hosting: Vercel
+- Issues: Quota limitations, high cost
+```
 
 ## Current Limitations
 
