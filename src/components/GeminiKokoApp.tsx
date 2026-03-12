@@ -9,7 +9,7 @@ export default function GeminiKokoApp() {
   const [isRecording, setIsRecording] = useState(false);
   const [message, setMessage] = useState('');
   const { sendMessage, isConnected, connect, disconnect } = useGeminiAudio();
-  const { conversation, state, starCount, visualAid } = useVoiceStore();
+  const { conversationHistory, state, starCount, visualAid } = useVoiceStore();
 
   const handleStartRecording = async () => {
     if (!isConnected) {
@@ -45,7 +45,7 @@ export default function GeminiKokoApp() {
               </div>
               <div className="text-sm">
                 <span className={`px-2 py-1 rounded-full ${
-                  state === 'connected' ? 'bg-green-100 text-green-800' :
+                  isConnected ? 'bg-green-100 text-green-800' :
                   state === 'connecting' ? 'bg-yellow-100 text-yellow-800' :
                   state === 'error' ? 'bg-red-100 text-red-800' :
                   'bg-gray-100 text-gray-800'
@@ -58,14 +58,19 @@ export default function GeminiKokoApp() {
         </div>
 
         {/* Visual Aid */}
-        {visualAid.isVisible && (
+        {visualAid && visualAid.isVisible && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
             <div className="text-center">
               <h3 className="text-lg font-bold text-purple-800 mb-2">Word: {visualAid.word}</h3>
               <div className="text-4xl mb-2">🔤</div>
               <p className="text-purple-600">Spelling: {visualAid.word.split('').join(' - ')}</p>
               <button
-                onClick={() => useVoiceStore.getState().setVisualAid({ ...visualAid, isVisible: false })}
+                onClick={() => useVoiceStore.getState().setVisualAid({ 
+                  word: visualAid.word, 
+                  imageQuery: visualAid.imageQuery || '', 
+                  imageUrl: visualAid.imageUrl || '', 
+                  isVisible: false 
+                })}
                 className="mt-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
               >
                 Close
@@ -77,7 +82,7 @@ export default function GeminiKokoApp() {
         {/* Conversation */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 h-96 overflow-y-auto">
           <div className="space-y-4">
-            {conversation.map((msg, index) => (
+            {conversationHistory.map((msg: any, index: number) => (
               <div
                 key={index}
                 className={`flex ${
