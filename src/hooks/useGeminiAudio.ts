@@ -140,6 +140,7 @@ export const useGeminiAudio = ({
       setupConfigRef.current = setupConfig;
 
       // Create WebSocket connection
+      console.log('🚀 Attempting Handshake: v1beta + 2.0-flash-exp');
       const websocket = new WebSocket(websocketUrl);
       websocketRef.current = websocket;
 
