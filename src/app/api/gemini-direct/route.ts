@@ -1,8 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +15,7 @@ export async function POST(request: NextRequest) {
     // Parse request body for dynamic persona injection
     const { userProfile, kidGender, message } = await request.json();
     
-    console.log('🎭 Gemini API call:', { userProfile: userProfile?.name, kidGender, message });
+    console.log('🎭 Direct Gemini API call:', { userProfile: userProfile?.name, kidGender, message });
     
     // Dynamic mentor prompt with gender injection
     const instructions = `You are Morah Koko, a warm and friendly Hebrew-speaking English tutor for children. You are speaking to a ${kidGender || 'child'} in Hebrew.
@@ -33,35 +29,51 @@ Speak naturally and warmly like a real teacher! The child is waiting to hear you
 
 ${message ? `Child said: "${message}". Respond naturally in Hebrew, continuing the conversation.` : ''}`;
 
-    // Get Gemini model
-    const model = genAI.getGenerativeModel({ 
-      model: 'text-bison-001',
-      generationConfig: {
-        temperature: 0.8,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      }
+    console.log('🤖 Calling direct Gemini API...');
+
+    // Use direct REST API call
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_AI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: instructions
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.8,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 8192,
+        }
+      })
     });
 
-    console.log('🤖 Calling Gemini API...');
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Direct Gemini API error:', response.status, errorText);
+      return NextResponse.json(
+        { error: 'Failed to generate content', details: errorText, status: response.status },
+        { status: 500 }
+      );
+    }
 
-    // Generate response
-    const result = await model.generateContent(instructions);
-    const response = result.response;
-    const text = response.text();
+    const data = await response.json();
+    const text = data.candidates[0]?.content?.parts[0]?.text || 'No response generated';
 
-    console.log('✅ Gemini response received:', text.substring(0, 100) + '...');
+    console.log('✅ Direct Gemini response received:', text.substring(0, 100) + '...');
 
-    // For now, return text response (we'll add TTS later)
     return NextResponse.json({
       response: text,
-      model: 'gemini-1.5-flash',
+      model: 'gemini-pro (direct API)',
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('❌ Gemini API error:', error);
+    console.error('❌ Direct Gemini API error:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

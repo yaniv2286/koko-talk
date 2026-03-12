@@ -37,7 +37,7 @@ export const useGeminiAudio = ({
       setConnectionError(null);
 
       // Get initial greeting from Gemini
-      const response = await fetch('/api/gemini-session', {
+      const response = await fetch('/api/gemini-direct', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -95,7 +95,7 @@ export const useGeminiAudio = ({
       addConversationMessage('user', message);
 
       // Get response from Gemini
-      const response = await fetch('/api/gemini-session', {
+      const response = await fetch('/api/gemini-direct', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
