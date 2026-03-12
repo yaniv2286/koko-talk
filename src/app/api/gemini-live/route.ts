@@ -61,7 +61,7 @@ CRITICAL RULES:
 
     // Return WebSocket connection details and setup config
     return NextResponse.json({
-      websocketUrl: `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${GOOGLE_AI_API_KEY}`,
+      websocketUrl: `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${GOOGLE_AI_API_KEY}`,
       setupConfig: {
         model: 'models/gemini-2.5-flash',
         generationConfig: {
