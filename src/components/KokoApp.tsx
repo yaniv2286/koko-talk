@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Avatar } from '@/components/Avatar';
-import { Controls } from '@/components/Controls';
 import { ProfileSelector } from '@/components/ProfileSelector';
 import { StarCounter } from '@/components/StarCounter';
 import { VisualAid } from '@/components/VisualAid';
