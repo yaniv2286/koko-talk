@@ -35,7 +35,7 @@ ${message ? `Child said: "${message}". Respond naturally in Hebrew, continuing t
 
     // Get Gemini model
     const model = genAI.getGenerativeModel({ 
-      model: 'text-bison-001',
+      model: 'gemini-2.5-flash',
       generationConfig: {
         temperature: 0.8,
         topK: 40,
