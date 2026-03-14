@@ -140,7 +140,7 @@ export const useGeminiAudio = ({
       setupConfigRef.current = setupConfig;
 
       // Create WebSocket connection
-      console.log('🚀 Attempting Handshake: v1beta + 2.0-flash-exp');
+      console.log('🚀 Attempting Handshake: v1beta + gemini-2.5-flash-native-audio-latest');
       const websocket = new WebSocket(websocketUrl);
       websocketRef.current = websocket;
 
@@ -186,6 +186,8 @@ export const useGeminiAudio = ({
       websocket.onmessage = async (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.log('📨 WebSocket message received:', JSON.stringify(data, null, 2));
+          
           if (data.setupComplete) console.log('✅ Gemini Setup Complete');
           
           // Tool Calls
