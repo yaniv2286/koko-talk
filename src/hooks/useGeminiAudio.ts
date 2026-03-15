@@ -509,14 +509,19 @@ export const useGeminiAudio = ({
 
   // Start recording (continuous streaming)
   const startRecording = useCallback(async () => {
+    console.log('🎤🎤🎤 startRecording CALLED - ENTRY POINT');
     try {
       console.log('🎤 Starting continuous audio streaming...');
+      console.log('🎤 WebSocket state:', websocketRef.current?.readyState);
       
       if (!websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) {
+        console.log('🎤 WebSocket not open, calling setupWebSocket...');
         await setupWebSocket();
       }
       
+      console.log('🎤 About to call initializeAudioContext...');
       await initializeAudioContext();
+      console.log('🎤 initializeAudioContext completed');
       
       // Start continuous audio streaming
       setState('listening');
