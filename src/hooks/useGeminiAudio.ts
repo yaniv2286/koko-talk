@@ -324,21 +324,19 @@ export const useGeminiAudio = ({
                         const duration = float32Array.length / 24000;
                         nextPlayTimeRef.current = startTime + duration;
                         
-                        // Clear any existing timeout
+                        console.log('🔊 Queued audio:', float32Array.length, 'samples, start:', startTime.toFixed(3));
+                        setState('speaking');
+                        
+                        // Debounce: Clear any existing timeout and set a new one
+                        // Transition to listening 1 second after the LAST audio chunk arrives
                         if (listeningTimeoutRef.current) {
                           clearTimeout(listeningTimeoutRef.current);
                         }
                         
-                        // Schedule transition to listening after all audio finishes
-                        // Add 500ms buffer to ensure audio is complete
-                        const timeUntilEnd = (nextPlayTimeRef.current - currentTime + 0.5) * 1000;
                         listeningTimeoutRef.current = setTimeout(() => {
-                          console.log('🎧 Audio finished, transitioning to listening');
+                          console.log('🎧 Audio finished (no new chunks for 1s), transitioning to listening');
                           setState('listening');
-                        }, Math.max(0, timeUntilEnd));
-                        
-                        console.log('🔊 Queued audio:', float32Array.length, 'samples, start:', startTime.toFixed(3));
-                        setState('speaking');
+                        }, 1000);
                       } catch (audioError) {
                         console.error('❌ Audio decode error:', audioError);
                       }
