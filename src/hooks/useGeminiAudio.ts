@@ -133,7 +133,7 @@ export const useGeminiAudio = ({
       setState('error');
       onError?.(errorMessage);
     }
-  }, [state, setConnectionError, setState, onError]);
+  }, [setConnectionError, setState, onError]);
 
   // Setup WebSocket connection
   const setupWebSocket = useCallback(async () => {
