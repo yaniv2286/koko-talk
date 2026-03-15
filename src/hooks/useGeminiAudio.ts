@@ -41,6 +41,7 @@ export const useGeminiAudio = ({
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const audioBufferRef = useRef<ArrayBuffer[]>([]);
   const setupConfigRef = useRef<SetupConfig | null>(null);
+  const nextPlayTimeRef = useRef<number>(0);
 
   // Initialize Web Audio API
   const initializeAudioContext = useCallback(async () => {
@@ -120,6 +121,9 @@ export const useGeminiAudio = ({
       console.log('🔗 Setting up Gemini Live WebSocket...');
       setState('connecting');
       setConnectionError(null);
+      
+      // Reset audio queue timing
+      nextPlayTimeRef.current = 0;
 
       // Get setup config from API
       const response = await fetch('/api/gemini-live', {
@@ -247,7 +251,6 @@ export const useGeminiAudio = ({
                   
                   // Handle Base64-encoded audio
                   if (part.inlineData?.mimeType === 'audio/pcm;rate=24000' && part.inlineData?.data) {
-                    console.log('🎵 Decoding Base64 PCM16 audio...');
                     
                     if (audioContextRef.current) {
                       try {
@@ -266,16 +269,27 @@ export const useGeminiAudio = ({
                           float32Array[i] = int16Array[i] / 32768.0;
                         }
                         
-                        // Play audio at 24kHz
+                        // Create audio buffer at 24kHz
                         const audioBuffer = audioContextRef.current.createBuffer(1, float32Array.length, 24000);
                         audioBuffer.getChannelData(0).set(float32Array);
                         
+                        // Schedule audio to play sequentially without gaps
                         const source = audioContextRef.current.createBufferSource();
                         source.buffer = audioBuffer;
                         source.connect(audioContextRef.current.destination);
-                        source.start();
                         
-                        console.log('🔊 Playing audio:', float32Array.length, 'samples');
+                        // Calculate when to start this chunk
+                        const currentTime = audioContextRef.current.currentTime;
+                        const startTime = Math.max(currentTime, nextPlayTimeRef.current);
+                        
+                        // Start playback at scheduled time
+                        source.start(startTime);
+                        
+                        // Update next play time (duration = samples / sampleRate)
+                        const duration = float32Array.length / 24000;
+                        nextPlayTimeRef.current = startTime + duration;
+                        
+                        console.log('🔊 Queued audio:', float32Array.length, 'samples, start:', startTime.toFixed(3));
                         setState('speaking');
                       } catch (audioError) {
                         console.error('❌ Audio decode error:', audioError);
