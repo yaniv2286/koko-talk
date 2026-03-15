@@ -224,7 +224,7 @@ export const useGeminiAudio = ({
       setupConfigRef.current = setupConfig;
 
       // Create WebSocket connection
-      console.log('🚀 Attempting Handshake: v1alpha + gemini-2.0-flash-exp');
+      console.log('🚀 Attempting Handshake: v1alpha + gemini-2.0-flash-live');
       const websocket = new WebSocket(websocketUrl);
       websocketRef.current = websocket;
 
@@ -234,7 +234,7 @@ export const useGeminiAudio = ({
         // 1. Send Setup Config with generationConfig
         websocket.send(JSON.stringify({
           setup: {
-            model: "models/gemini-2.0-flash-exp",
+            model: "models/gemini-2.0-flash-live",
             generationConfig: {
               responseModalities: ["AUDIO"],
               speechConfig: {
