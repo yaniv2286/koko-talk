@@ -192,37 +192,11 @@ export const useGeminiAudio = ({
           if (event.data instanceof Blob) {
             const arrayBuffer = await event.data.arrayBuffer();
             
-            // Check if this is binary audio (even byte length for PCM16) or JSON text
-            if (arrayBuffer.byteLength % 2 === 0 && arrayBuffer.byteLength > 100) {
-              // Likely binary audio data
-              console.log('🎵 Received audio Blob:', arrayBuffer.byteLength, 'bytes');
-              
-              if (audioContextRef.current) {
-                const int16Array = new Int16Array(arrayBuffer);
-                const float32Array = new Float32Array(int16Array.length);
-                
-                // Convert PCM16 to Float32
-                for (let i = 0; i < int16Array.length; i++) {
-                  float32Array[i] = int16Array[i] / 32768.0;
-                }
-
-                // Play Audio (Gemini outputs 24kHz)
-                const audioBuffer = audioContextRef.current.createBuffer(1, float32Array.length, 24000);
-                audioBuffer.getChannelData(0).set(float32Array);
-                
-                const source = audioContextRef.current.createBufferSource();
-                source.buffer = audioBuffer;
-                source.connect(audioContextRef.current.destination);
-                source.start();
-                
-                console.log('🔊 Audio playing:', float32Array.length, 'samples');
-                setState('speaking');
-              }
-              return;
-            } else {
-              // Likely JSON text in Blob format
+            // Try to decode as JSON first
+            try {
               const text = new TextDecoder().decode(arrayBuffer);
               const data = JSON.parse(text);
+              // Successfully parsed as JSON - handle as JSON message
               console.log('📨 WebSocket message (Blob->JSON):', JSON.stringify(data, null, 2));
               
               if (data.setupComplete) console.log('✅ Gemini Setup Complete');
@@ -278,6 +252,34 @@ export const useGeminiAudio = ({
               if (data.serverContent?.turnComplete) {
                 console.log('✅ Turn complete');
                 setState('listening');
+              }
+              return;
+            } catch (jsonError) {
+              // Not JSON - treat as binary audio data
+              console.log('🎵 Received audio Blob:', arrayBuffer.byteLength, 'bytes');
+              
+              if (audioContextRef.current && arrayBuffer.byteLength % 2 === 0) {
+                const int16Array = new Int16Array(arrayBuffer);
+                const float32Array = new Float32Array(int16Array.length);
+                
+                // Convert PCM16 to Float32
+                for (let i = 0; i < int16Array.length; i++) {
+                  float32Array[i] = int16Array[i] / 32768.0;
+                }
+
+                // Play Audio (Gemini outputs 24kHz)
+                const audioBuffer = audioContextRef.current.createBuffer(1, float32Array.length, 24000);
+                audioBuffer.getChannelData(0).set(float32Array);
+                
+                const source = audioContextRef.current.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioContextRef.current.destination);
+                source.start();
+                
+                console.log('🔊 Audio playing:', float32Array.length, 'samples');
+                setState('speaking');
+              } else if (arrayBuffer.byteLength % 2 !== 0) {
+                console.warn('⚠️ Skipping odd-byte Blob (not valid PCM16):', arrayBuffer.byteLength, 'bytes');
               }
               return;
             }
