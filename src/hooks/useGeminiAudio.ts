@@ -41,6 +41,7 @@ export const useGeminiAudio = ({
 
   const websocketRef = useRef<WebSocket | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const playbackContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
@@ -332,38 +333,43 @@ export const useGeminiAudio = ({
                   // Handle Base64-encoded audio
                   if (part.inlineData?.mimeType === 'audio/pcm;rate=24000' && part.inlineData?.data) {
                     
-                    if (audioContextRef.current) {
+                    const ctx = playbackContextRef.current;
+                    if (ctx && part.inlineData && part.inlineData.data) {
                       try {
-                        // 1. FORCE THE BROWSER AUDIO ENGINE AWAKE
-                        if (audioContextRef.current.state === 'suspended') {
-                          audioContextRef.current.resume().then(() => console.log('🔊 AudioContext forced awake!'));
-                        }
+                        // 1. Force context awake if browser suspended it
+                        if (ctx.state === 'suspended') ctx.resume();
 
+                        // 2. Decode Base64 to Binary
                         const base64Audio = part.inlineData.data;
                         const binaryString = atob(base64Audio);
                         const bytes = new Uint8Array(binaryString.length);
-                        for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+                        for (let i = 0; i < binaryString.length; i++) {
+                          bytes[i] = binaryString.charCodeAt(i);
+                        }
 
-                        const int16Array = new Int16Array(bytes.buffer);
+                        // 3. Convert to Float32 and BOOST VOLUME by 3x
+                        const int16Array = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength / 2);
                         const float32Array = new Float32Array(int16Array.length);
-                        for (let i = 0; i < int16Array.length; i++) float32Array[i] = int16Array[i] / 32768.0;
+                        for (let i = 0; i < int16Array.length; i++) {
+                          float32Array[i] = (int16Array[i] / 32768.0) * 3.0; // 300% Gain Boost
+                        }
 
-                        const audioBuffer = audioContextRef.current.createBuffer(1, float32Array.length, 24000);
+                        // 4. Schedule Playback
+                        const audioBuffer = ctx.createBuffer(1, float32Array.length, 24000);
                         audioBuffer.getChannelData(0).set(float32Array);
 
-                        const source = audioContextRef.current.createBufferSource();
+                        const source = ctx.createBufferSource();
                         source.buffer = audioBuffer;
-                        source.connect(audioContextRef.current.destination);
+                        source.connect(ctx.destination); // Connect directly to raw speakers
 
-                        // 2. BULLETPROOF QUEUING
-                        const currentTime = audioContextRef.current.currentTime;
+                        const currentTime = ctx.currentTime;
                         if (nextAudioTimeRef.current < currentTime) {
-                          nextAudioTimeRef.current = currentTime + 0.05; // 50ms buffer to prevent crackling
+                          nextAudioTimeRef.current = currentTime + 0.05;
                         }
 
                         source.start(nextAudioTimeRef.current);
                         nextAudioTimeRef.current += audioBuffer.duration;
-                        console.log(`🔊 Playing chunk. Context State: ${audioContextRef.current.state}`);
+                        console.log(`🔊 AMPLIFIED PLAYBACK - Context: ${ctx.state}, Volume: 3x`);
                         setState('speaking');
                         
                         // Debounce: Clear any existing timeout and set a new one
@@ -382,13 +388,15 @@ export const useGeminiAudio = ({
                           }
                         }, 1000);
                       } catch (audioError) {
-                        console.error('❌ Audio decode error:', audioError);
+                        console.error('🚨 AUDIO PLAYBACK ERROR:', audioError);
                       }
+                    } else {
+                      console.warn('⚠️ Playback context not initialized!');
                     }
                   }
                   
-                  // Handle text content (but skip thoughts)
-                  if (part.text && !part.thought) {
+                  // Handle text content
+                  if (part.text) {
                     console.log('💬 Text:', part.text);
                     addConversationMessage('assistant', part.text);
                   }
@@ -537,6 +545,10 @@ export const useGeminiAudio = ({
         console.log('🎤 WebSocket not open, calling setupWebSocket...');
         await setupWebSocket();
       }
+      
+      // Initialize dedicated playback context (isolated from microphone)
+      playbackContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+      console.log('🔊 Dedicated playback AudioContext created');
       
       console.log('🎤 About to call initializeAudioContext...');
       await initializeAudioContext();
