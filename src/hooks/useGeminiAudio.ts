@@ -224,7 +224,7 @@ export const useGeminiAudio = ({
       setupConfigRef.current = setupConfig;
 
       // Create WebSocket connection
-      console.log('🚀 Attempting Handshake: v1beta + gemini-2.5-flash-native-audio-latest');
+      console.log('🚀 Attempting Handshake: v1beta + gemini-2.0-flash');
       const websocket = new WebSocket(websocketUrl);
       websocketRef.current = websocket;
 
@@ -234,19 +234,16 @@ export const useGeminiAudio = ({
         // 1. Send Setup Config with generationConfig
         websocket.send(JSON.stringify({
           setup: {
-            model: "models/gemini-2.5-flash-native-audio-latest",
+            model: "models/gemini-2.0-flash",
             generationConfig: {
-              responseModalities: ["AUDIO"]
+              responseModalities: ["AUDIO"],
+              speechConfig: {
+                voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } }
+              }
             },
             systemInstruction: {
-              parts: [{ text: `You are Koko. You are speaking to a ${kidGender} in Hebrew. Keep conversation flowing continuously.` }]
-            },
-            tools: [{
-              functionDeclarations: [
-                { name: "award_star", description: "Reward the child" },
-                { name: "show_spelling", description: "Show word", parameters: { type: "OBJECT", properties: { word: { type: "STRING" } }, required: ["word"] } }
-              ]
-            }]
+              parts: [{ text: "You are Koko, a friendly dog. You are speaking to a child. You must NEVER call yourself 'Morah'. Keep the conversation flowing naturally in Hebrew and English." }]
+            }
           }
         }));
 
@@ -542,7 +539,10 @@ export const useGeminiAudio = ({
           console.log('🗣️ Triggering Initial Greeting (after mic init)...');
           websocketRef.current.send(JSON.stringify({
             clientContent: {
-              turns: [{ role: "user", parts: [{ text: "Hello! Please greet me EXACTLY with this phrase and nothing else: 'שלום אני קוקו, מה שלומך היום?'" }] }],
+              turns: [{
+                role: "user",
+                parts: [{ text: "Hello! Please introduce yourself EXACTLY with this phrase and nothing else: 'שלום אני קוקו, מה שלומך היום?'" }]
+              }],
               turnComplete: true
             }
           }));
