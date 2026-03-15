@@ -188,36 +188,102 @@ export const useGeminiAudio = ({
 
       websocket.onmessage = async (event) => {
         try {
-          // Handle binary audio data (Blob)
+          // Handle Blob data (could be JSON text or binary audio)
           if (event.data instanceof Blob) {
-            console.log('🎵 Received audio Blob:', event.data.size, 'bytes');
+            const arrayBuffer = await event.data.arrayBuffer();
             
-            if (audioContextRef.current) {
-              const arrayBuffer = await event.data.arrayBuffer();
-              const int16Array = new Int16Array(arrayBuffer);
-              const float32Array = new Float32Array(int16Array.length);
+            // Check if this is binary audio (even byte length for PCM16) or JSON text
+            if (arrayBuffer.byteLength % 2 === 0 && arrayBuffer.byteLength > 100) {
+              // Likely binary audio data
+              console.log('🎵 Received audio Blob:', arrayBuffer.byteLength, 'bytes');
               
-              // Convert PCM16 to Float32
-              for (let i = 0; i < int16Array.length; i++) {
-                float32Array[i] = int16Array[i] / 32768.0;
+              if (audioContextRef.current) {
+                const int16Array = new Int16Array(arrayBuffer);
+                const float32Array = new Float32Array(int16Array.length);
+                
+                // Convert PCM16 to Float32
+                for (let i = 0; i < int16Array.length; i++) {
+                  float32Array[i] = int16Array[i] / 32768.0;
+                }
+
+                // Play Audio (Gemini outputs 24kHz)
+                const audioBuffer = audioContextRef.current.createBuffer(1, float32Array.length, 24000);
+                audioBuffer.getChannelData(0).set(float32Array);
+                
+                const source = audioContextRef.current.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioContextRef.current.destination);
+                source.start();
+                
+                console.log('🔊 Audio playing:', float32Array.length, 'samples');
+                setState('speaking');
+              }
+              return;
+            } else {
+              // Likely JSON text in Blob format
+              const text = new TextDecoder().decode(arrayBuffer);
+              const data = JSON.parse(text);
+              console.log('📨 WebSocket message (Blob->JSON):', JSON.stringify(data, null, 2));
+              
+              if (data.setupComplete) console.log('✅ Gemini Setup Complete');
+              
+              // Process JSON data (tool calls, text, etc.)
+              if (data.toolCall) {
+                console.log('🛠️ Tool called:', data.toolCall);
+                const { functionCalls } = data.toolCall;
+                
+                if (functionCalls && functionCalls.length > 0) {
+                  for (const call of functionCalls) {
+                    const { name, args, id } = call;
+                    
+                    if (name === 'award_star') {
+                      incrementStarCount();
+                      console.log('⭐ Star awarded!');
+                    }
+                    
+                    if (name === 'show_spelling' && args?.word) {
+                      setVisualAid({
+                        word: args.word,
+                        imageQuery: args.word,
+                        imageUrl: '',
+                        isVisible: true
+                      });
+                      console.log('🔤 Spelling aid shown:', args.word);
+                    }
+                    
+                    // Send tool response
+                    websocket.send(JSON.stringify({
+                      toolResponse: {
+                        functionResponses: [{
+                          id: id || Date.now().toString(),
+                          name: name,
+                          response: { success: true }
+                        }]
+                      }
+                    }));
+                  }
+                }
               }
 
-              // Play Audio (Gemini outputs 24kHz)
-              const audioBuffer = audioContextRef.current.createBuffer(1, float32Array.length, 24000);
-              audioBuffer.getChannelData(0).set(float32Array);
+              // Handle text content
+              if (data.serverContent?.modelTurn?.parts) {
+                const textPart = data.serverContent.modelTurn.parts.find((p: any) => p.text);
+                if (textPart) {
+                  console.log('💬 Text:', textPart.text);
+                  addConversationMessage('assistant', textPart.text);
+                }
+              }
               
-              const source = audioContextRef.current.createBufferSource();
-              source.buffer = audioBuffer;
-              source.connect(audioContextRef.current.destination);
-              source.start();
-              
-              console.log('🔊 Audio playing:', float32Array.length, 'samples');
-              setState('speaking');
+              // State transitions
+              if (data.serverContent?.turnComplete) {
+                console.log('✅ Turn complete');
+                setState('listening');
+              }
+              return;
             }
-            return;
           }
 
-          // Handle JSON messages
+          // Handle string JSON messages
           const data = JSON.parse(event.data);
           console.log('📨 WebSocket message received:', JSON.stringify(data, null, 2));
           
