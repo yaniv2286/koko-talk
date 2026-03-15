@@ -48,6 +48,7 @@ export const useGeminiAudio = ({
   const audioBufferRef = useRef<ArrayBuffer[]>([]);
   const setupConfigRef = useRef<SetupConfig | null>(null);
   const nextPlayTimeRef = useRef<number>(0);
+  const nextAudioTimeRef = useRef<number>(0);
   const audioChunksRef = useRef<Int16Array[]>([]);
   const lastSendTimeRef = useRef<number>(0);
   const listeningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -333,42 +334,36 @@ export const useGeminiAudio = ({
                     
                     if (audioContextRef.current) {
                       try {
-                        // Decode Base64 to binary
+                        // 1. FORCE THE BROWSER AUDIO ENGINE AWAKE
+                        if (audioContextRef.current.state === 'suspended') {
+                          audioContextRef.current.resume().then(() => console.log('🔊 AudioContext forced awake!'));
+                        }
+
                         const base64Audio = part.inlineData.data;
                         const binaryString = atob(base64Audio);
                         const bytes = new Uint8Array(binaryString.length);
-                        for (let i = 0; i < binaryString.length; i++) {
-                          bytes[i] = binaryString.charCodeAt(i);
-                        }
-                        
-                        // Convert PCM16 to Float32
+                        for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+
                         const int16Array = new Int16Array(bytes.buffer);
                         const float32Array = new Float32Array(int16Array.length);
-                        for (let i = 0; i < int16Array.length; i++) {
-                          float32Array[i] = int16Array[i] / 32768.0;
-                        }
-                        
-                        // Create audio buffer at 24kHz
+                        for (let i = 0; i < int16Array.length; i++) float32Array[i] = int16Array[i] / 32768.0;
+
                         const audioBuffer = audioContextRef.current.createBuffer(1, float32Array.length, 24000);
                         audioBuffer.getChannelData(0).set(float32Array);
-                        
-                        // Schedule audio to play sequentially without gaps
+
                         const source = audioContextRef.current.createBufferSource();
                         source.buffer = audioBuffer;
                         source.connect(audioContextRef.current.destination);
-                        
-                        // Calculate when to start this chunk
+
+                        // 2. BULLETPROOF QUEUING
                         const currentTime = audioContextRef.current.currentTime;
-                        const startTime = Math.max(currentTime, nextPlayTimeRef.current);
-                        
-                        // Start playback at scheduled time
-                        source.start(startTime);
-                        
-                        // Update next play time (duration = samples / sampleRate)
-                        const duration = float32Array.length / 24000;
-                        nextPlayTimeRef.current = startTime + duration;
-                        
-                        console.log('🔊 Queued audio:', float32Array.length, 'samples, start:', startTime.toFixed(3));
+                        if (nextAudioTimeRef.current < currentTime) {
+                          nextAudioTimeRef.current = currentTime + 0.05; // 50ms buffer to prevent crackling
+                        }
+
+                        source.start(nextAudioTimeRef.current);
+                        nextAudioTimeRef.current += audioBuffer.duration;
+                        console.log(`🔊 Playing chunk. Context State: ${audioContextRef.current.state}`);
                         setState('speaking');
                         
                         // Debounce: Clear any existing timeout and set a new one
@@ -640,6 +635,7 @@ export const useGeminiAudio = ({
       setConnected(false);
       setSessionId(null);
       setConnectionError(null);
+      nextAudioTimeRef.current = 0;
       
       console.log('✅ Disconnected successfully');
       
