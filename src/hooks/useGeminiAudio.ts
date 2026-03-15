@@ -47,6 +47,7 @@ export const useGeminiAudio = ({
   const audioProcessCountRef = useRef<number>(0);
   const isFirstGreetingRef = useRef<boolean>(true);
   const userSpeechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasGreetedRef = useRef<boolean>(false);
 
   // Initialize Web Audio API
   const initializeAudioContext = useCallback(async () => {
@@ -117,17 +118,11 @@ export const useGeminiAudio = ({
             console.log(`🎤 Sending ${pcm16.length} audio samples (energy: ${avgEnergy.toFixed(0)})`);
             
             websocketRef.current.send(JSON.stringify({
-              clientContent: {
-                turns: [{
-                  role: "user",
-                  parts: [{
-                    inlineData: {
-                      mimeType: "audio/pcm;rate=16000",
-                      data: base64
-                    }
-                  }]
-                }],
-                turnComplete: false
+              realtimeInput: {
+                mediaChunks: [{
+                  mimeType: "audio/pcm;rate=16000",
+                  data: base64
+                }]
               }
             }));
             
@@ -177,8 +172,9 @@ export const useGeminiAudio = ({
       setState('connecting');
       setConnectionError(null);
       
-      // Reset audio queue timing
+      // Reset audio queue timing and greeting flag
       nextPlayTimeRef.current = 0;
+      hasGreetedRef.current = false;
 
       // Get setup config from API
       const response = await fetch('/api/gemini-live', {
@@ -510,21 +506,26 @@ export const useGeminiAudio = ({
       await initializeAudioContext();
       console.log('🎤 initializeAudioContext completed');
       
-      // NOW send the initial greeting AFTER microphone is ready
-      console.log('🗣️ Triggering Initial Greeting (after mic init)...');
-      if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
-        websocketRef.current.send(JSON.stringify({
-          clientContent: {
-            turns: [{ role: "user", parts: [{ text: "Hello! I am ready to learn English. Please introduce yourself and ask me how I am doing today in Hebrew." }] }],
-            turnComplete: true
-          }
-        }));
-        setState('listening');
-        console.log('✅ Initial greeting sent, microphone active');
-      } else {
-        console.error('🚨 WebSocket not open when trying to send greeting');
-        setState('error');
-      }
+      // NOW send the initial greeting AFTER microphone is ready (with race condition guard)
+      setTimeout(() => {
+        if (!hasGreetedRef.current && websocketRef.current?.readyState === WebSocket.OPEN) {
+          hasGreetedRef.current = true;
+          console.log('🗣️ Triggering Initial Greeting (after mic init)...');
+          websocketRef.current.send(JSON.stringify({
+            clientContent: {
+              turns: [{ role: "user", parts: [{ text: "Hello! I am ready to learn English. Please introduce yourself and ask me how I am doing today in Hebrew." }] }],
+              turnComplete: true
+            }
+          }));
+          setState('listening');
+          console.log('✅ Initial greeting sent, microphone active');
+        } else if (hasGreetedRef.current) {
+          console.log('⚠️ Greeting already sent, skipping duplicate');
+        } else {
+          console.error('🚨 WebSocket not open when trying to send greeting');
+          setState('error');
+        }
+      }, 1500);
 
     } catch (error) {
       console.error('🚨 RECORDING START FAILURE:', error);
