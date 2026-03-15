@@ -323,6 +323,15 @@ export const useGeminiAudio = ({
                         const duration = float32Array.length / 24000;
                         nextPlayTimeRef.current = startTime + duration;
                         
+                        // Transition back to listening when audio finishes
+                        source.onended = () => {
+                          // Only transition if we're past the scheduled end time
+                          if (audioContextRef.current && audioContextRef.current.currentTime >= nextPlayTimeRef.current - 0.1) {
+                            console.log('🎧 Audio finished, transitioning to listening');
+                            setState('listening');
+                          }
+                        };
+                        
                         console.log('🔊 Queued audio:', float32Array.length, 'samples, start:', startTime.toFixed(3));
                         setState('speaking');
                       } catch (audioError) {
