@@ -34,6 +34,11 @@ export const useGeminiAudio = ({
     conversationHistory
   } = useVoiceStore();
 
+  // Keep liveStateRef synced with Zustand state
+  useEffect(() => {
+    liveStateRef.current = state;
+  }, [state]);
+
   const websocketRef = useRef<WebSocket | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -49,6 +54,7 @@ export const useGeminiAudio = ({
   const isFirstGreetingRef = useRef<boolean>(true);
   const userSpeechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasGreetedRef = useRef<boolean>(false);
+  const liveStateRef = useRef(state);
 
   // Initialize Web Audio API
   const initializeAudioContext = useCallback(async () => {
@@ -89,12 +95,12 @@ export const useGeminiAudio = ({
       processorRef.current.onaudioprocess = (event) => {
         processCount++;
         if (processCount % 50 === 0) {
-          console.log(`🎙️ onaudioprocess firing (${processCount} calls), state: ${state}, isFirstGreeting: ${isFirstGreetingRef.current}, WS: ${websocketRef.current?.readyState}`);
+          console.log(`🎙️ onaudioprocess firing (${processCount} calls), liveState: ${liveStateRef.current}, isFirstGreeting: ${isFirstGreetingRef.current}, WS: ${websocketRef.current?.readyState}`);
         }
         
-        // CRITICAL: Only process microphone when state is 'listening' AND first greeting is done
+        // CRITICAL: Only process microphone when state is 'listening' AND first greeting is done (use liveStateRef to avoid stale closure)
         if (websocketRef.current?.readyState === WebSocket.OPEN && 
-            state === 'listening' && 
+            liveStateRef.current === 'listening' && 
             !isFirstGreetingRef.current) {
           
           const inputData = event.inputBuffer.getChannelData(0);
