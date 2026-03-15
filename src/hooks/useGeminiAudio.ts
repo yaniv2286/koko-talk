@@ -85,7 +85,13 @@ export const useGeminiAudio = ({
       processorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
       
       // Process raw Float32 audio samples
+      let processCount = 0;
       processorRef.current.onaudioprocess = (event) => {
+        processCount++;
+        if (processCount % 50 === 0) {
+          console.log(`🎙️ onaudioprocess firing (${processCount} calls), state: ${state}, isFirstGreeting: ${isFirstGreetingRef.current}, WS: ${websocketRef.current?.readyState}`);
+        }
+        
         // CRITICAL: Only process microphone when state is 'listening' AND first greeting is done
         if (websocketRef.current?.readyState === WebSocket.OPEN && 
             state === 'listening' && 
