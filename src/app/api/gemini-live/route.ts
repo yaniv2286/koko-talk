@@ -63,13 +63,9 @@ CRITICAL RULES:
     return NextResponse.json({
       websocketUrl: `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${GOOGLE_AI_API_KEY}`,
       setupConfig: {
-        model: 'models/gemini-2.5-flash',
+        model: 'models/gemini-2.5-flash-native-audio-latest',
         generationConfig: {
-          temperature: 0.8,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 8192,
-          responseModalities: ["AUDIO", "TEXT"],
+          responseModalities: ["AUDIO"],
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: {
@@ -85,7 +81,6 @@ CRITICAL RULES:
         },
         tools: tools
       },
-      model: 'gemini-2.5-flash-live',
       timestamp: new Date().toISOString()
     });
 
