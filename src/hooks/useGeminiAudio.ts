@@ -44,6 +44,7 @@ export const useGeminiAudio = ({
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
   const audioBufferRef = useRef<ArrayBuffer[]>([]);
   const setupConfigRef = useRef<SetupConfig | null>(null);
   const nextPlayTimeRef = useRef<number>(0);
@@ -89,6 +90,10 @@ export const useGeminiAudio = ({
       
       // Create ScriptProcessorNode for raw audio processing (4096 buffer size, 1 input channel, 1 output channel)
       processorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
+      
+      // Create GainNode and mute it to prevent feedback loops while keeping pipeline active
+      gainNodeRef.current = audioContextRef.current.createGain();
+      gainNodeRef.current.gain.value = 0; // Silent Vacuum - mute output but keep processor firing
       
       // Process raw Float32 audio samples
       let processCount = 0;
@@ -165,11 +170,12 @@ export const useGeminiAudio = ({
         }
       };
       
-      // Connect the audio processing chain
+      // Connect the Silent Vacuum pipeline (source → processor → muted gain → destination)
       sourceRef.current.connect(processorRef.current);
-      processorRef.current.connect(audioContextRef.current.destination);
+      processorRef.current.connect(gainNodeRef.current);
+      gainNodeRef.current.connect(audioContextRef.current.destination);
       
-      console.log('🎙️ ScriptProcessorNode connected and processing audio');
+      console.log('🎙️ Silent Vacuum pipeline connected (muted output, active processor)');
       
       console.log('✅ Web Audio API initialized');
       
@@ -558,6 +564,11 @@ export const useGeminiAudio = ({
     console.log('🛑 Stopping audio streaming...');
     
     // Disconnect audio processing chain
+    if (gainNodeRef.current) {
+      gainNodeRef.current.disconnect();
+      gainNodeRef.current = null;
+    }
+    
     if (processorRef.current) {
       processorRef.current.disconnect();
       processorRef.current = null;
