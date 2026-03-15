@@ -87,12 +87,21 @@ export const useGeminiAudio = ({
             pcm16[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
           }
           
-          // Convert to base64 and send
+          // Convert to base64 and send using Gemini Live API format
           const base64 = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
           
           websocketRef.current.send(JSON.stringify({
-            realtimeInput: {
-              audio: base64
+            clientContent: {
+              turns: [{
+                role: "user",
+                parts: [{
+                  inlineData: {
+                    mimeType: "audio/pcm;rate=16000",
+                    data: base64
+                  }
+                }]
+              }],
+              turnComplete: false
             }
           }));
         }
