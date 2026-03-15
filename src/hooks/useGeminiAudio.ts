@@ -37,8 +37,7 @@ export const useGeminiAudio = ({
   const websocketRef = useRef<WebSocket | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioBufferRef = useRef<ArrayBuffer[]>([]);
   const setupConfigRef = useRef<SetupConfig | null>(null);
   const nextPlayTimeRef = useRef<number>(0);
@@ -75,76 +74,55 @@ export const useGeminiAudio = ({
       
       mediaStreamRef.current = stream;
 
-      // Create audio source
-      sourceRef.current = audioContextRef.current?.createMediaStreamSource(stream);
-      
-      // Create script processor for 16-bit PCM conversion
-      processorRef.current = audioContextRef.current?.createScriptProcessor(4096, 1, 1);
-      
-      processorRef.current.onaudioprocess = (event) => {
-        // Debug: Log every 100 calls to verify this is firing
-        audioProcessCountRef.current++;
-        if (audioProcessCountRef.current % 100 === 0) {
-          console.log(`🎙️ onaudioprocess firing (${audioProcessCountRef.current} calls), state: ${state}, WS: ${websocketRef.current?.readyState}`);
-        }
-        
-        if (websocketRef.current?.readyState === WebSocket.OPEN && state === 'listening') {
-          const inputData = event.inputBuffer.getChannelData(0);
+      // Use MediaRecorder API (modern, reliable alternative to ScriptProcessorNode)
+      mediaRecorderRef.current = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus',
+        audioBitsPerSecond: 16000
+      });
+
+      mediaRecorderRef.current.ondataavailable = async (event) => {
+        if (event.data.size > 0 && websocketRef.current?.readyState === WebSocket.OPEN && state === 'listening') {
+          console.log(`🎤 MediaRecorder data available: ${event.data.size} bytes`);
           
-          // Convert float32 to int16 PCM
-          const pcm16 = new Int16Array(inputData.length);
-          for (let i = 0; i < inputData.length; i++) {
-            pcm16[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
+          // Convert WebM/Opus to PCM16
+          const arrayBuffer = await event.data.arrayBuffer();
+          const audioContext = new AudioContext({ sampleRate: 16000 });
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+          const channelData = audioBuffer.getChannelData(0);
+          
+          // Convert Float32 to Int16 PCM
+          const pcm16 = new Int16Array(channelData.length);
+          for (let i = 0; i < channelData.length; i++) {
+            pcm16[i] = Math.max(-32768, Math.min(32767, channelData[i] * 32768));
           }
           
-          // Accumulate audio chunks
-          audioChunksRef.current.push(pcm16);
+          // Convert to base64 and send
+          const base64 = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
           
-          // Send batched audio every 500ms to avoid overwhelming the API
-          const now = Date.now();
-          if (now - lastSendTimeRef.current >= 500 && audioChunksRef.current.length > 0) {
-            // Combine all accumulated chunks
-            const totalLength = audioChunksRef.current.reduce((sum, chunk) => sum + chunk.length, 0);
-            const combined = new Int16Array(totalLength);
-            let offset = 0;
-            for (const chunk of audioChunksRef.current) {
-              combined.set(chunk, offset);
-              offset += chunk.length;
+          console.log(`🎤 Sending ${pcm16.length} audio samples`);
+          
+          websocketRef.current.send(JSON.stringify({
+            clientContent: {
+              turns: [{
+                role: "user",
+                parts: [{
+                  inlineData: {
+                    mimeType: "audio/pcm;rate=16000",
+                    data: base64
+                  }
+                }]
+              }],
+              turnComplete: false
             }
-            
-            // Convert to base64 and send
-            const base64 = btoa(String.fromCharCode(...new Uint8Array(combined.buffer)));
-            
-            console.log(`🎤 Sending ${combined.length} audio samples (${audioChunksRef.current.length} chunks batched)`);
-            
-            websocketRef.current.send(JSON.stringify({
-              clientContent: {
-                turns: [{
-                  role: "user",
-                  parts: [{
-                    inlineData: {
-                      mimeType: "audio/pcm;rate=16000",
-                      data: base64
-                    }
-                  }]
-                }],
-                turnComplete: false
-              }
-            }));
-            
-            // Clear chunks and update timestamp
-            audioChunksRef.current = [];
-            lastSendTimeRef.current = now;
-            console.log('✅ Microphone audio sent to Gemini');
-          }
+          }));
+          
+          console.log('✅ Microphone audio sent to Gemini');
         }
       };
 
-      // Connect audio processing chain
-      if (sourceRef.current && processorRef.current && audioContextRef.current) {
-        sourceRef.current.connect(processorRef.current);
-        processorRef.current.connect(audioContextRef.current.destination);
-      }
+      // Start recording in 500ms chunks
+      mediaRecorderRef.current.start(500);
+      console.log('🎙️ MediaRecorder started (500ms chunks)');
       
       console.log('✅ Web Audio API initialized');
       
@@ -515,41 +493,26 @@ export const useGeminiAudio = ({
 
   // Stop recording
   const stopRecording = useCallback(() => {
-    try {
-      console.log('🛑 Stopping audio streaming...');
-      
-      // Stop audio processing
-      if (processorRef.current) {
-        processorRef.current.disconnect();
-        processorRef.current = null;
-      }
-      
-      if (sourceRef.current) {
-        sourceRef.current.disconnect();
-        sourceRef.current = null;
-      }
-      
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach(track => track.stop());
-        mediaStreamRef.current = null;
-      }
-      
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
-      
-      setState('idle');
-      console.log('✅ Audio streaming stopped');
-
-    } catch (error) {
-      console.error('🚨 RECORDING STOP FAILURE:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to stop recording';
-      setConnectionError(errorMessage);
-      setState('error');
-      onError?.(errorMessage);
+    console.log('🛑 Stopping audio streaming...');
+    
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
     }
-  }, [setState, setConnectionError, onError]);
+    
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    setState('idle');
+    console.log('✅ Audio streaming stopped');
+  }, [setState]);
 
   // Send text message (fallback)
   const sendMessage = useCallback(async (message: string) => {
