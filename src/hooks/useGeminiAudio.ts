@@ -45,6 +45,7 @@ export const useGeminiAudio = ({
   const audioChunksRef = useRef<Int16Array[]>([]);
   const lastSendTimeRef = useRef<number>(0);
   const listeningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const audioProcessCountRef = useRef<number>(0);
 
   // Initialize Web Audio API
   const initializeAudioContext = useCallback(async () => {
@@ -81,6 +82,12 @@ export const useGeminiAudio = ({
       processorRef.current = audioContextRef.current?.createScriptProcessor(4096, 1, 1);
       
       processorRef.current.onaudioprocess = (event) => {
+        // Debug: Log every 100 calls to verify this is firing
+        audioProcessCountRef.current++;
+        if (audioProcessCountRef.current % 100 === 0) {
+          console.log(`🎙️ onaudioprocess firing (${audioProcessCountRef.current} calls), state: ${state}, WS: ${websocketRef.current?.readyState}`);
+        }
+        
         if (websocketRef.current?.readyState === WebSocket.OPEN && state === 'listening') {
           const inputData = event.inputBuffer.getChannelData(0);
           
