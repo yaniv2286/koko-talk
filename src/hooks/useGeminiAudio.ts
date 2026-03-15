@@ -37,7 +37,8 @@ export const useGeminiAudio = ({
   const websocketRef = useRef<WebSocket | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
   const audioBufferRef = useRef<ArrayBuffer[]>([]);
   const setupConfigRef = useRef<SetupConfig | null>(null);
   const nextPlayTimeRef = useRef<number>(0);
@@ -77,31 +78,26 @@ export const useGeminiAudio = ({
       
       mediaStreamRef.current = stream;
 
-      // Use MediaRecorder API (modern, reliable alternative to ScriptProcessorNode)
-      mediaRecorderRef.current = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus',
-        audioBitsPerSecond: 16000
-      });
-
-      mediaRecorderRef.current.ondataavailable = async (event) => {
+      // Create audio source from microphone
+      sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
+      
+      // Create ScriptProcessorNode for raw audio processing (4096 buffer size, 1 input channel, 1 output channel)
+      processorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
+      
+      // Process raw Float32 audio samples
+      processorRef.current.onaudioprocess = (event) => {
         // CRITICAL: Only process microphone when state is 'listening' AND first greeting is done
-        if (event.data.size > 0 && 
-            websocketRef.current?.readyState === WebSocket.OPEN && 
+        if (websocketRef.current?.readyState === WebSocket.OPEN && 
             state === 'listening' && 
             !isFirstGreetingRef.current) {
           
-          console.log(`🎤 MediaRecorder data available: ${event.data.size} bytes`);
+          const inputData = event.inputBuffer.getChannelData(0);
           
-          // Convert WebM/Opus to PCM16
-          const arrayBuffer = await event.data.arrayBuffer();
-          const audioContext = new AudioContext({ sampleRate: 16000 });
-          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-          const channelData = audioBuffer.getChannelData(0);
-          
-          // Convert Float32 to Int16 PCM
-          const pcm16 = new Int16Array(channelData.length);
-          for (let i = 0; i < channelData.length; i++) {
-            pcm16[i] = Math.max(-32768, Math.min(32767, channelData[i] * 32768));
+          // 1. Convert Float32 to PCM16 (exact math as specified)
+          const pcm16 = new Int16Array(inputData.length);
+          for (let i = 0; i < inputData.length; i++) {
+            let s = Math.max(-1, Math.min(1, inputData[i]));
+            pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
           }
           
           // Detect silence vs speech (simple energy-based VAD)
@@ -113,15 +109,22 @@ export const useGeminiAudio = ({
           const isSpeech = avgEnergy > 500; // Threshold for speech detection
           
           if (isSpeech) {
-            // User is speaking - send audio with turnComplete=false
-            const base64 = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
+            // 2. Convert PCM16 to Base64
+            const uint8 = new Uint8Array(pcm16.buffer);
+            let binary = '';
+            for (let i = 0; i < uint8.byteLength; i++) {
+              binary += String.fromCharCode(uint8[i]);
+            }
+            const base64Data = btoa(binary);
+            
             console.log(`🎤 Sending ${pcm16.length} audio samples (energy: ${avgEnergy.toFixed(0)})`);
             
+            // 3. Send strictly formatted realtimeInput
             websocketRef.current.send(JSON.stringify({
               realtimeInput: {
                 mediaChunks: [{
                   mimeType: "audio/pcm;rate=16000",
-                  data: base64
+                  data: base64Data
                 }]
               }
             }));
@@ -149,10 +152,12 @@ export const useGeminiAudio = ({
           }
         }
       };
-
-      // Start recording in 500ms chunks
-      mediaRecorderRef.current.start(500);
-      console.log('🎙️ MediaRecorder started (500ms chunks)');
+      
+      // Connect the audio processing chain
+      sourceRef.current.connect(processorRef.current);
+      processorRef.current.connect(audioContextRef.current.destination);
+      
+      console.log('🎙️ ScriptProcessorNode connected and processing audio');
       
       console.log('✅ Web Audio API initialized');
       
@@ -540,9 +545,15 @@ export const useGeminiAudio = ({
   const stopRecording = useCallback(() => {
     console.log('🛑 Stopping audio streaming...');
     
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
+    // Disconnect audio processing chain
+    if (processorRef.current) {
+      processorRef.current.disconnect();
+      processorRef.current = null;
+    }
+    
+    if (sourceRef.current) {
+      sourceRef.current.disconnect();
+      sourceRef.current = null;
     }
     
     if (mediaStreamRef.current) {
