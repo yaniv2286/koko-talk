@@ -45,6 +45,8 @@ export const useGeminiAudio = ({
   const lastSendTimeRef = useRef<number>(0);
   const listeningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioProcessCountRef = useRef<number>(0);
+  const isFirstGreetingRef = useRef<boolean>(true);
+  const userSpeechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize Web Audio API
   const initializeAudioContext = useCallback(async () => {
@@ -81,7 +83,12 @@ export const useGeminiAudio = ({
       });
 
       mediaRecorderRef.current.ondataavailable = async (event) => {
-        if (event.data.size > 0 && websocketRef.current?.readyState === WebSocket.OPEN && state === 'listening') {
+        // CRITICAL: Only process microphone when state is 'listening' AND first greeting is done
+        if (event.data.size > 0 && 
+            websocketRef.current?.readyState === WebSocket.OPEN && 
+            state === 'listening' && 
+            !isFirstGreetingRef.current) {
+          
           console.log(`🎤 MediaRecorder data available: ${event.data.size} bytes`);
           
           // Convert WebM/Opus to PCM16
@@ -96,27 +103,55 @@ export const useGeminiAudio = ({
             pcm16[i] = Math.max(-32768, Math.min(32767, channelData[i] * 32768));
           }
           
-          // Convert to base64 and send
-          const base64 = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
+          // Detect silence vs speech (simple energy-based VAD)
+          let energy = 0;
+          for (let i = 0; i < pcm16.length; i++) {
+            energy += Math.abs(pcm16[i]);
+          }
+          const avgEnergy = energy / pcm16.length;
+          const isSpeech = avgEnergy > 500; // Threshold for speech detection
           
-          console.log(`🎤 Sending ${pcm16.length} audio samples`);
-          
-          websocketRef.current.send(JSON.stringify({
-            clientContent: {
-              turns: [{
-                role: "user",
-                parts: [{
-                  inlineData: {
-                    mimeType: "audio/pcm;rate=16000",
-                    data: base64
-                  }
-                }]
-              }],
-              turnComplete: false
+          if (isSpeech) {
+            // User is speaking - send audio with turnComplete=false
+            const base64 = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
+            console.log(`🎤 Sending ${pcm16.length} audio samples (energy: ${avgEnergy.toFixed(0)})`);
+            
+            websocketRef.current.send(JSON.stringify({
+              clientContent: {
+                turns: [{
+                  role: "user",
+                  parts: [{
+                    inlineData: {
+                      mimeType: "audio/pcm;rate=16000",
+                      data: base64
+                    }
+                  }]
+                }],
+                turnComplete: false
+              }
+            }));
+            
+            // Reset silence timeout - user is still speaking
+            if (userSpeechTimeoutRef.current) {
+              clearTimeout(userSpeechTimeoutRef.current);
             }
-          }));
-          
-          console.log('✅ Microphone audio sent to Gemini');
+            
+            // Set timeout to detect end of user speech (1.5 seconds of silence)
+            userSpeechTimeoutRef.current = setTimeout(() => {
+              console.log('🎤 User finished speaking (1.5s silence), sending turnComplete=true');
+              if (websocketRef.current?.readyState === WebSocket.OPEN) {
+                websocketRef.current.send(JSON.stringify({
+                  clientContent: {
+                    turns: [{
+                      role: "user",
+                      parts: [{ text: "" }]
+                    }],
+                    turnComplete: true
+                  }
+                }));
+              }
+            }, 1500);
+          }
         }
       };
 
@@ -321,6 +356,11 @@ export const useGeminiAudio = ({
                         listeningTimeoutRef.current = setTimeout(() => {
                           console.log('🎧 Audio finished (no new chunks for 1s), transitioning to listening');
                           setState('listening');
+                          // Mark first greeting as complete after Koko finishes speaking
+                          if (isFirstGreetingRef.current) {
+                            isFirstGreetingRef.current = false;
+                            console.log('✅ First greeting complete - microphone now active');
+                          }
                         }, 1000);
                       } catch (audioError) {
                         console.error('❌ Audio decode error:', audioError);
