@@ -42,6 +42,8 @@ export const useGeminiAudio = ({
   const audioBufferRef = useRef<ArrayBuffer[]>([]);
   const setupConfigRef = useRef<SetupConfig | null>(null);
   const nextPlayTimeRef = useRef<number>(0);
+  const audioChunksRef = useRef<Int16Array[]>([]);
+  const lastSendTimeRef = useRef<number>(0);
 
   // Initialize Web Audio API
   const initializeAudioContext = useCallback(async () => {
@@ -87,23 +89,43 @@ export const useGeminiAudio = ({
             pcm16[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
           }
           
-          // Convert to base64 and send using Gemini Live API format
-          const base64 = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
+          // Accumulate audio chunks
+          audioChunksRef.current.push(pcm16);
           
-          websocketRef.current.send(JSON.stringify({
-            clientContent: {
-              turns: [{
-                role: "user",
-                parts: [{
-                  inlineData: {
-                    mimeType: "audio/pcm;rate=16000",
-                    data: base64
-                  }
-                }]
-              }],
-              turnComplete: false
+          // Send batched audio every 500ms to avoid overwhelming the API
+          const now = Date.now();
+          if (now - lastSendTimeRef.current >= 500 && audioChunksRef.current.length > 0) {
+            // Combine all accumulated chunks
+            const totalLength = audioChunksRef.current.reduce((sum, chunk) => sum + chunk.length, 0);
+            const combined = new Int16Array(totalLength);
+            let offset = 0;
+            for (const chunk of audioChunksRef.current) {
+              combined.set(chunk, offset);
+              offset += chunk.length;
             }
-          }));
+            
+            // Convert to base64 and send
+            const base64 = btoa(String.fromCharCode(...new Uint8Array(combined.buffer)));
+            
+            websocketRef.current.send(JSON.stringify({
+              clientContent: {
+                turns: [{
+                  role: "user",
+                  parts: [{
+                    inlineData: {
+                      mimeType: "audio/pcm;rate=16000",
+                      data: base64
+                    }
+                  }]
+                }],
+                turnComplete: false
+              }
+            }));
+            
+            // Clear chunks and update timestamp
+            audioChunksRef.current = [];
+            lastSendTimeRef.current = now;
+          }
         }
       };
 
