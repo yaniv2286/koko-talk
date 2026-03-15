@@ -225,22 +225,9 @@ export const useGeminiAudio = ({
           }
         }));
 
-        // 2. Force Initial Greeting
-        setTimeout(() => {
-          console.log('🗣️ Triggering Initial Greeting...');
-          if (websocket && websocket.readyState === WebSocket.OPEN) {
-            websocket.send(JSON.stringify({
-              clientContent: {
-                turns: [{ role: "user", parts: [{ text: "Hello! I am ready to learn English. Please introduce yourself and ask me how I am doing today in Hebrew." }] }],
-                turnComplete: true
-              }
-            }));
-          } else {
-            console.warn('⚠️ WebSocket not open, skipping greeting');
-          }
-        }, 1500);
+        // DO NOT send greeting here - it will be sent after microphone initialization in startRecording()
         
-        setState('listening');
+        setState('idle');
         setConnected(true);
         setSessionId('gemini-live-session');
       };
@@ -523,9 +510,21 @@ export const useGeminiAudio = ({
       await initializeAudioContext();
       console.log('🎤 initializeAudioContext completed');
       
-      // Start continuous audio streaming
-      setState('listening');
-      console.log('✅ Continuous audio streaming started');
+      // NOW send the initial greeting AFTER microphone is ready
+      console.log('🗣️ Triggering Initial Greeting (after mic init)...');
+      if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
+        websocketRef.current.send(JSON.stringify({
+          clientContent: {
+            turns: [{ role: "user", parts: [{ text: "Hello! I am ready to learn English. Please introduce yourself and ask me how I am doing today in Hebrew." }] }],
+            turnComplete: true
+          }
+        }));
+        setState('listening');
+        console.log('✅ Initial greeting sent, microphone active');
+      } else {
+        console.error('🚨 WebSocket not open when trying to send greeting');
+        setState('error');
+      }
 
     } catch (error) {
       console.error('🚨 RECORDING START FAILURE:', error);
