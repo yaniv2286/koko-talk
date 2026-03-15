@@ -147,10 +147,11 @@ export const useGeminiAudio = ({
       websocket.onopen = () => {
         console.log('✅ WebSocket connected, sending setup config...');
         
-        // 1. Send Setup Config
+        // 1. Send Setup Config (CRITICAL: use "config" not "setup")
         websocket.send(JSON.stringify({
-          setup: {
+          config: {
             model: "models/gemini-2.5-flash-native-audio-latest",
+            responseModalities: ["AUDIO"],
             systemInstruction: {
               parts: [{ text: `You are Morah Koko. You are speaking to a ${kidGender} in Hebrew. DO NOT ask if they want to learn a word. Keep conversation flowing continuously.` }]
             },
