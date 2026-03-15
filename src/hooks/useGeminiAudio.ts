@@ -44,6 +44,7 @@ export const useGeminiAudio = ({
   const nextPlayTimeRef = useRef<number>(0);
   const audioChunksRef = useRef<Int16Array[]>([]);
   const lastSendTimeRef = useRef<number>(0);
+  const listeningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize Web Audio API
   const initializeAudioContext = useCallback(async () => {
@@ -323,14 +324,18 @@ export const useGeminiAudio = ({
                         const duration = float32Array.length / 24000;
                         nextPlayTimeRef.current = startTime + duration;
                         
-                        // Transition back to listening when audio finishes
-                        source.onended = () => {
-                          // Only transition if we're past the scheduled end time
-                          if (audioContextRef.current && audioContextRef.current.currentTime >= nextPlayTimeRef.current - 0.1) {
-                            console.log('🎧 Audio finished, transitioning to listening');
-                            setState('listening');
-                          }
-                        };
+                        // Clear any existing timeout
+                        if (listeningTimeoutRef.current) {
+                          clearTimeout(listeningTimeoutRef.current);
+                        }
+                        
+                        // Schedule transition to listening after all audio finishes
+                        // Add 500ms buffer to ensure audio is complete
+                        const timeUntilEnd = (nextPlayTimeRef.current - currentTime + 0.5) * 1000;
+                        listeningTimeoutRef.current = setTimeout(() => {
+                          console.log('🎧 Audio finished, transitioning to listening');
+                          setState('listening');
+                        }, Math.max(0, timeUntilEnd));
                         
                         console.log('🔊 Queued audio:', float32Array.length, 'samples, start:', startTime.toFixed(3));
                         setState('speaking');
