@@ -267,7 +267,22 @@ export const useGeminiAudio = ({
               // Successfully parsed as JSON - handle as JSON message
               console.log('📨 WebSocket message (Blob->JSON):', JSON.stringify(data, null, 2));
               
-              if (data.setupComplete) console.log('✅ Gemini Setup Complete');
+              if (data.setupComplete) {
+                console.log('✅ Gemini Setup Complete. Server is ready.');
+
+                // Fire greeting exactly once when server confirms readiness
+                if (!hasGreetedRef.current && websocket.readyState === WebSocket.OPEN) {
+                  hasGreetedRef.current = true;
+                  console.log('🗣️ Triggering Initial Greeting...');
+                  websocket.send(JSON.stringify({
+                    clientContent: {
+                      turns: [{ role: "user", parts: [{ text: "Hello! Please introduce yourself EXACTLY with this phrase and nothing else: 'שלום אני קוקו, מה שלומך היום?'" }] }],
+                      turnComplete: true
+                    }
+                  }));
+                  setState('listening');
+                }
+              }
               
               // Process JSON data (tool calls, text, etc.)
               if (data.toolCall) {
@@ -531,30 +546,7 @@ export const useGeminiAudio = ({
       console.log('🎤 About to call initializeAudioContext...');
       await initializeAudioContext();
       console.log('🎤 initializeAudioContext completed');
-      
-      // NOW send the initial greeting AFTER microphone is ready (with race condition guard)
-      setTimeout(() => {
-        if (!hasGreetedRef.current && websocketRef.current?.readyState === WebSocket.OPEN) {
-          hasGreetedRef.current = true;
-          console.log('🗣️ Triggering Initial Greeting (after mic init)...');
-          websocketRef.current.send(JSON.stringify({
-            clientContent: {
-              turns: [{
-                role: "user",
-                parts: [{ text: "Hello! Please introduce yourself EXACTLY with this phrase and nothing else: 'שלום אני קוקו, מה שלומך היום?'" }]
-              }],
-              turnComplete: true
-            }
-          }));
-          setState('listening');
-          console.log('✅ Initial greeting sent, microphone active');
-        } else if (hasGreetedRef.current) {
-          console.log('⚠️ Greeting already sent, skipping duplicate');
-        } else {
-          console.error('🚨 WebSocket not open when trying to send greeting');
-          setState('error');
-        }
-      }, 1500);
+      console.log('⏳ Waiting for setupComplete event from Gemini before sending greeting...');
 
     } catch (error) {
       console.error('🚨 RECORDING START FAILURE:', error);
