@@ -107,6 +107,8 @@ export const useGeminiAudio = ({
             // Convert to base64 and send
             const base64 = btoa(String.fromCharCode(...new Uint8Array(combined.buffer)));
             
+            console.log(`🎤 Sending ${combined.length} audio samples (${audioChunksRef.current.length} chunks batched)`);
+            
             websocketRef.current.send(JSON.stringify({
               clientContent: {
                 turns: [{
@@ -125,6 +127,7 @@ export const useGeminiAudio = ({
             // Clear chunks and update timestamp
             audioChunksRef.current = [];
             lastSendTimeRef.current = now;
+            console.log('✅ Microphone audio sent to Gemini');
           }
         }
       };
