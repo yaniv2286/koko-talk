@@ -110,6 +110,12 @@ export const useGeminiAudio = ({
           
           const inputData = event.inputBuffer.getChannelData(0);
           
+          // Hardware Diagnostic
+          const volumeSum = inputData.reduce((a, b) => a + Math.abs(b), 0);
+          if (volumeSum === 0) {
+            console.warn('🔇 MIC IS DEAD: Captured volume is exactly 0. OS is blocking mic or wrong input device selected.');
+          }
+          
           // 1. Convert Float32 to PCM16 (exact math as specified)
           const pcm16 = new Int16Array(inputData.length);
           for (let i = 0; i < inputData.length; i++) {
@@ -233,7 +239,7 @@ export const useGeminiAudio = ({
               responseModalities: ["AUDIO"]
             },
             systemInstruction: {
-              parts: [{ text: `You are Morah Koko. You are speaking to a ${kidGender} in Hebrew. DO NOT ask if they want to learn a word. Keep conversation flowing continuously.` }]
+              parts: [{ text: `You are Koko. You are speaking to a ${kidGender} in Hebrew. Keep conversation flowing continuously.` }]
             },
             tools: [{
               functionDeclarations: [
@@ -536,7 +542,7 @@ export const useGeminiAudio = ({
           console.log('🗣️ Triggering Initial Greeting (after mic init)...');
           websocketRef.current.send(JSON.stringify({
             clientContent: {
-              turns: [{ role: "user", parts: [{ text: "Hello! I am ready to learn English. Please introduce yourself and ask me how I am doing today in Hebrew." }] }],
+              turns: [{ role: "user", parts: [{ text: "Hello! Please greet me EXACTLY with this phrase and nothing else: 'שלום אני קוקו, מה שלומך היום?'" }] }],
               turnComplete: true
             }
           }));
