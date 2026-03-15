@@ -188,6 +188,36 @@ export const useGeminiAudio = ({
 
       websocket.onmessage = async (event) => {
         try {
+          // Handle binary audio data (Blob)
+          if (event.data instanceof Blob) {
+            console.log('🎵 Received audio Blob:', event.data.size, 'bytes');
+            
+            if (audioContextRef.current) {
+              const arrayBuffer = await event.data.arrayBuffer();
+              const int16Array = new Int16Array(arrayBuffer);
+              const float32Array = new Float32Array(int16Array.length);
+              
+              // Convert PCM16 to Float32
+              for (let i = 0; i < int16Array.length; i++) {
+                float32Array[i] = int16Array[i] / 32768.0;
+              }
+
+              // Play Audio (Gemini outputs 24kHz)
+              const audioBuffer = audioContextRef.current.createBuffer(1, float32Array.length, 24000);
+              audioBuffer.getChannelData(0).set(float32Array);
+              
+              const source = audioContextRef.current.createBufferSource();
+              source.buffer = audioBuffer;
+              source.connect(audioContextRef.current.destination);
+              source.start();
+              
+              console.log('🔊 Audio playing:', float32Array.length, 'samples');
+              setState('speaking');
+            }
+            return;
+          }
+
+          // Handle JSON messages
           const data = JSON.parse(event.data);
           console.log('📨 WebSocket message received:', JSON.stringify(data, null, 2));
           
@@ -231,35 +261,8 @@ export const useGeminiAudio = ({
             }
           }
 
-          // Audio Playback
+          // Handle text content
           if (data.serverContent?.modelTurn?.parts) {
-            const audioPart = data.serverContent.modelTurn.parts.find((p: any) => p.inlineData && p.inlineData.data);
-            if (audioPart && audioContextRef.current) {
-              const base64Audio = audioPart.inlineData.data;
-              
-              // Decode Base64 PCM16 to Float32Array
-              const binaryString = atob(base64Audio);
-              const bytes = new Uint8Array(binaryString.length);
-              for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
-              
-              const int16Array = new Int16Array(bytes.buffer);
-              const float32Array = new Float32Array(int16Array.length);
-              for (let i = 0; i < int16Array.length; i++) float32Array[i] = int16Array[i] / 32768.0;
-
-              // Play Audio (Gemini outputs 24kHz)
-              const audioBuffer = audioContextRef.current.createBuffer(1, float32Array.length, 24000);
-              audioBuffer.getChannelData(0).set(float32Array);
-              
-              const source = audioContextRef.current.createBufferSource();
-              source.buffer = audioBuffer;
-              source.connect(audioContextRef.current.destination);
-              source.start();
-              
-              console.log('🔊 Audio playing:', float32Array.length, 'samples');
-              setState('speaking');
-            }
-            
-            // Handle text
             const textPart = data.serverContent.modelTurn.parts.find((p: any) => p.text);
             if (textPart) {
               console.log('💬 Text:', textPart.text);
