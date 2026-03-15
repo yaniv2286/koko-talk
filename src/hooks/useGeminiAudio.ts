@@ -239,12 +239,55 @@ export const useGeminiAudio = ({
                 }
               }
 
-              // Handle text content
+              // Handle audio content (Base64 PCM16)
               if (data.serverContent?.modelTurn?.parts) {
-                const textPart = data.serverContent.modelTurn.parts.find((p: any) => p.text);
-                if (textPart) {
-                  console.log('💬 Text:', textPart.text);
-                  addConversationMessage('assistant', textPart.text);
+                for (const part of data.serverContent.modelTurn.parts) {
+                  // Skip thought messages
+                  if (part.thought) continue;
+                  
+                  // Handle Base64-encoded audio
+                  if (part.inlineData?.mimeType === 'audio/pcm;rate=24000' && part.inlineData?.data) {
+                    console.log('🎵 Decoding Base64 PCM16 audio...');
+                    
+                    if (audioContextRef.current) {
+                      try {
+                        // Decode Base64 to binary
+                        const base64Audio = part.inlineData.data;
+                        const binaryString = atob(base64Audio);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                          bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        
+                        // Convert PCM16 to Float32
+                        const int16Array = new Int16Array(bytes.buffer);
+                        const float32Array = new Float32Array(int16Array.length);
+                        for (let i = 0; i < int16Array.length; i++) {
+                          float32Array[i] = int16Array[i] / 32768.0;
+                        }
+                        
+                        // Play audio at 24kHz
+                        const audioBuffer = audioContextRef.current.createBuffer(1, float32Array.length, 24000);
+                        audioBuffer.getChannelData(0).set(float32Array);
+                        
+                        const source = audioContextRef.current.createBufferSource();
+                        source.buffer = audioBuffer;
+                        source.connect(audioContextRef.current.destination);
+                        source.start();
+                        
+                        console.log('🔊 Playing audio:', float32Array.length, 'samples');
+                        setState('speaking');
+                      } catch (audioError) {
+                        console.error('❌ Audio decode error:', audioError);
+                      }
+                    }
+                  }
+                  
+                  // Handle text content (but skip thoughts)
+                  if (part.text && !part.thought) {
+                    console.log('💬 Text:', part.text);
+                    addConversationMessage('assistant', part.text);
+                  }
                 }
               }
               
