@@ -189,23 +189,43 @@ export const useGeminiAudio = ({
       nextPlayTimeRef.current = 0;
       hasGreetedRef.current = false;
 
-      // Get setup config from API
-      const response = await fetch('/api/gemini-live', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userProfile: userProfile || undefined,
-          kidGender: kidGender || undefined
-        }),
-      });
+      let websocketUrl: string;
+      let setupConfig: any;
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to get Live API setup');
+      try {
+        console.log('📡 Fetching WebSocket config from /api/gemini-live...');
+        const response = await fetch('/api/gemini-live', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userProfile: userProfile || undefined,
+            kidGender: kidGender || undefined
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`🚨 BACKEND ERROR (${response.status}):`, errorText);
+          throw new Error(`API Route Failed: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        if (!data.websocketUrl || !data.setupConfig) {
+          console.error('🚨 INVALID PAYLOAD:', data);
+          throw new Error('Backend returned invalid WebSocket configuration.');
+        }
+
+        websocketUrl = data.websocketUrl;
+        setupConfig = data.setupConfig;
+        setupConfigRef.current = setupConfig;
+        console.log('✅ Configuration received. Connecting to WebSocket...');
+
+      } catch (err) {
+        console.error('💥 SETUP FATAL ERROR:', err);
+        setState('error');
+        setConnectionError(err instanceof Error ? err.message : 'Failed to setup WebSocket');
+        return;
       }
-
-      const { websocketUrl, setupConfig } = await response.json();
-      setupConfigRef.current = setupConfig;
 
       console.log('🚀 Attempting Handshake: v1alpha + gemini-2.5-flash-native-audio-preview-12-2025');
       const websocket = new WebSocket(websocketUrl);
