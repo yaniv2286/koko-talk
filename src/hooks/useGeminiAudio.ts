@@ -130,7 +130,8 @@ export const useGeminiAudio = ({
         const downsampledData = new Float32Array(downsampledLength);
 
         for (let i = 0; i < downsampledLength; i++) {
-          const sample = inputData[Math.floor(i * compressionRatio)];
+          let sample = inputData[Math.floor(i * compressionRatio)];
+          sample = sample * 5.0; // 🚀 BOOST MICROPHONE GAIN BY 500%
           downsampledData[i] = sample;
         }
 
@@ -398,21 +399,11 @@ CRITICAL RULES:
                         console.log(`🔊 AMPLIFIED PLAYBACK - Context: ${ctx.state}, Volume: 3x`);
                         setState('speaking');
                         
-                        // Debounce: Clear any existing timeout and set a new one
-                        // Transition to listening 1 second after the LAST audio chunk arrives
-                        if (listeningTimeoutRef.current) {
-                          clearTimeout(listeningTimeoutRef.current);
+                        // Rely on Gemini's native VAD - no local silence detection
+                        if (isFirstGreetingRef.current) {
+                          isFirstGreetingRef.current = false;
+                          console.log('✅ First greeting complete - microphone now active');
                         }
-                        
-                        listeningTimeoutRef.current = setTimeout(() => {
-                          console.log('🎧 Audio finished (no new chunks for 1s), transitioning to listening');
-                          setState('listening');
-                          // Mark first greeting as complete after Koko finishes speaking
-                          if (isFirstGreetingRef.current) {
-                            isFirstGreetingRef.current = false;
-                            console.log('✅ First greeting complete - microphone now active');
-                          }
-                        }, 1000);
                       } catch (audioError) {
                         console.error('🚨 AUDIO PLAYBACK ERROR:', audioError);
                       }
