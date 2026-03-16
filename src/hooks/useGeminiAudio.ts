@@ -253,9 +253,6 @@ export const useGeminiAudio = ({
               responseModalities: ["AUDIO"],
               speechConfig: {
                 voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceSelection } }
-              },
-              thinkingConfig: {
-                thoughts: false // CRITICAL: Disables the thought blocks that are crashing the socket
               }
             },
             systemInstruction: {
