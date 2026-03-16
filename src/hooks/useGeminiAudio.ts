@@ -97,85 +97,55 @@ export const useGeminiAudio = ({
       gainNodeRef.current = audioContextRef.current.createGain();
       gainNodeRef.current.gain.value = 0; // Silent Vacuum - mute output but keep processor firing
       
-      // Process raw Float32 audio samples
-      let processCount = 0;
-      processorRef.current.onaudioprocess = (event) => {
-        processCount++;
-        if (processCount % 50 === 0) {
-          console.log(`🎙️ onaudioprocess firing (${processCount} calls), liveState: ${liveStateRef.current}, isFirstGreeting: ${isFirstGreetingRef.current}, WS: ${websocketRef.current?.readyState}`);
+      // Process raw Float32 audio samples with downsampling
+      processorRef.current.onaudioprocess = (e) => {
+        // Check live state to ensure we should be listening
+        if (liveStateRef.current !== 'listening' || !websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) return;
+
+        const inputData = e.inputBuffer.getChannelData(0);
+        const inputSampleRate = audioContextRef.current!.sampleRate;
+        const targetSampleRate = 16000;
+
+        // 1. Mathematical Downsampling (Nearest Neighbor)
+        const compressionRatio = inputSampleRate / targetSampleRate;
+        const downsampledLength = Math.floor(inputData.length / compressionRatio);
+        const downsampledData = new Float32Array(downsampledLength);
+
+        let energy = 0;
+        for (let i = 0; i < downsampledLength; i++) {
+          const sample = inputData[Math.floor(i * compressionRatio)];
+          downsampledData[i] = sample;
+          energy += Math.abs(sample);
         }
-        
-        // CRITICAL: Only process microphone when state is 'listening' AND first greeting is done (use liveStateRef to avoid stale closure)
-        if (websocketRef.current?.readyState === WebSocket.OPEN && 
-            liveStateRef.current === 'listening' && 
-            !isFirstGreetingRef.current) {
-          
-          const inputData = event.inputBuffer.getChannelData(0);
-          
-          // Hardware Diagnostic
-          const volumeSum = inputData.reduce((a, b) => a + Math.abs(b), 0);
-          if (volumeSum === 0) {
-            console.warn('🔇 MIC IS DEAD: Captured volume is exactly 0. OS is blocking mic or wrong input device selected.');
-          }
-          
-          // 1. Convert Float32 to PCM16 (exact math as specified)
-          const pcm16 = new Int16Array(inputData.length);
-          for (let i = 0; i < inputData.length; i++) {
-            let s = Math.max(-1, Math.min(1, inputData[i]));
-            pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-          }
-          
-          // Detect silence vs speech (simple energy-based VAD)
-          let energy = 0;
-          for (let i = 0; i < pcm16.length; i++) {
-            energy += Math.abs(pcm16[i]);
-          }
-          const avgEnergy = energy / pcm16.length;
-          const isSpeech = avgEnergy > 500; // Threshold for speech detection
-          
-          if (isSpeech) {
-            // 2. Convert PCM16 to Base64
-            const uint8 = new Uint8Array(pcm16.buffer);
-            let binary = '';
-            for (let i = 0; i < uint8.byteLength; i++) {
-              binary += String.fromCharCode(uint8[i]);
-            }
-            const base64Data = btoa(binary);
-            
-            console.log(`🎤 Sending ${pcm16.length} audio samples (energy: ${avgEnergy.toFixed(0)})`);
-            
-            // 3. Send strictly formatted realtimeInput
-            websocketRef.current.send(JSON.stringify({
-              realtimeInput: {
-                mediaChunks: [{
-                  mimeType: "audio/pcm;rate=16000",
-                  data: base64Data
-                }]
-              }
-            }));
-            
-            // Reset silence timeout - user is still speaking
-            if (userSpeechTimeoutRef.current) {
-              clearTimeout(userSpeechTimeoutRef.current);
-            }
-            
-            // Set timeout to detect end of user speech (1.5 seconds of silence)
-            userSpeechTimeoutRef.current = setTimeout(() => {
-              console.log('🎤 User finished speaking (1.5s silence), sending turnComplete=true');
-              if (websocketRef.current?.readyState === WebSocket.OPEN) {
-                websocketRef.current.send(JSON.stringify({
-                  clientContent: {
-                    turns: [{
-                      role: "user",
-                      parts: [{ text: "" }]
-                    }],
-                    turnComplete: true
-                  }
-                }));
-              }
-            }, 1500);
-          }
+
+        // 2. Noise Gate: Don't send absolute silence (speeds up AI response time)
+        const averageEnergy = energy / downsampledLength;
+        if (averageEnergy < 0.005) return; 
+
+        // 3. Convert Float32 to PCM16
+        const pcm16 = new Int16Array(downsampledData.length);
+        for (let i = 0; i < downsampledData.length; i++) {
+          let s = Math.max(-1, Math.min(1, downsampledData[i]));
+          pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
         }
+
+        // 4. Fast Base64 Encoding
+        const uint8 = new Uint8Array(pcm16.buffer);
+        let binary = '';
+        for (let i = 0; i < uint8.byteLength; i++) {
+          binary += String.fromCharCode(uint8[i]);
+        }
+        const base64Data = btoa(binary);
+
+        // 5. Send to Gemini
+        websocketRef.current.send(JSON.stringify({
+          realtimeInput: {
+            mediaChunks: [{
+              mimeType: "audio/pcm;rate=16000",
+              data: base64Data
+            }]
+          }
+        }));
       };
       
       // Connect the Silent Vacuum pipeline (source → processor → muted gain → destination)
