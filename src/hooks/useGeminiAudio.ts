@@ -233,12 +233,13 @@ export const useGeminiAudio = ({
         const currentTutor = tutorIdRef.current;
         const currentGender = kidGenderRef.current;
         const isCat = currentTutor === 'mimi';
-        const tutorName = isCat ? 'Mimi the Cat' : 'Koko the Dog';
-        const tutorType = isCat ? 'cat' : 'dog';
-        const voiceSelection = isCat ? 'Aoede' : 'Puck'; // Aoede = Female, Puck = Male
-        const grammarRule = currentGender === 'boy' ? 'masculine (זכר)' : 'feminine (נקבה)';
+        // Use Niqqud and English to force correct TTS pronunciation
+        const tutorName = isCat ? 'מימי (Mimi)' : 'קוֹקוֹ (Koko)'; 
+        const tutorIdentity = isCat ? 'חתולה (female cat)' : 'כלב (male dog)'; 
+        const voiceSelection = isCat ? 'Aoede' : 'Puck'; 
+        const userGrammar = currentGender === 'boy' ? 'masculine (זכר)' : 'feminine (נקבה)';
 
-        console.log(`🎭 LIVE EVALUATION - Tutor: ${tutorName}, Voice: ${voiceSelection}, Grammar: ${grammarRule}`);
+        console.log(`🎭 LIVE EVALUATION - Tutor: ${tutorName}, Voice: ${voiceSelection}, User Grammar: ${userGrammar}`);
         
         // 1. Send Setup Config with Dynamic Voice and Behavioral Rules
         websocket.send(JSON.stringify({
@@ -252,16 +253,52 @@ export const useGeminiAudio = ({
             },
             systemInstruction: {
               parts: [{
-                text: `You are ${tutorName}, a highly energetic, friendly AI English tutor for Israeli users. 
+                text: `You are ${tutorName}, a highly energetic AI English tutor for Israeli children.
 CRITICAL RULES:
-1. IDENTITY: You are a friendly ${tutorType}. You must NEVER call yourself 'Morah' or 'Teacher'.
-2. GRAMMAR: You are talking to a ${currentGender}. You MUST use strictly correct ${grammarRule} Hebrew grammar at all times.
-3. LANGUAGE: Speak 95% in natural, friendly Israeli Hebrew, and 5% in English to teach new words organically.
-4. CONVERSATION: Keep responses VERY short (1-2 sentences max). Always end your turn with a short, engaging question. Do not ramble.
-5. AGE ADAPTATION: You do not know the user's age yet. Once they tell you, adapt your vocabulary. If young, use simple words and talk about games/animals. If an adult, use sophisticated vocabulary and adult contexts (work/hobbies), but maintain your ${tutorType} persona.
-6. KILL SWITCH: If the user says "Goodbye", "Bye", "להתראות", or asks to end the call, say a warm, quick goodbye and stop talking.`
+1. YOUR IDENTITY: You are a friendly ${tutorIdentity}. You MUST refer to yourself using the correct Hebrew grammar for a ${tutorIdentity}.
+2. USER IDENTITY: You are talking to a ${currentGender}. You MUST address the user with strictly correct ${userGrammar} Hebrew grammar.
+3. LANGUAGE: Speak 95% in natural Israeli Hebrew, and 5% in English to teach words.
+4. PACING: Keep responses VERY short (1-2 sentences). Always end by asking a question.
+5. VISUAL SPELLING: If you are teaching a new English word, you MUST use the 'show_visual_aid' tool to display how it is spelled on the screen.
+6. KILL SWITCH: If the user says "Goodbye" or "להתראות", say a quick goodbye and stop.`
               }]
-            }
+            },
+            tools: [{
+              functionDeclarations: [
+                {
+                  name: "show_visual_aid",
+                  description: "Display a visual aid on the screen to help the user learn",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      content: {
+                        type: "string",
+                        description: "The text or content to display on the screen"
+                      },
+                      type: {
+                        type: "string",
+                        description: "The type of visual aid (e.g., 'spelling', 'image', 'text')"
+                      }
+                    },
+                    required: ["content"]
+                  }
+                },
+                {
+                  name: "award_star",
+                  description: "Award a star to the user for good performance",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      reason: {
+                        type: "string",
+                        description: "The reason for awarding the star"
+                      }
+                    },
+                    required: ["reason"]
+                  }
+                }
+              ]
+            }]
           }
         }));
 
