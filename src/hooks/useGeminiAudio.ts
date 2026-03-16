@@ -125,8 +125,6 @@ export const useGeminiAudio = ({
         const downsampledLength = Math.floor(inputData.length / compressionRatio);
         const pcm16 = new Int16Array(downsampledLength);
 
-        let hasAudio = false;
-
         for (let i = 0; i < downsampledLength; i++) {
           // 2. Downsample and apply 500% Gain Boost
           let sample = inputData[Math.floor(i * compressionRatio)] * 5.0;
@@ -134,15 +132,9 @@ export const useGeminiAudio = ({
           // 3. Mathematical Clamp (Prevents audio distortion/crashing)
           sample = Math.max(-1, Math.min(1, sample));
 
-          // 4. Boosted Noise Gate
-          if (Math.abs(sample) > 0.01) hasAudio = true;
-
-          // 5. Convert to PCM16
+          // 4. Convert to PCM16
           pcm16[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
         }
-
-        // 6. Drop pure silence to save bandwidth
-        if (!hasAudio) return;
 
         // 7. Fast Base64 Encoding
         const uint8 = new Uint8Array(pcm16.buffer);
