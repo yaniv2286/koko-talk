@@ -42,10 +42,18 @@ export const useGeminiAudio = ({
   const kidGender = propKidGender || storeKidGender;
   const tutorId = propTutorId || userProfile?.id || 'koko';
 
-  // Keep liveStateRef synced with Zustand state
+  // Keep refs synced with latest state values
   useEffect(() => {
     liveStateRef.current = state;
   }, [state]);
+
+  useEffect(() => {
+    tutorIdRef.current = tutorId;
+  }, [tutorId]);
+
+  useEffect(() => {
+    kidGenderRef.current = kidGender;
+  }, [kidGender]);
 
   const websocketRef = useRef<WebSocket | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -66,6 +74,8 @@ export const useGeminiAudio = ({
   const userSpeechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasGreetedRef = useRef<boolean>(false);
   const liveStateRef = useRef(state);
+  const tutorIdRef = useRef(tutorId);
+  const kidGenderRef = useRef(kidGender);
 
   // Initialize Web Audio API
   const initializeAudioContext = useCallback(async () => {
@@ -203,21 +213,23 @@ export const useGeminiAudio = ({
       const { websocketUrl, setupConfig } = await response.json();
       setupConfigRef.current = setupConfig;
 
-      // Create WebSocket connection
-      // Dynamic Voice Routing Matrix
-      const isCat = tutorId === 'mimi';
-      const tutorName = isCat ? 'Mimi the Cat' : 'Koko the Dog';
-      const tutorType = isCat ? 'cat' : 'dog';
-      const voiceSelection = isCat ? 'Aoede' : 'Puck'; // Aoede = Female, Puck = Male
-      const grammarRule = kidGender === 'boy' ? 'masculine (זכר)' : 'feminine (נקבה)';
-
       console.log('🚀 Attempting Handshake: v1alpha + gemini-2.5-flash-native-audio-preview-12-2025');
-      console.log(`🎭 Tutor: ${tutorName}, Voice: ${voiceSelection}, Grammar: ${grammarRule}`);
       const websocket = new WebSocket(websocketUrl);
       websocketRef.current = websocket;
 
       websocket.onopen = () => {
         console.log('✅ WebSocket connected, sending setup config...');
+        
+        // Dynamic Voice Routing Matrix - Evaluated INSIDE onopen to use live ref values
+        const currentTutor = tutorIdRef.current;
+        const currentGender = kidGenderRef.current;
+        const isCat = currentTutor === 'mimi';
+        const tutorName = isCat ? 'Mimi the Cat' : 'Koko the Dog';
+        const tutorType = isCat ? 'cat' : 'dog';
+        const voiceSelection = isCat ? 'Aoede' : 'Puck'; // Aoede = Female, Puck = Male
+        const grammarRule = currentGender === 'boy' ? 'masculine (זכר)' : 'feminine (נקבה)';
+
+        console.log(`🎭 LIVE EVALUATION - Tutor: ${tutorName}, Voice: ${voiceSelection}, Grammar: ${grammarRule}`);
         
         // 1. Send Setup Config with Dynamic Voice and Behavioral Rules
         websocket.send(JSON.stringify({
@@ -234,7 +246,7 @@ export const useGeminiAudio = ({
                 text: `You are ${tutorName}, a highly energetic, friendly AI English tutor for Israeli users. 
 CRITICAL RULES:
 1. IDENTITY: You are a friendly ${tutorType}. You must NEVER call yourself 'Morah' or 'Teacher'.
-2. GRAMMAR: You are talking to a ${kidGender}. You MUST use strictly correct ${grammarRule} Hebrew grammar at all times.
+2. GRAMMAR: You are talking to a ${currentGender}. You MUST use strictly correct ${grammarRule} Hebrew grammar at all times.
 3. LANGUAGE: Speak 95% in natural, friendly Israeli Hebrew, and 5% in English to teach new words organically.
 4. CONVERSATION: Keep responses VERY short (1-2 sentences max). Always end your turn with a short, engaging question. Do not ramble.
 5. AGE ADAPTATION: You do not know the user's age yet. Once they tell you, adapt your vocabulary. If young, use simple words and talk about games/animals. If an adult, use sophisticated vocabulary and adult contexts (work/hobbies), but maintain your ${tutorType} persona.
@@ -270,7 +282,12 @@ CRITICAL RULES:
                 // Fire greeting exactly once when server confirms readiness
                 if (!hasGreetedRef.current && websocket.readyState === WebSocket.OPEN) {
                   hasGreetedRef.current = true;
-                  console.log('🗣️ Triggering Initial Greeting...');
+                  
+                  // Dynamic evaluation - use live ref values
+                  const currentTutor = tutorIdRef.current;
+                  const tutorName = currentTutor === 'mimi' ? 'Mimi the Cat' : 'Koko the Dog';
+                  
+                  console.log(`🗣️ Triggering Initial Greeting for ${tutorName}...`);
                   websocket.send(JSON.stringify({
                     clientContent: {
                       turns: [{ role: "user", parts: [{ text: `Hello! Please start the conversation. Introduce yourself as ${tutorName} in Hebrew, and immediately ask me how old I am so you know how to teach me.` }] }],
