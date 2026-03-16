@@ -221,7 +221,7 @@ export const useGeminiAudio = ({
         return;
       }
 
-      console.log('🚀 Attempting Handshake: v1alpha + gemini-2.5-flash-native-audio-preview-12-2025');
+      console.log('🚀 Attempting Handshake: v1alpha + gemini-2.0-flash-exp');
       const websocket = new WebSocket(websocketUrl);
       websocketRef.current = websocket;
 
@@ -242,7 +242,7 @@ export const useGeminiAudio = ({
         // 1. Send Setup Config with Dynamic Voice and Behavioral Rules
         websocket.send(JSON.stringify({
           setup: {
-            model: "models/gemini-2.5-flash-native-audio-preview-12-2025",
+            model: "models/gemini-2.0-flash-exp",
             generationConfig: {
               responseModalities: ["AUDIO"],
               speechConfig: {
