@@ -117,45 +117,46 @@ export const useGeminiAudio = ({
       
       // Process raw Float32 audio samples with downsampling
       processorRef.current.onaudioprocess = (e) => {
-        // Check live state to ensure we should be listening
-        if (liveStateRef.current !== 'listening' || !websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) return;
+        // 1. FULL DUPLEX: Always listen if socket is open. Ignore UI state.
+        if (!websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) return;
 
         const inputData = e.inputBuffer.getChannelData(0);
-        const inputSampleRate = audioContextRef.current!.sampleRate;
-        const targetSampleRate = 16000;
-
-        // 1. Mathematical Downsampling (Nearest Neighbor)
-        const compressionRatio = inputSampleRate / targetSampleRate;
+        const compressionRatio = audioContextRef.current!.sampleRate / 16000;
         const downsampledLength = Math.floor(inputData.length / compressionRatio);
-        const downsampledData = new Float32Array(downsampledLength);
+        const pcm16 = new Int16Array(downsampledLength);
+
+        let hasAudio = false;
 
         for (let i = 0; i < downsampledLength; i++) {
-          let sample = inputData[Math.floor(i * compressionRatio)];
-          sample = sample * 5.0; // 🚀 BOOST MICROPHONE GAIN BY 500%
-          downsampledData[i] = sample;
+          // 2. Downsample and apply 500% Gain Boost
+          let sample = inputData[Math.floor(i * compressionRatio)] * 5.0;
+
+          // 3. Mathematical Clamp (Prevents audio distortion/crashing)
+          sample = Math.max(-1, Math.min(1, sample));
+
+          // 4. Boosted Noise Gate
+          if (Math.abs(sample) > 0.01) hasAudio = true;
+
+          // 5. Convert to PCM16
+          pcm16[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
         }
 
-        // 2. Convert Float32 to PCM16 (Noise gate removed - rely on Gemini's native VAD)
-        const pcm16 = new Int16Array(downsampledData.length);
-        for (let i = 0; i < downsampledData.length; i++) {
-          let s = Math.max(-1, Math.min(1, downsampledData[i]));
-          pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-        }
+        // 6. Drop pure silence to save bandwidth
+        if (!hasAudio) return;
 
-        // 4. Fast Base64 Encoding
+        // 7. Fast Base64 Encoding
         const uint8 = new Uint8Array(pcm16.buffer);
         let binary = '';
         for (let i = 0; i < uint8.byteLength; i++) {
           binary += String.fromCharCode(uint8[i]);
         }
-        const base64Data = btoa(binary);
 
-        // 5. Send to Gemini
+        // 8. Stream to Gemini
         websocketRef.current.send(JSON.stringify({
           realtimeInput: {
             mediaChunks: [{
               mimeType: "audio/pcm;rate=16000",
-              data: base64Data
+              data: btoa(binary)
             }]
           }
         }));
