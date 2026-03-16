@@ -54,18 +54,21 @@ Koko Talk is an AI-powered English tutoring application for Israeli children age
 🔧 Debug: /api/list-models (GET) - Available AI models and Live API support
 ```
 
-### Dynamic Instruction Generation
-- **Age Groups**: 4-7 (playful), 8-12 (cool companion)
+### Binary Tutor System
+- **Tutor Selection**: Dog (Koko) or Cat (Mimi)
+- **Dynamic Voice Routing**: 
+  - Koko the Dog → "Puck" (Male voice)
+  - Mimi the Cat → "Aoede" (Female voice)
 - **Gender Adaptation**: Masculine/Feminine Hebrew grammar rules
-- **Persona**: Koko, a friendly dog (NOT "Morah" - per user rules)
+- **Persona**: Friendly animal tutors (NEVER "Morah" or "Teacher")
 - **Language**: 95% Hebrew with natural conversation flow
-- **Voice**: "Puck" (prebuilt voice config for Gemini)
+- **Age Adaptation**: Dynamic vocabulary adjustment based on user's stated age
 - **Response Modalities**: Audio-only (native speech generation)
 
 ### Tool Functions
 ```javascript
-award_star: Reward correct answers
-show_visual_aid: Display image + letter-by-letter spelling
+award_star: Reward correct answers (increments star counter)
+show_spelling: Display image + letter-by-letter spelling aid
 ```
 
 ## Frontend Architecture
@@ -74,8 +77,12 @@ show_visual_aid: Display image + letter-by-letter spelling
 ```
 🚀 CURRENT: src/app/page.tsx (Gemini Live Version - PRODUCTION)
 ├── KokoApp
-│   ├── GenderSelection (Boy/Girl choice)
-│   ├── ProfileSelector (Avatar selection)
+│   ├── GenderSelection (Boy/Girl choice with hardcoded avatars)
+│   │   ├── Boy: /avatars/boy_avatar.png
+│   │   └── Girl: /avatars/girl_avatar.png
+│   ├── ProfileSelector (Binary Tutor Selection)
+│   │   ├── Koko the Dog: /avatars/cute-dog-studio.jpg
+│   │   └── Mimi the Cat: /avatars/cute-cat-studio.png
 │   ├── MainApp (Voice conversation interface)
 │   │   ├── Avatar (Animated character)
 │   │   ├── Controls (Start/Stop call)
@@ -102,6 +109,10 @@ VoiceStore:
 ```javascript
 🚀 CURRENT: useGeminiAudio Hook (Production)
 ├── WebSocket connection management
+├── Dynamic Voice Routing Matrix
+│   ├── tutorId: 'koko' → Voice: 'Puck' (Male)
+│   ├── tutorId: 'mimi' → Voice: 'Aoede' (Female)
+│   └── kidGender: 'boy'/'girl' → Grammar rules
 ├── Microphone initialization with downsampling
 ├── Dedicated playback AudioContext (isolated)
 ├── Event-driven greeting flow (setupComplete trigger)
@@ -115,20 +126,23 @@ Key Technical Details:
 ├── Playback: Dedicated 24kHz AudioContext with 3x gain boost
 ├── Queueing: Bulletproof scheduling to prevent audio crackling
 ├── Silent Vacuum: Muted GainNode keeps processor active
-└── Live State Ref: Avoids stale closure in onaudioprocess
+├── Live State Ref: Avoids stale closure in onaudioprocess
+└── Dynamic systemInstruction: Tutor persona + grammar + age adaptation
 ```
 
 ## Data Flow
 
 ### 🚀 Gemini Live Session Flow (Current)
-1. **User Selection**: Gender → Avatar → Start Call
-2. **Setup Request**: GET /api/gemini-live (fetch WebSocket URL + config)
-3. **WebSocket Connection**: Connect to v1alpha BidiGenerateContent endpoint
-4. **Setup Payload**: Send model, voice, system instructions, generation config
-5. **Event-Driven Greeting**: Wait for `setupComplete` event, then send greeting
-6. **Microphone Initialization**: getUserMedia → ScriptProcessorNode → Silent Vacuum
-7. **Playback Initialization**: Dedicated AudioContext (24kHz, user gesture)
-8. **Bidirectional Streaming**: Real-time audio conversation begins
+1. **Gender Selection**: Boy or Girl (hardcoded avatar images)
+2. **Tutor Selection**: Koko the Dog or Mimi the Cat (hardcoded images)
+3. **Setup Request**: GET /api/gemini-live (fetch WebSocket URL + config)
+4. **Dynamic Voice Matrix**: Calculate tutorName, tutorType, voiceSelection, grammarRule
+5. **WebSocket Connection**: Connect to v1alpha BidiGenerateContent endpoint
+6. **Setup Payload**: Send model, dynamic voice, behavioral rules, generation config
+7. **Event-Driven Greeting**: Wait for `setupComplete` event, then send dynamic greeting
+8. **Microphone Initialization**: getUserMedia → ScriptProcessorNode → Silent Vacuum
+9. **Playback Initialization**: Dedicated AudioContext (24kHz, user gesture)
+10. **Bidirectional Streaming**: Real-time audio conversation begins
 
 ### Real-time Communication Flow
 ```
@@ -170,16 +184,29 @@ User Interaction → Tool Output → AI Continuation
 
 ## Persona & Conversation Logic
 
-### Morah Koko Character
-- **Identity**: Empathetic Israeli English teacher
-- **Language**: 95% Hebrew, 5% English integration
-- **Tone**: Warm, encouraging, uses natural Israeli slang
-- **Approach**: Conversational partner, not rigid flashcard machine
+### Binary Tutor Personas
 
-### Dynamic Conversation Rules
-- **Spontaneity**: Never repeat same greeting/lesson structure
-- **Empathy**: Validate struggle ("Zeh kashe li") with supportive responses
-- **Adaptation**: Flow with child's interests and mood changes
+**Koko the Dog (Male Voice - Puck):**
+- **Identity**: Highly energetic, friendly dog AI tutor
+- **Persona Rule**: NEVER call yourself "Morah" or "Teacher"
+- **Language Mix**: 95% Hebrew, 5% English (teaching moments)
+- **Tone**: Encouraging, playful, never condescending
+
+**Mimi the Cat (Female Voice - Aoede):**
+- **Identity**: Highly energetic, friendly cat AI tutor
+- **Persona Rule**: NEVER call yourself "Morah" or "Teacher"
+- **Language Mix**: 95% Hebrew, 5% English (teaching moments)
+- **Tone**: Encouraging, playful, never condescending
+
+### Behavioral Rules (Injected via systemInstruction)
+1. **Identity**: Maintain animal persona (dog/cat), never use "Morah"
+2. **Grammar**: Strictly correct masculine/feminine Hebrew based on kidGender
+3. **Language**: 95% Hebrew, 5% English for organic teaching
+4. **Conversation**: VERY short responses (1-2 sentences), always end with question
+5. **Age Adaptation**: Ask user's age, then adapt vocabulary (simple for kids, sophisticated for adults)
+6. **Kill Switch**: Respond to goodbye phrases ("Bye", "להתראות") with warm farewell
+
+### Hebrew Grammar Rules
 - **Gender Grammar**: Masculine ("Ata", "Rotze") vs Feminine ("At", "Rotza")
 
 ### Anti-Repetition Protocols

@@ -18,7 +18,8 @@ export default function KokoApp() {
   const [selectedGender, setSelectedGender] = useState<'boy' | 'girl' | null>(null);
   
   const { userProfile, kidGender, setKidGender, setProfile, state, audioLevel, disconnect, reset, currentView, setCurrentView, incrementStarCount, starCount } = useVoiceStore();
-  const { initialize, startRecording, stopRecording, disconnect: geminiDisconnect } = useGeminiAudio({});
+  const tutorId = userProfile?.id || 'koko'; // Extract tutorId from profile (koko or mimi)
+  const { initialize, startRecording, stopRecording, disconnect: geminiDisconnect } = useGeminiAudio({ kidGender, tutorId });
   
   // Emergency Console Trace - Detect component re-mounting
   useEffect(() => { 
@@ -51,14 +52,6 @@ export default function KokoApp() {
     state,
     currentView
   });
-
-  const hardcodedAvatars = [
-    '/avatars/boy_avatar.png',
-    '/avatars/girl_avatar.png',
-    '/avatars/cute-dog-studio.jpg',
-    '/avatars/Gemini_Generated_Image_sndvtosndvtosndv.png',
-    '/avatars/Gemini_Generated_Image_4xj7d14xj7d14xj7.png'
-  ];
 
   const handleGenderSelected = () => {
     console.log('🏠 handleGenderSelected called - transitioning to ProfileSelector');

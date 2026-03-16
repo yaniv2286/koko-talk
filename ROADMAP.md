@@ -1,7 +1,7 @@
 # Koko Talk - Development Roadmap
 
 ## Project Overview
-Koko Talk is an AI-powered English tutoring platform for Israeli children (ages 4-12) featuring real-time voice conversation with visual learning aids and gamification. **🚀 NOW WITH GEMINI LIVE API - Native audio streaming via WebSocket!**
+Koko Talk is an AI-powered English tutoring platform for Israeli children (ages 4-12) featuring real-time voice conversation with visual learning aids and gamification. **🚀 NOW WITH BINARY TUTOR SYSTEM - Choose between Koko the Dog or Mimi the Cat with dynamic voice routing!**
 
 ## Phase 0: Gemini Live API Migration ✅ COMPLETE
 
@@ -14,20 +14,26 @@ Koko Talk is an AI-powered English tutoring platform for Israeli children (ages 
 ### Completed Features
 - **Gemini Live Integration**: WebSocket streaming via `/api/gemini-live`
 - **Native Audio**: Full-duplex PCM16 audio streaming (16kHz input, 24kHz output)
+- **Binary Tutor System**: Dog (Koko) or Cat (Mimi) selection
+- **Dynamic Voice Routing**: Puck (Male) for Dog, Aoede (Female) for Cat
 - **Hebrew Support**: Perfect gender-aware Hebrew voice responses
-- **Voice Interface**: Real-time voice conversation with "Puck" voice
+- **Behavioral Rules**: Strict persona enforcement (never "Morah")
+- **Age Adaptation**: Dynamic vocabulary based on user's stated age
 - **Downsampling**: Mathematical downsampling to fix sample-rate mismatch
 - **Dedicated Playback**: Isolated AudioContext with 3x gain boost
 - **Event-Driven Flow**: setupComplete-triggered greeting for reliability
+- **Hardcoded Assets**: 4 exact image paths for Gender + Tutor selection
 - **Debug Tools**: API testing and model listing endpoints
 
 ### Technical Achievements
 - **Model**: `gemini-2.5-flash-native-audio-preview-12-2025`
 - **Protocol**: WebSocket v1alpha BidiGenerateContent
+- **Binary Tutor Matrix**: Dynamic voice + persona + grammar routing
 - **Audio Pipeline**: ScriptProcessorNode with downsampling + dedicated playback context
 - **Noise Gate**: Energy threshold (0.005) to filter silence and improve AI response time
 - **Silent Vacuum**: Muted GainNode architecture to keep audio processing active
 - **Bulletproof Queueing**: 50ms buffer scheduling to prevent audio crackling
+- **systemInstruction**: 6 critical behavioral rules injected dynamically
 - **Error Handling**: Comprehensive debugging and connection recovery
 
 ### Cost Impact
@@ -77,29 +83,36 @@ Status: ✅ PRODUCTION READY WITH NATIVE AUDIO
 
 ---
 
-## Phase 2: Gender & Teacher Avatar Onboarding Gate ✅ COMPLETE
+## Phase 2: Binary Tutor Selection & Onboarding ✅ COMPLETE
 
 ### Objectives
 - Create personalized onboarding experience
 - Implement gender-aware Hebrew grammar
-- Add avatar selection for engagement
+- Add binary tutor selection (Dog vs Cat)
+- Implement dynamic voice routing based on tutor choice
 
 ### Completed Features
-- **Age Selection**: 4-7 (playful) vs 8-12 (cool) age groups
 - **Gender Selection**: Boy/Girl choice with Hebrew grammar adaptation
-- **Avatar Gallery**: Multiple character options for personalization
-- **Progressive Onboarding**: Age → Avatar → Gender → Main App
+- **Binary Tutor Selection**: Koko the Dog 🐶 or Mimi the Cat 🐱
+- **Hardcoded Assets**: 4 exact image paths (boy, girl, dog, cat)
+- **Progressive Onboarding**: Gender → Tutor → Main App
+- **Dynamic Voice Routing**: Puck (Male) for Dog, Aoede (Female) for Cat
 
 ### Technical Achievements
 - **Gender-Aware AI**: Masculine ("Ata", "Rotze") vs Feminine ("At", "Rotza") grammar
+- **Binary Tutor System**: Dog/Cat selection with dynamic voice matrix
 - **State Management**: Zustand store with persistence for user profiles
-- **UI/UX**: Premium onboarding with large, colorful buttons
-- **Persona Logic**: Dynamic instruction generation based on demographics
+- **UI/UX**: Large gradient buttons with hardcoded tutor images
+- **Persona Logic**: Dynamic systemInstruction with 6 behavioral rules
+- **Age Adaptation**: AI asks user's age and adapts vocabulary dynamically
 
 ### Lessons Learned
-- Children respond better to personalized avatars
+- Binary choice (Dog vs Cat) reduces decision paralysis
+- Dynamic voice routing (Male/Female) enhances persona authenticity
 - Gender-aware Hebrew significantly improves conversation naturalness
-- Progressive onboarding reduces cognitive load
+- Hardcoded assets eliminate dynamic fetching complexity
+- Age adaptation allows single app to serve kids and adults
+- Strict behavioral rules prevent AI from breaking character
 
 ---
 
@@ -270,7 +283,7 @@ ParentDashboard:
 ### Completed ✅
 - **Phase 0**: Gemini Live API Migration 🚀 **MAJOR MILESTONE**
 - **Phase 1**: Gemini Live Audio Pipeline (Native audio streaming)
-- **Phase 2**: Gender & Avatar Onboarding
+- **Phase 2**: Binary Tutor Selection & Onboarding 🎭 **NEW MILESTONE**
 
 ### In Progress 🔄
 - Phase 3: Visual Scaffolding (80% complete)
@@ -299,13 +312,14 @@ ParentDashboard:
 
 ### Technical Summary
 ```
-✅ Achievement: Native audio streaming with Gemini Live API
-🎯 Status: Production ready with real-time voice conversation
+✅ Achievement: Binary Tutor System with Dynamic Voice Routing
+🎭 Tutors: Koko the Dog (Puck) + Mimi the Cat (Aoede)
+🎯 Status: Production ready with personalized voice conversation
 🚀 Next: Complete visual aids and add progress tracking
 ```
 
 ---
 
 *Last Updated: March 16, 2026*
-*Major Milestone: Gemini Live API with Native Audio Complete*
-*Next Review: Visual Aid Integration & AudioWorklet Migration*
+*Major Milestone: Binary Tutor System with Dynamic Voice Routing Complete*
+*Next Review: Visual Aid Integration & Progress Tracking*
