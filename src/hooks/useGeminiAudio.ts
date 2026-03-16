@@ -125,25 +125,26 @@ export const useGeminiAudio = ({
         const downsampledLength = Math.floor(inputData.length / compressionRatio);
         const pcm16 = new Int16Array(downsampledLength);
 
+        let hasAudio = false;
         for (let i = 0; i < downsampledLength; i++) {
-          // 2. Downsample and apply 500% Gain Boost
-          let sample = inputData[Math.floor(i * compressionRatio)] * 5.0;
+          let sample = inputData[Math.floor(i * compressionRatio)] * 5.0; // Keep the 5x boost
+          sample = Math.max(-1, Math.min(1, sample)); // Clamp
 
-          // 3. Mathematical Clamp (Prevents audio distortion/crashing)
-          sample = Math.max(-1, Math.min(1, sample));
+          // The Noise Gate: Only flag true if we hear actual sound
+          if (Math.abs(sample) > 0.01) hasAudio = true; 
 
-          // 4. Convert to PCM16
           pcm16[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
         }
 
-        // 7. Fast Base64 Encoding
+        // CRITICAL: Stop sending data if there is no audio. This prevents the 1008 crash.
+        if (!hasAudio) return; 
+
         const uint8 = new Uint8Array(pcm16.buffer);
         let binary = '';
         for (let i = 0; i < uint8.byteLength; i++) {
           binary += String.fromCharCode(uint8[i]);
         }
 
-        // 8. Stream to Gemini
         websocketRef.current.send(JSON.stringify({
           realtimeInput: {
             mediaChunks: [{
@@ -221,7 +222,7 @@ export const useGeminiAudio = ({
         return;
       }
 
-      console.log('🚀 Attempting Handshake: v1alpha + gemini-2.0-flash-exp');
+      console.log('🚀 Attempting Handshake: v1alpha + gemini-2.5-flash-native-audio-preview-12-2025');
       const websocket = new WebSocket(websocketUrl);
       websocketRef.current = websocket;
 
@@ -242,7 +243,7 @@ export const useGeminiAudio = ({
         // 1. Send Setup Config with Dynamic Voice and Behavioral Rules
         websocket.send(JSON.stringify({
           setup: {
-            model: "models/gemini-2.0-flash-exp",
+            model: "models/gemini-2.5-flash-native-audio-preview-12-2025",
             generationConfig: {
               responseModalities: ["AUDIO"],
               speechConfig: {
