@@ -230,9 +230,12 @@ export const useGeminiAudio = ({
           setup: {
             model: "models/gemini-2.5-flash-native-audio-preview-12-2025",
             generationConfig: {
-              responseModalities: "audio",
+              responseModalities: ["AUDIO"],
               speechConfig: {
                 voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceSelection } }
+              },
+              thinkingConfig: {
+                thoughts: false // CRITICAL: Disables the thought blocks that are crashing the socket
               }
             },
             systemInstruction: {
