@@ -73,6 +73,7 @@ export const useGeminiAudio = ({
   const isFirstGreetingRef = useRef<boolean>(true);
   const userSpeechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasGreetedRef = useRef<boolean>(false);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const liveStateRef = useRef(state);
   const tutorIdRef = useRef(tutorId);
   const kidGenderRef = useRef(kidGender);
@@ -134,6 +135,11 @@ export const useGeminiAudio = ({
           if (Math.abs(sample) > 0.01) hasAudio = true; 
 
           pcm16[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        }
+
+        // Clear silence timer when user speaks to prevent interrupting them
+        if (hasAudio && silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
         }
 
         // CRITICAL: Stop sending data if there is no audio. This prevents the 1008 crash.
@@ -260,7 +266,8 @@ CRITICAL RULES:
 3. LANGUAGE: Speak 95% in natural Israeli Hebrew, and 5% in English to teach words.
 4. PACING: Keep responses VERY short (1-2 sentences). Always end by asking a question.
 5. VISUAL SPELLING: If you are teaching a new English word, you MUST use the 'show_visual_aid' tool to display how it is spelled on the screen.
-6. KILL SWITCH: If the user says "Goodbye" or "להתראות", say a quick goodbye and stop.`
+6. THE NUDGE: If I tell you "The child is quiet", you must say something short, fun, and energetic to get their attention back.
+7. KILL SWITCH: If the user says "Goodbye" or "להתראות", say a quick goodbye and stop.`
               }]
             },
             tools: [{
@@ -455,6 +462,23 @@ CRITICAL RULES:
               if (data.serverContent?.turnComplete) {
                 console.log('✅ Turn complete');
                 setState('listening');
+                
+                // Start silence timer for Auto-Nudge
+                if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+                silenceTimerRef.current = setTimeout(() => {
+                  if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN && liveStateRef.current === 'listening') {
+                    console.log('💤 Silence detected. Nudging the AI...');
+                    websocketRef.current.send(JSON.stringify({ 
+                      clientContent: { 
+                        turns: [{ 
+                          role: "user", 
+                          parts: [{ text: "The child is quiet. Say something fun to get their attention back." }] 
+                        }], 
+                        turnComplete: true 
+                      } 
+                    }));
+                  }
+                }, 12000); // 12 seconds of silence triggers the nudge
               }
               return;
             } catch (jsonError) {
@@ -545,6 +569,23 @@ CRITICAL RULES:
           if (data.serverContent?.turnComplete) {
             console.log('✅ Turn complete');
             setState('listening');
+            
+            // Start silence timer for Auto-Nudge
+            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = setTimeout(() => {
+              if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN && liveStateRef.current === 'listening') {
+                console.log('💤 Silence detected. Nudging the AI...');
+                websocketRef.current.send(JSON.stringify({ 
+                  clientContent: { 
+                    turns: [{ 
+                      role: "user", 
+                      parts: [{ text: "The child is quiet. Say something fun to get their attention back." }] 
+                    }], 
+                    turnComplete: true 
+                  } 
+                }));
+              }
+            }, 12000); // 12 seconds of silence triggers the nudge
           }
           
         } catch (error) {
