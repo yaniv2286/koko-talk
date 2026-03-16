@@ -1,58 +1,66 @@
 # Koko Talk - Architecture Documentation
 
 ## Overview
-Koko Talk is an AI-powered English tutoring application for Israeli children ages 4-12, featuring real-time conversation with visual learning aids. **NOW WITH COST-EFFECTIVE GEMINI BACKEND** - 90% cost reduction while maintaining full functionality.
+Koko Talk is an AI-powered English tutoring application for Israeli children ages 4-12, featuring real-time voice conversation with visual learning aids. **NOW WITH GEMINI LIVE API** - Native audio streaming with WebSocket for low-latency bidirectional communication.
 
 ## Core Engine
 
-### 🚀 NEW: Gemini AI Backend (Primary Recommendation)
-- **Implementation**: Direct REST API calls to Google AI
-- **Model**: `gemini-2.5-flash` (latest available)
-- **Cost**: $5-15/month (vs $60-100/month with OpenAI)
-- **Connection**: HTTP-based with instant responses
-- **Authentication**: Google AI API Key
-- **Route**: `/api/gemini-direct`
-
-### 🔄 Legacy: OpenAI Realtime API via WebRTC (Deprecated)
-- **Implementation**: Native WebRTC P2P connection (abandoned WebSockets for latency)
-- **Model**: `gpt-4o-realtime-preview-2024-12-17`
-- **Audio**: PCM16, 24kHz, bi-directional streaming
-- **Connection**: RTCPeerConnection with RTCDataChannel for JSON events
-- **Authentication**: Ephemeral tokens via `/api/session` endpoint
-- **Status**: High cost, quota issues - use Gemini instead
+### 🚀 CURRENT: Gemini Live API via WebSocket (Production)
+- **Implementation**: WebSocket bidirectional streaming with native audio
+- **Model**: `gemini-2.5-flash-native-audio-preview-12-2025`
+- **API Version**: `v1alpha` (Google AI Generative Language Service)
+- **Audio Input**: PCM16, 16kHz (downsampled from hardware rate)
+- **Audio Output**: PCM16, 24kHz (native streaming)
+- **Connection**: WebSocket with JSON message protocol
+- **Authentication**: Google AI API Key (query parameter)
+- **Route**: `/api/gemini-live`
+- **Cost**: Significantly lower than OpenAI Realtime
 
 ### Audio Pipeline
-- **Gemini Version**: Text-based chat (TTS coming in Phase 2)
-- **OpenAI Version**: MediaStream getUserMedia() → RTCPeerConnection addTrack()
-- **Output**: RTCPeerConnection ontrack() → HTMLAudioElement autoplay
-- **Monitoring**: AudioContext AnalyserNode for VU meter visualization
-- **VAD**: Server-side Voice Activity Detection (1200ms silence threshold)
+
+#### Input Pipeline (Microphone → Gemini)
+1. **Capture**: `getUserMedia()` → MediaStream (hardware rate: 44.1kHz or 48kHz)
+2. **Processing**: ScriptProcessorNode (4096 buffer, deprecated but functional)
+3. **Downsampling**: Mathematical nearest-neighbor downsampling to 16kHz
+4. **Noise Gate**: Energy threshold (0.005) to filter silence
+5. **Encoding**: Float32 → PCM16 → Base64
+6. **Transmission**: WebSocket `realtimeInput` with `mediaChunks`
+
+#### Output Pipeline (Gemini → Speakers)
+1. **Reception**: WebSocket `serverContent.modelTurn.parts` with Base64 audio
+2. **Decoding**: Base64 → PCM16 → Float32
+3. **Volume Boost**: 3x gain amplification for audibility
+4. **Playback Context**: Dedicated AudioContext (24kHz, isolated from microphone)
+5. **Queueing**: Bulletproof scheduling with `nextAudioTimeRef` (50ms buffer)
+6. **Output**: AudioBufferSourceNode → destination (speakers)
+
+#### Silent Vacuum Architecture
+- **Purpose**: Keep ScriptProcessorNode firing without audio feedback
+- **Implementation**: Microphone → Processor → GainNode (muted) → destination
+- **Gain**: 0.0 (complete silence, prevents feedback loops)
+- **Benefit**: Continuous audio processing without audible output
 
 ## Backend Architecture
 
 ### Next.js Route Handlers
 ```
-🚀 NEW: /api/gemini-direct (POST) - RECOMMENDED
-├── Request: { userProfile, kidGender, message }
-├── Process: Direct Google AI API call with Hebrew instructions
-├── Action: Generate Hebrew response with gender awareness
-└── Response: { response, model, timestamp }
-
-🔄 Legacy: /api/session (POST) - DEPRECATED
-├── Request: { userProfile, kidGender }
-├── Process: Generate dynamic instructions + gender rules
-├── Action: Create OpenAI ephemeral session
-└── Response: { ephemeralToken, model, voice }
+🚀 CURRENT: /api/gemini-live (GET) - PRODUCTION
+├── Request: Query parameters (none required)
+├── Process: Generate WebSocket URL and setup config
+├── Config: Model, voice (Puck), system instructions, generation config
+└── Response: { websocketUrl, setupConfig }
 
 🔧 Debug: /api/debug (GET) - API key status check
-🔧 Debug: /api/list-models (GET) - Available AI models
+🔧 Debug: /api/list-models (GET) - Available AI models and Live API support
 ```
 
 ### Dynamic Instruction Generation
 - **Age Groups**: 4-7 (playful), 8-12 (cool companion)
 - **Gender Adaptation**: Masculine/Feminine Hebrew grammar rules
-- **Persona**: Empathetic Israeli English Teacher ("Morah Koko")
-- **Language**: 95% Hebrew with natural slang ("Yalla", "Sababa", "Eize kef")
+- **Persona**: Koko, a friendly dog (NOT "Morah" - per user rules)
+- **Language**: 95% Hebrew with natural conversation flow
+- **Voice**: "Puck" (prebuilt voice config for Gemini)
+- **Response Modalities**: Audio-only (native speech generation)
 
 ### Tool Functions
 ```javascript
@@ -64,23 +72,18 @@ show_visual_aid: Display image + letter-by-letter spelling
 
 ### React Component Structure
 ```
-🚀 NEW: src/app/gemini/page.tsx (Gemini Version - RECOMMENDED)
-├── GeminiKokoApp
-│   ├── Text-based chat interface
-│   ├── Star counter and visual aids
-│   ├── Modern responsive UI
-│   └── Cost-effective backend integration
+🚀 CURRENT: src/app/page.tsx (Gemini Live Version - PRODUCTION)
+├── KokoApp
+│   ├── GenderSelection (Boy/Girl choice)
+│   ├── ProfileSelector (Avatar selection)
+│   ├── MainApp (Voice conversation interface)
+│   │   ├── Avatar (Animated character)
+│   │   ├── Controls (Start/Stop call)
+│   │   ├── StarCounter (Gamification)
+│   │   └── VisualAid (Modal for spelling help)
+│   └── useGeminiAudio hook integration
 
-🔄 Legacy: src/app/page.tsx (OpenAI Version - DEPRECATED)
-├── ProfileSelector (Age/Avatar/Gender onboarding)
-├── GenderSelection (Boy/Girl choice)
-├── MainApp
-│   ├── Avatar (Animated character)
-│   ├── Controls (Connect/Disconnect)
-│   ├── StarCounter (Gamification)
-│   └── VisualAid (Modal for spelling help)
-
-🔧 Debug: src/app/test/page.tsx (Simple API testing)
+🔧 Debug: src/app/test/page.tsx (API testing)
 ```
 
 ### State Management (Zustand)
@@ -97,45 +100,65 @@ VoiceStore:
 
 ### Hook Architecture
 ```javascript
-🚀 NEW: useGeminiAudio Hook (Recommended)
-├── Direct HTTP API calls to Gemini
-├── Text-based conversation handling
-├── State management integration
-└── Error handling and debugging
+🚀 CURRENT: useGeminiAudio Hook (Production)
+├── WebSocket connection management
+├── Microphone initialization with downsampling
+├── Dedicated playback AudioContext (isolated)
+├── Event-driven greeting flow (setupComplete trigger)
+├── Audio processing with noise gate
+├── State management integration (Zustand)
+├── Tool function processing (stars, visual aids)
+└── Error handling and connection recovery
 
-🔄 Legacy: useRealtimeAudio Hook (Deprecated)
-├── RTCPeerConnection setup
-├── MediaStream acquisition
-├── RTCDataChannel event handling
-├── Audio level monitoring
-└── Tool function processing
+Key Technical Details:
+├── Downsampling: Hardware rate → 16kHz (nearest-neighbor)
+├── Playback: Dedicated 24kHz AudioContext with 3x gain boost
+├── Queueing: Bulletproof scheduling to prevent audio crackling
+├── Silent Vacuum: Muted GainNode keeps processor active
+└── Live State Ref: Avoids stale closure in onaudioprocess
 ```
 
 ## Data Flow
 
-### 🚀 Gemini Session Flow (Recommended)
-1. **User Selection**: Navigate to `/gemini` route
-2. **API Request**: POST /api/gemini-direct with profile data
-3. **Dynamic Instructions**: Gender-aware Hebrew grammar + age-appropriate persona
-4. **Direct Response**: Google AI generates Hebrew text response
-5. **UI Update**: Text displayed in chat interface
+### 🚀 Gemini Live Session Flow (Current)
+1. **User Selection**: Gender → Avatar → Start Call
+2. **Setup Request**: GET /api/gemini-live (fetch WebSocket URL + config)
+3. **WebSocket Connection**: Connect to v1alpha BidiGenerateContent endpoint
+4. **Setup Payload**: Send model, voice, system instructions, generation config
+5. **Event-Driven Greeting**: Wait for `setupComplete` event, then send greeting
+6. **Microphone Initialization**: getUserMedia → ScriptProcessorNode → Silent Vacuum
+7. **Playback Initialization**: Dedicated AudioContext (24kHz, user gesture)
+8. **Bidirectional Streaming**: Real-time audio conversation begins
 
-### 🔄 Legacy OpenAI Session Flow (Deprecated)
-1. **User Selection**: Age → Avatar → Gender
-2. **Token Request**: POST /api/session with profile data
-3. **Dynamic Instructions**: Gender-aware Hebrew grammar + age-appropriate persona
-4. **Ephemeral Session**: OpenAI creates WebRTC session
-5. **P2P Connection**: RTCPeerConnection offer/answer exchange
-
-### Real-time Communication
+### Real-time Communication Flow
 ```
-🚀 Gemini Version:
-User Text → HTTP API → Google AI → Hebrew Response → UI Display
+🚀 Gemini Live (Current):
 
-🔄 OpenAI Version:
-User Microphone → RTCPeerConnection → OpenAI
-OpenAI Response → RTCPeerConnection → User Speakers
-RTCDataChannel Events → Frontend State Updates
+Input Path:
+User Microphone (44.1kHz/48kHz) → 
+ScriptProcessorNode → 
+Downsampling (16kHz) → 
+Noise Gate (0.005 threshold) → 
+Float32 → PCM16 → Base64 → 
+WebSocket realtimeInput → 
+Gemini AI
+
+Output Path:
+Gemini AI → 
+WebSocket serverContent → 
+Base64 audio chunks → 
+PCM16 → Float32 (3x gain) → 
+Dedicated AudioContext (24kHz) → 
+Bulletproof Queueing → 
+AudioBufferSourceNode → 
+Speakers
+
+Events:
+WebSocket onmessage → 
+JSON parsing → 
+setupComplete / modelTurn / turnComplete → 
+State updates (Zustand) → 
+UI reactions
 ```
 
 ### Tool Function Flow
@@ -167,10 +190,19 @@ User Interaction → Tool Output → AI Continuation
 ## Technical Specifications
 
 ### Performance Requirements
-- **Latency**: <200ms audio round-trip (WebRTC advantage)
-- **VAD Threshold**: 1200ms silence for children's processing time
+- **Latency**: <500ms audio round-trip (WebSocket streaming)
+- **Sample Rate Mismatch**: Handled via downsampling (hardware → 16kHz)
+- **Noise Gate**: 0.005 energy threshold to filter silence
+- **Audio Queueing**: 50ms buffer between chunks to prevent crackling
 - **Turn Length**: 1-2 sentences max, then wait for child
 - **Image Load**: <3 seconds for visual aids
+
+### Audio Processing Details
+- **Input Buffer**: 4096 samples per ScriptProcessorNode callback
+- **Downsampling Ratio**: Calculated dynamically (inputRate / 16000)
+- **Playback Gain**: 3x amplification for audibility
+- **Context Isolation**: Separate AudioContext for playback (prevents feedback)
+- **State Management**: liveStateRef to avoid stale closures
 
 ### Error Handling
 - **No Silent Failures**: All errors logged and displayed
@@ -210,14 +242,16 @@ User Interaction → Tool Output → AI Continuation
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS
 - **State**: Zustand with persistence
-- **Audio**: Web Audio API + WebRTC (Legacy) / Text-based (Gemini)
+- **Audio**: Web Audio API (ScriptProcessorNode, AudioContext, AudioBufferSourceNode)
+- **WebSocket**: Native browser WebSocket API
 
 ### Backend
 - **Runtime**: Next.js Edge Runtime
-- **🚀 Primary API**: Google Gemini 2.5 Flash
-- **🔄 Legacy API**: OpenAI Realtime API (Deprecated)
+- **🚀 Primary API**: Google Gemini 2.5 Flash Native Audio (Live API)
+- **Model**: `gemini-2.5-flash-native-audio-preview-12-2025`
+- **Protocol**: WebSocket (v1alpha BidiGenerateContent)
 - **Database**: None (stateless currently)
-- **Authentication**: API Keys (Google AI) / Ephemeral tokens (OpenAI)
+- **Authentication**: Google AI API Key (query parameter)
 
 ### Infrastructure
 - **Deployment**: Vercel (Edge functions)
@@ -226,17 +260,14 @@ User Interaction → Tool Output → AI Continuation
 - **Monitoring**: Console logging + error tracking
 - **Environment**: NEXT_PUBLIC_* for client keys
 
-### Cost Comparison
+### Cost Analysis
 ```
-🚀 Gemini Version: $5-15/month
-- API: Google Gemini 2.5 Flash
+🚀 Gemini Live API: Cost-effective
+- API: Google Gemini 2.5 Flash Native Audio
+- Pricing: Per-token + audio streaming (significantly lower than OpenAI)
 - Hosting: Vercel free tier
-- Total: 90% cost reduction
-
-🔄 OpenAI Version: $60-100/month
-- API: OpenAI Realtime
-- Hosting: Vercel
-- Issues: Quota limitations, high cost
+- WebSocket: No additional infrastructure cost
+- Total: Affordable for production use
 ```
 
 ## Current Limitations

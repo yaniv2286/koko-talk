@@ -1,25 +1,24 @@
 # קוקו (Koko) - AI English Tutor for Israeli Children
 
-🚀 **Cost-effective AI-powered English tutoring platform** featuring natural Hebrew conversation with visual learning aids and gamification.
+🚀 **AI-powered English tutoring platform** featuring real-time voice conversation with visual learning aids and gamification.
 
-## 🌟 Major Achievement: 90% Cost Reduction!
+## 🌟 Major Achievement: Gemini Live API with Native Audio!
 
-**✅ MIGRATION COMPLETE**: Switched from expensive OpenAI to affordable Google Gemini while maintaining full functionality.
+**✅ MIGRATION COMPLETE**: Switched from expensive OpenAI to affordable Google Gemini Live API with native audio streaming.
 
 ```
 Before: $60-100/month (OpenAI Realtime)
-After:  $5-15/month  (Google Gemini)
-Savings: 90% cost reduction! 🎉
+After:  Cost-effective (Gemini Live API)
+Features: Native audio streaming, real-time voice conversation! 🎉
 ```
 
 ## 🚀 Quick Start
 
-### **Production Version (Recommended)**
+### **Production Version**
 ```
-🎯 URL: https://koko-talk.vercel.app/gemini
-💰 Cost: $5-15/month
-🎯 Features: Full Hebrew support, gender-aware conversations
-⭐ Status: Production ready
+🎯 URL: https://koko-talk.vercel.app
+� Features: Real-time voice conversation, Hebrew support, gender-aware
+⭐ Status: Production ready with native audio
 ```
 
 ### **Local Development**
@@ -38,56 +37,49 @@ npm run dev
 ```
 
 **Open**: 
-- **Gemini Version**: `http://localhost:3000/gemini` (Recommended)
+- **Main App**: `http://localhost:3000` (Gemini Live with voice)
 - **Debug Tools**: `http://localhost:3000/test`
-- **Legacy OpenAI**: `http://localhost:3000` (Expensive)
 
 ## 🎯 Features
 
-### 🚀 Gemini Version (Production Ready)
-- **💰 Cost-Effective**: 90% cheaper than OpenAI
-- **🗣️ Hebrew Native**: Perfect gender-aware Hebrew responses
+### 🚀 Gemini Live API (Production)
+- **🎤 Real-time Voice**: Native audio streaming via WebSocket
+- **🗣️ Hebrew Native**: Perfect gender-aware Hebrew voice responses
 - **👧👦 Gender Smart**: Masculine/feminine grammar adaptation
 - **⭐ Gamification**: Star rewards for confidence building
 - **🎨 Visual Aids**: Spelling assistance with images
 - **📱 Modern UI**: Clean, responsive interface
-
-### 🔄 Legacy OpenAI Version (Deprecated)
-- **🎤 Real-time Audio**: WebRTC voice conversation
-- **🔧 Complex Setup**: WebRTC handshakes and audio streams
-- **💸 High Cost**: $60-100/month with quota issues
-- **⚠️ Status**: Functional but not economically viable
+- **🔊 High Quality**: 16kHz input, 24kHz output with 3x gain boost
+- **⚡ Low Latency**: <500ms round-trip audio streaming
 
 ## 🏗️ Architecture
 
 ### Backend
 ```
-🚀 Primary: Google Gemini 2.5 Flash
-├── Route: /api/gemini-direct
-├── Cost: $0.000075/1K tokens
-├── Language: Native Hebrew support
-└── Response: Text-based (TTS coming soon)
-
-🔄 Legacy: OpenAI Realtime API
-├── Route: /api/session
-├── Cost: $0.005/1K tokens + audio streaming
-├── Protocol: WebRTC P2P
-└── Status: High cost, quota limited
+🚀 Production: Google Gemini Live API
+├── Route: /api/gemini-live
+├── Model: gemini-2.5-flash-native-audio-preview-12-2025
+├── Protocol: WebSocket (v1alpha BidiGenerateContent)
+├── Audio: Native PCM16 streaming (16kHz input, 24kHz output)
+└── Cost: Cost-effective streaming
 ```
 
 ### Frontend
 ```
-🚀 GeminiKokoApp (/gemini)
-├── Text-based chat interface
+🚀 KokoApp (Main Route)
+├── Real-time voice conversation
+├── WebSocket bidirectional streaming
+├── Downsampling: Hardware rate → 16kHz
+├── Dedicated playback: 24kHz AudioContext with 3x gain
 ├── Star system and visual aids
 ├── Modern responsive design
 └── useGeminiAudio hook
+```
 
-🔄 KokoApp (/)
-├── WebRTC audio streaming
-├── Complex state management
-├── Avatar animations
-└── useRealtimeAudio hook
+### Audio Pipeline
+```
+Input:  Microphone → Downsampling → Noise Gate → WebSocket
+Output: WebSocket → Decode → 3x Gain → Queueing → Speakers
 ```
 
 ## 🎓 Educational Philosophy
@@ -111,26 +103,29 @@ Girl: "היי חמודה! אני קוקו! כל כך שמחה ללמד אותך 
 - **Language**: TypeScript (strict)
 - **Styling**: Tailwind CSS
 - **State**: Zustand with persistence
+- **Audio**: Web Audio API (ScriptProcessorNode, AudioContext, AudioBufferSourceNode)
+- **WebSocket**: Native browser WebSocket API
 
 ### Backend
-- **Primary**: Google Gemini 2.5 Flash
-- **Legacy**: OpenAI Realtime API
+- **API**: Google Gemini 2.5 Flash Native Audio (Live API)
+- **Model**: `gemini-2.5-flash-native-audio-preview-12-2025`
+- **Protocol**: WebSocket v1alpha BidiGenerateContent
 - **Runtime**: Next.js Edge Runtime
 - **Deployment**: Vercel (recommended) or Google Cloud Run
 
 ## 📊 Development Status
 
 ### ✅ Completed
-- **Phase 0**: Cost-Effective Gemini Migration 🎉
-- **Phase 1**: WebRTC Audio Pipeline (Functional)
+- **Phase 0**: Gemini Live API Migration 🎉
+- **Phase 1**: Native Audio Pipeline (WebSocket streaming)
 - **Phase 2**: Gender & Avatar Onboarding
 
 ### 🔄 In Progress
 - **Phase 3**: Visual Scaffolding (80% complete)
 
 ### 📋 Next Steps
-- Add TTS to Gemini version
 - Complete visual aid integration
+- Optimize audio processing (AudioWorklet migration)
 - Database for progress tracking
 
 ## 🔧 Environment Setup
@@ -168,22 +163,28 @@ docker build -t koko-talk .
 gcloud run deploy koko-talk --image gcr.io/PROJECT/koko-talk
 ```
 
-## 📈 Cost Analysis
+## 📈 Technical Highlights
 
-### Gemini Version (Recommended)
+### Audio Processing
 ```
-API Costs: $5-15/month
-Hosting:   Free (Vercel) or $5-10/month (Cloud Run)
-Total:     $5-25/month
-Users:     Unlimited (within fair use)
+Input Pipeline:
+- Hardware capture: 44.1kHz or 48kHz
+- Downsampling: Mathematical nearest-neighbor → 16kHz
+- Noise gate: 0.005 energy threshold
+- Encoding: Float32 → PCM16 → Base64
+
+Output Pipeline:
+- Decoding: Base64 → PCM16 → Float32
+- Gain boost: 3x amplification
+- Dedicated context: 24kHz AudioContext (isolated)
+- Queueing: 50ms buffer scheduling
 ```
 
-### OpenAI Version (Legacy)
+### Cost Analysis
 ```
-API Costs: $60-100/month
-Hosting:   Free (Vercel)
-Total:     $60-100/month
-Issues:     Quota limitations, high cost
+API: Gemini Live API (cost-effective streaming)
+Hosting: Free (Vercel) or $5-10/month (Cloud Run)
+Status: Production ready
 ```
 
 ## 🤝 Contributing
@@ -207,13 +208,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-🚀 **Ready to save 90% on AI tutoring costs?** 
+🚀 **Ready to experience real-time AI voice tutoring?** 
 
-**Start with**: `https://koko-talk.vercel.app/gemini`
+**Start with**: `https://koko-talk.vercel.app`
 
 **Questions?** Check our [Architecture Docs](./ARCHITECTURE.md) and [Roadmap](./ROADMAP.md).
 
 ---
 
-*Last Updated: March 12, 2026*
-*Status: Production Ready with Cost-Effective Gemini Backend*
+*Last Updated: March 16, 2026*
+*Status: Production Ready with Gemini Live API Native Audio*

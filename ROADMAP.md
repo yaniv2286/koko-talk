@@ -1,70 +1,79 @@
 # Koko Talk - Development Roadmap
 
 ## Project Overview
-Koko Talk is an AI-powered English tutoring platform for Israeli children (ages 4-12) featuring real-time conversation with visual learning aids and gamification. **🚀 NOW WITH COST-EFFECTIVE GEMINI BACKEND - 90% cost reduction achieved!**
+Koko Talk is an AI-powered English tutoring platform for Israeli children (ages 4-12) featuring real-time voice conversation with visual learning aids and gamification. **🚀 NOW WITH GEMINI LIVE API - Native audio streaming via WebSocket!**
 
-## Phase 0: Cost-Effective Gemini Migration ✅ COMPLETE
+## Phase 0: Gemini Live API Migration ✅ COMPLETE
 
 ### Objectives
-- Replace expensive OpenAI Realtime API with affordable Gemini
-- Maintain full functionality while reducing costs by 90%
+- Replace expensive OpenAI Realtime API with affordable Gemini Live API
+- Implement native audio streaming with WebSocket bidirectional communication
 - Ensure Hebrew language support and gender awareness
+- Solve sample-rate mismatch and audio playback issues
 
 ### Completed Features
-- **Gemini Integration**: Direct Google AI API calls via `/api/gemini-direct`
-- **Cost Reduction**: From $60-100/month to $5-15/month (90% savings)
-- **Hebrew Support**: Perfect gender-aware Hebrew responses
-- **Text Interface**: Modern chat-based UI at `/gemini` route
+- **Gemini Live Integration**: WebSocket streaming via `/api/gemini-live`
+- **Native Audio**: Full-duplex PCM16 audio streaming (16kHz input, 24kHz output)
+- **Hebrew Support**: Perfect gender-aware Hebrew voice responses
+- **Voice Interface**: Real-time voice conversation with "Puck" voice
+- **Downsampling**: Mathematical downsampling to fix sample-rate mismatch
+- **Dedicated Playback**: Isolated AudioContext with 3x gain boost
+- **Event-Driven Flow**: setupComplete-triggered greeting for reliability
 - **Debug Tools**: API testing and model listing endpoints
-- **Deployment Ready**: TypeScript errors fixed, Vercel deployment successful
 
 ### Technical Achievements
-- **Model**: Google Gemini 2.5 Flash with Hebrew proficiency
-- **API**: Direct REST API calls (no WebRTC complexity)
-- **Response Quality**: Natural Hebrew: "היי חמוד, אתק! אני קוקו!"
-- **Error Handling**: Comprehensive debugging and error management
-- **UI**: Modern responsive interface with star system
+- **Model**: `gemini-2.5-flash-native-audio-preview-12-2025`
+- **Protocol**: WebSocket v1alpha BidiGenerateContent
+- **Audio Pipeline**: ScriptProcessorNode with downsampling + dedicated playback context
+- **Noise Gate**: Energy threshold (0.005) to filter silence and improve AI response time
+- **Silent Vacuum**: Muted GainNode architecture to keep audio processing active
+- **Bulletproof Queueing**: 50ms buffer scheduling to prevent audio crackling
+- **Error Handling**: Comprehensive debugging and connection recovery
 
 ### Cost Impact
 ```
 Before: OpenAI Realtime - $60-100/month
-After:  Gemini Direct - $5-15/month
-Savings: 90% cost reduction
-Status: ✅ PRODUCTION READY
+After:  Gemini Live API - Cost-effective streaming
+Status: ✅ PRODUCTION READY WITH NATIVE AUDIO
 ```
 
 ---
 
-## Phase 1: WebRTC Audio Pipeline & Handshake ✅ COMPLETE
+## Phase 1: Gemini Live Audio Pipeline ✅ COMPLETE
 
 ### Objectives
-- Establish low-latency real-time audio communication
-- Implement OpenAI Realtime API integration
-- Create stable WebRTC connection flow
+- Establish low-latency real-time audio communication with Gemini Live API
+- Implement WebSocket bidirectional streaming
+- Solve sample-rate mismatch and audio playback issues
+- Create stable connection flow with event-driven architecture
 
 ### Completed Features
-- **WebRTC Connection**: Native RTCPeerConnection implementation
-- **Audio Streaming**: Bi-directional PCM16 audio at 24kHz
-- **Session Management**: Ephemeral token generation via `/api/session`
-- **Connection States**: Connecting, listening, speaking, error handling
-- **Audio Monitoring**: Real-time VU meter with AudioContext
+- **WebSocket Connection**: Native browser WebSocket to v1alpha endpoint
+- **Audio Streaming**: Bi-directional PCM16 audio (16kHz input, 24kHz output)
+- **Downsampling**: Mathematical nearest-neighbor downsampling from hardware rate
+- **Dedicated Playback**: Isolated AudioContext (24kHz) with 3x gain boost
+- **Connection States**: Idle, connecting, listening, speaking, error handling
+- **Silent Vacuum**: Muted GainNode architecture to keep processor active
 
 ### Technical Achievements
-- **Latency**: <200ms round-trip audio (vs 800ms+ with WebSockets)
-- **Reliability**: Stable P2P connection with auto-reconnect
-- **Quality**: Clear audio with proper gain control
-- **Error Handling**: Graceful degradation and user feedback
+- **Latency**: <500ms round-trip audio (WebSocket streaming)
+- **Sample Rate Fix**: Dynamic downsampling (44.1kHz/48kHz → 16kHz)
+- **Audio Quality**: Clear playback with bulletproof queueing (50ms buffer)
+- **Noise Gate**: 0.005 energy threshold to filter silence
+- **Event-Driven**: setupComplete-triggered greeting prevents race conditions
+- **Error Handling**: Graceful degradation and connection recovery
 
 ### Lessons Learned
-- WebRTC significantly outperforms WebSockets for real-time audio
-- Server VAD requires longer silence thresholds for children (1200ms)
-- Ephemeral token authentication is secure and efficient
-- **⚠️ COST ISSUE**: OpenAI API too expensive for production use
+- Browser ignores AudioContext sample rate request, requires manual downsampling
+- Dedicated playback context prevents feedback loops and muting issues
+- 3x gain boost necessary for audible playback
+- liveStateRef prevents stale closure issues in onaudioprocess
+- Event-driven greeting more reliable than setTimeout
 
 ### Current Status
-- **✅ Functionality**: Fully working
-- **❌ Economics**: Not viable due to high costs
-- **🔄 Recommendation**: Use Gemini version instead
+- **✅ Functionality**: Fully working with native audio
+- **✅ Economics**: Cost-effective for production use
+- **✅ Recommendation**: Production ready
 
 ---
 
@@ -256,53 +265,47 @@ ParentDashboard:
 
 ---
 
-## Current Status Summary
+### Current Status Summary
 
 ### Completed ✅
-- **Phase 0**: Cost-Effective Gemini Migration 🚀 **MAJOR MILESTONE**
-- Phase 1: WebRTC Audio Pipeline (Functional but expensive)
-- Phase 2: Gender & Avatar Onboarding
+- **Phase 0**: Gemini Live API Migration 🚀 **MAJOR MILESTONE**
+- **Phase 1**: Gemini Live Audio Pipeline (Native audio streaming)
+- **Phase 2**: Gender & Avatar Onboarding
 
 ### In Progress 🔄
 - Phase 3: Visual Scaffolding (80% complete)
 
 ### Next Steps 📋
-- **🎯 IMMEDIATE**: Deploy and scale Gemini version
-- Complete Phase 3 visual aid integration for Gemini
-- Add TTS (Text-to-Speech) to Gemini version (Phase 2.5)
-- Begin Phase 4 database design and implementation
+- **🎯 IMMEDIATE**: Complete Phase 3 visual aid integration
+- Optimize audio processing (consider AudioWorklet migration)
+- Add conversation history and word tracking (Phase 4)
+- Begin parent dashboard design (Phase 5)
 
-### Production Recommendation
+### Production Status
 ```
-🚀 USE: Gemini Version (/gemini route)
-- Cost: $5-15/month (90% savings)
-- Features: Full Hebrew support, gender awareness
-- Status: Production ready
-- URL: https://koko-talk.vercel.app/gemini
-
-🔄 AVOID: OpenAI Version (main route)
-- Cost: $60-100/month
-- Issues: Quota limitations, high cost
-- Status: Deprecated for production
+🚀 PRODUCTION: Gemini Live API (main route)
+- Protocol: WebSocket bidirectional streaming
+- Audio: Native PCM16 (16kHz input, 24kHz output)
+- Features: Full Hebrew voice, gender awareness, real-time conversation
+- Status: Production ready with native audio
+- URL: https://koko-talk.vercel.app
 ```
 
 ### Timeline Estimate
-- **🚀 Gemini TTS Integration**: 1-2 weeks
 - **Phase 3 Completion**: 2-3 weeks
 - **Phase 4 Implementation**: 3-4 weeks
 - **Phase 5 Development**: 4-6 weeks
-- **Total to Full Platform**: 10-14 weeks
+- **Total to Full Platform**: 9-13 weeks
 
-### Cost Summary
+### Technical Summary
 ```
-✅ Achievement: 90% cost reduction completed
-💰 Monthly savings: $45-85
-🎯 Status: Production ready with Gemini backend
-🚀 Next: Scale user base with affordable costs
+✅ Achievement: Native audio streaming with Gemini Live API
+🎯 Status: Production ready with real-time voice conversation
+🚀 Next: Complete visual aids and add progress tracking
 ```
 
 ---
 
-*Last Updated: March 12, 2026*
-*Major Milestone: Cost-Effective Gemini Migration Complete*
-*Next Review: TTS Integration Planning*
+*Last Updated: March 16, 2026*
+*Major Milestone: Gemini Live API with Native Audio Complete*
+*Next Review: Visual Aid Integration & AudioWorklet Migration*
