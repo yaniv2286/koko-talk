@@ -108,8 +108,8 @@ export const useGeminiAudio = ({
       // Create audio source from microphone
       sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
       
-      // Create ScriptProcessorNode for raw audio processing (4096 buffer size, 1 input channel, 1 output channel)
-      processorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
+      // Create ScriptProcessorNode for raw audio processing (1024 buffer size for ultra-low latency, 1 input channel, 1 output channel)
+      processorRef.current = audioContextRef.current.createScriptProcessor(1024, 1, 1);
       
       // Create GainNode and mute it to prevent feedback loops while keeping pipeline active
       gainNodeRef.current = audioContextRef.current.createGain();
@@ -129,18 +129,12 @@ export const useGeminiAudio = ({
         const downsampledLength = Math.floor(inputData.length / compressionRatio);
         const downsampledData = new Float32Array(downsampledLength);
 
-        let energy = 0;
         for (let i = 0; i < downsampledLength; i++) {
           const sample = inputData[Math.floor(i * compressionRatio)];
           downsampledData[i] = sample;
-          energy += Math.abs(sample);
         }
 
-        // 2. Noise Gate: Don't send absolute silence (speeds up AI response time)
-        const averageEnergy = energy / downsampledLength;
-        if (averageEnergy < 0.005) return; 
-
-        // 3. Convert Float32 to PCM16
+        // 2. Convert Float32 to PCM16 (Noise gate removed - rely on Gemini's native VAD)
         const pcm16 = new Int16Array(downsampledData.length);
         for (let i = 0; i < downsampledData.length; i++) {
           let s = Math.max(-1, Math.min(1, downsampledData[i]));
